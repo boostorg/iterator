@@ -454,6 +454,95 @@ Standard compliant iterators).
                      typename Derived::difference_type n)
 
 
+.. nothing
+
+``reference operator*() const;``
+
+:Returns: ``static_cast<Derived const*>(this)->dereference();``
+
+*see details* ``operator->() const;``
+
+:Requires: 
+:Effects: 
+:Postconditions: 
+:Returns: ``static_cast<Derived const*>(this)->dereference();``
+:Throws: 
+:Complexity: 
+
+
+*see details* ``operator[](difference_type n) const;``
+
+:Requires: 
+:Effects: 
+:Postconditions: 
+:Returns: ``static_cast<Derived const*>(this)->dereference();``
+:Throws: 
+:Complexity: 
+
+
+``Derived& operator++();``
+
+:Requires: 
+:Effects: 
+:Postconditions: 
+:Returns: ``static_cast<Derived const*>(this)->dereference();``
+:Throws: 
+:Complexity: 
+
+``Derived operator++(int);``
+
+:Requires: 
+:Effects: 
+:Postconditions: 
+:Returns: ``static_cast<Derived const*>(this)->dereference();``
+:Throws: 
+:Complexity: 
+
+``Derived& operator--();``
+
+:Requires: 
+:Effects: 
+:Postconditions: 
+:Returns: ``static_cast<Derived const*>(this)->dereference();``
+:Throws: 
+:Complexity: 
+
+``Derived operator--(int);``
+
+:Requires: 
+:Effects: 
+:Postconditions: 
+:Returns: ``static_cast<Derived const*>(this)->dereference();``
+:Throws: 
+:Complexity: 
+
+``Derived& operator+=(difference_type n);``
+
+:Requires: 
+:Effects: 
+:Postconditions: 
+:Returns: ``static_cast<Derived const*>(this)->dereference();``
+:Throws: 
+:Complexity: 
+
+``Derived& operator-=(difference_type n);``
+
+:Requires: 
+:Effects: 
+:Postconditions: 
+:Returns: ``static_cast<Derived const*>(this)->dereference();``
+:Throws: 
+:Complexity: 
+
+``Derived operator-(difference_type x) const;``
+
+:Requires: 
+:Effects: 
+:Postconditions: 
+:Returns: ``static_cast<Derived const*>(this)->dereference();``
+:Throws: 
+:Complexity: 
+
 
 ``iterator_adaptor``
 ====================
