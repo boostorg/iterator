@@ -308,24 +308,25 @@ namespace boost
           rhs.derived(), lhs.derived());                                                    \
   }
 
-# define BOOST_ITERATOR_FACADE_RELATION(op, test, base_op)  \
-  BOOST_ITERATOR_FACADE_INTEROP(                            \
-      op                                                    \
-    , bool                                                  \
-    , true                                                  \
-    , return test                                           \
-    , base_op                                               \
+# define BOOST_ITERATOR_FACADE_RELATION(op, return_prefix, base_op) \
+  BOOST_ITERATOR_FACADE_INTEROP(                                    \
+      op                                                            \
+    , bool                                                          \
+    , true                                                          \
+    , return_prefix                                                 \
+    , base_op                                                       \
   )
 
-  BOOST_ITERATOR_FACADE_RELATION(==, (bool), equal)
-  BOOST_ITERATOR_FACADE_RELATION(!=, !, equal)
+  BOOST_ITERATOR_FACADE_RELATION(==, return, equal)
+  BOOST_ITERATOR_FACADE_RELATION(!=, return !, equal)
 
-  BOOST_ITERATOR_FACADE_RELATION(<, 0>, distance_to)
-  BOOST_ITERATOR_FACADE_RELATION(>, 0<, distance_to)
-  BOOST_ITERATOR_FACADE_RELATION(<=, 0>=, distance_to)
-  BOOST_ITERATOR_FACADE_RELATION(>=, 0<=, distance_to)
+  BOOST_ITERATOR_FACADE_RELATION(<, return 0 >, distance_to)
+  BOOST_ITERATOR_FACADE_RELATION(>, return 0 <, distance_to)
+  BOOST_ITERATOR_FACADE_RELATION(<=, return 0 >=, distance_to)
+  BOOST_ITERATOR_FACADE_RELATION(>=, return 0 <=, distance_to)
 # undef BOOST_ITERATOR_FACADE_RELATION
 
+  // operator- requires an additional part in the static assertion
   BOOST_ITERATOR_FACADE_INTEROP(
       -
     , typename Traits1::difference_type
