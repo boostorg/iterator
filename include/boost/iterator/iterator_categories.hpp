@@ -16,7 +16,9 @@
 #include <boost/pending/ct_if.hpp>
 #include <boost/detail/iterator.hpp>
 #include <boost/mpl/apply_if.hpp>
-#include <boost/type_traits/ice.hpp>
+#include <boost/mpl/if.hpp>
+#include <boost/mpl/bool_c.hpp>
+#include <boost/mpl/aux_/has_xxx.hpp>
 #include <iterator>
 
 namespace boost {
@@ -167,16 +169,16 @@ namespace boost {
     };
 #else
 
-
-    template <class T>
-    type_traits::yes_type is_new_iter_cat(T*, BOOST_DEDUCED_TYPENAME T::traversal* = 0);
-
-    type_traits::no_type is_new_iter_cat(...);
+  BOOST_MPL_HAS_XXX_TRAIT_DEF(traversal)
 
     template <class Tag>
     struct is_new_iterator_tag
+        : //has_traversal<Tag>
+          mpl::if_<
+          is_class<Tag>
+          , has_traversal<Tag>
+          , mpl::bool_c<false> >::type
     {
-      enum { value = (sizeof(is_new_iter_cat((Tag*)0)) == sizeof(type_traits::yes_type)) };
     };
 #endif
     
