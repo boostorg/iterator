@@ -8,16 +8,25 @@
 #define BOOST_ITERATOR_CONCEPTS_HPP
 
 //  Revision History
+//  26 Apr 2003 thw
+//       Adapted to new iterator concepts
 //  22 Nov 2002 Thomas Witt
 //       Added interoperable concept.
 
 #include <boost/concept_check.hpp>
 #include <boost/iterator/iterator_categories.hpp>
 #include <boost/type_traits/is_same.hpp>
+#include <boost/type_traits/is_integral.hpp>
+#include <boost/mpl/bool.hpp>
+#include <boost/mpl/if.hpp>
+#include <boost/mpl/and.hpp>
 #include <boost/static_assert.hpp>
 
 // Use boost::detail::iterator_traits to work around some MSVC/Dinkumware problems.
 #include <boost/detail/iterator.hpp>
+
+#include <algorithm>
+#include <limits>
 
 namespace boost_concepts {
   // Used a different namespace here (instead of "boost") so that the
@@ -53,8 +62,8 @@ namespace boost_concepts {
       boost::function_requires< 
         boost::DefaultConstructibleConcept<Iterator> >();
 
-      static_assert_base_and_derived<boost::readable_iterator_tag, access_category>();
-                          
+      BOOST_STATIC_ASSERT((boost::detail::is_tag<boost::readable_iterator_tag, access_category>::value));
+
       reference r = *i; // or perhaps read(x)
       value_type v(r);
       boost::ignore_unused_variable_warning(v);
@@ -73,7 +82,7 @@ namespace boost_concepts {
       boost::function_requires< 
         boost::DefaultConstructibleConcept<Iterator> >();
       
-      static_assert_base_and_derived<boost::writable_iterator_tag, access_category>();
+      BOOST_STATIC_ASSERT((boost::detail::is_tag<boost::writable_iterator_tag, access_category>::value));
 
       *i = v; // a good alternative could be something like write(x, v)
     }
@@ -82,7 +91,21 @@ namespace boost_concepts {
   };
   
   template <typename Iterator>
-  class ConstantLvalueIteratorConcept {
+  class SwappableIteratorConcept {
+  public:
+    typedef typename boost::access_category<Iterator>::type access_category;
+
+    void constraints() {
+      BOOST_STATIC_ASSERT((boost::detail::is_tag<boost::swappable_iterator_tag, access_category>::value));
+
+      std::iter_swap(i1, i2);
+    }
+    Iterator i1;
+    Iterator i2;
+  };
+
+  template <typename Iterator>
+  class ReadableLvalueIteratorConcept {
   public:
     typedef typename boost::detail::iterator_traits<Iterator>::value_type value_type;
     typedef typename boost::detail::iterator_traits<Iterator>::reference reference;
@@ -91,9 +114,13 @@ namespace boost_concepts {
     void constraints() {
       boost::function_requires< ReadableIteratorConcept<Iterator> >();
 
-      static_assert_base_and_derived<boost::readable_lvalue_iterator_tag, access_category>();
+      BOOST_STATIC_ASSERT((boost::detail::is_tag<boost::readable_lvalue_iterator_tag, access_category>::value));
 
-      BOOST_STATIC_ASSERT((boost::is_same<reference, const value_type&>::value));
+      typedef boost::mpl::or_<
+        boost::is_same<reference, value_type&>,
+        boost::is_same<reference, value_type const&> > correct_reference;
+        
+      BOOST_STATIC_ASSERT(correct_reference::value);
 
       reference v = *i;
       boost::ignore_unused_variable_warning(v);
@@ -102,47 +129,78 @@ namespace boost_concepts {
   };
 
   template <typename Iterator>
-  class MutableLvalueIteratorConcept {
+  class WritableLvalueIteratorConcept {
   public:
     typedef typename boost::detail::iterator_traits<Iterator>::value_type value_type;
     typedef typename boost::detail::iterator_traits<Iterator>::reference reference;
     typedef typename boost::access_category<Iterator>::type access_category;
 
     void constraints() {
-      boost::function_requires< ReadableIteratorConcept<Iterator> >();
+      boost::function_requires< 
+        ReadableLvalueIteratorConcept<Iterator> >();
       boost::function_requires< 
         WritableIteratorConcept<Iterator, value_type> >();
+      boost::function_requires< 
+        SwappableIteratorConcept<Iterator> >();
       
-      static_assert_base_and_derived<boost::writable_lvalue_iterator_tag, access_category>();
+      BOOST_STATIC_ASSERT((boost::detail::is_tag<boost::writable_lvalue_iterator_tag, access_category>::value));
 
       BOOST_STATIC_ASSERT((boost::is_same<reference, value_type&>::value));
-
-      reference v = *i;
-      boost::ignore_unused_variable_warning(v);
     }
-    Iterator i;
   };
   
   //===========================================================================
   // Iterator Traversal Concepts
 
   template <typename Iterator>
-  class ForwardTraversalConcept {
+  class IncrementableIteratorConcept {
   public:
     typedef typename boost::traversal_category<Iterator>::type traversal_category;
 
     void constraints() {
       boost::function_requires< boost::SGIAssignableConcept<Iterator> >();
-      boost::function_requires< boost::EqualityComparableConcept<Iterator> >();
       boost::function_requires< 
         boost::DefaultConstructibleConcept<Iterator> >();
 
-      static_assert_base_and_derived<boost::forward_traversal_tag, traversal_category>();
+      BOOST_STATIC_ASSERT((boost::detail::is_tag<boost::incrementable_iterator_tag, traversal_category>::value));
 
       ++i;
       (void)i++;
     }
     Iterator i;
+  };
+
+  template <typename Iterator>
+  class SinglePassIteratorConcept {
+  public:
+    typedef typename boost::traversal_category<Iterator>::type traversal_category;
+    typedef typename boost::detail::iterator_traits<Iterator>::difference_type difference_type;
+
+    void constraints() {
+      boost::function_requires< IncrementableIteratorConcept<Iterator> >();
+      boost::function_requires< boost::EqualityComparableConcept<Iterator> >();
+
+      BOOST_STATIC_ASSERT((boost::detail::is_tag<boost::single_pass_iterator_tag, traversal_category>::value));
+    }
+  };
+
+  template <typename Iterator>
+  class ForwardTraversalConcept {
+  public:
+    typedef typename boost::traversal_category<Iterator>::type traversal_category;
+    typedef typename boost::detail::iterator_traits<Iterator>::difference_type difference_type;
+
+    void constraints() {
+      boost::function_requires< SinglePassIteratorConcept<Iterator> >();
+
+      typedef boost::mpl::and_<
+        boost::is_integral<difference_type>,
+        boost::mpl::bool_< std::numeric_limits<difference_type>::is_signed >
+        > difference_type_is_signed_integral;
+
+      BOOST_STATIC_ASSERT(difference_type_is_signed_integral::value);
+      BOOST_STATIC_ASSERT((boost::detail::is_tag<boost::forward_traversal_tag, traversal_category>::value));
+    }
   };
   
   template <typename Iterator>
@@ -153,7 +211,7 @@ namespace boost_concepts {
     void constraints() {
       boost::function_requires< ForwardTraversalConcept<Iterator> >();
       
-      static_assert_base_and_derived<boost::bidirectional_traversal_tag, traversal_category>();
+      BOOST_STATIC_ASSERT((boost::detail::is_tag<boost::bidirectional_traversal_tag, traversal_category>::value));
 
       --i;
       (void)i--;
@@ -171,8 +229,7 @@ namespace boost_concepts {
     void constraints() {
       boost::function_requires< BidirectionalTraversalConcept<Iterator> >();
 
-      static_assert_base_and_derived<boost::random_access_traversal_tag, traversal_category>();
-
+      BOOST_STATIC_ASSERT((boost::detail::is_tag<boost::random_access_traversal_tag, traversal_category>::value));
       
       i += n;
       i = i + n;
