@@ -13,6 +13,7 @@
 #include <boost/iterator.hpp>
 #include <boost/detail/iterator.hpp>
 
+#include <boost/iterator/iterator_categories.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/iterator/detail/enable_if.hpp>
 
@@ -33,20 +34,6 @@ namespace boost
 {
   namespace detail
   {
-    template <class Traits, class Other>
-    struct same_category_and_difference
-      : mpl::and_<
-            is_same<
-                typename Traits::iterator_category
-              , typename Other::iterator_category
-            >
-          , is_same<
-                typename Traits::iterator_category   // *** THIS IS A BUG!! ***
-              , typename Other::iterator_category    // MAKE FAILING TEST BEFORE FIXING!!
-            >
-        >
-    {};
-
 
     // 
     // Result type used in enable_if_convertible meta function.
@@ -187,17 +174,21 @@ namespace boost
       , class Value
       , class Category
       , class Reference
-      , class Pointer
       , class Difference
     >
     struct iterator_adaptor_base
     {
+    private:
+      typedef typename detail::ia_dflt_help<Category    , mpl::true_                     , BOOST_ITERATOR_CATEGORY<Base> >::type category;
+      typedef typename detail::ia_dflt_help<Reference   , is_same<Value, use_default>    , iterator_reference<Base> >::type      reference;
+
+    public:
         typedef iterator_facade<
             Derived
           , typename detail::ia_dflt_help<Value       , mpl::true_                     , iterator_value<Base> >::type
-          , typename detail::ia_dflt_help<Category    , mpl::true_                     , BOOST_ITERATOR_CATEGORY<Base> >::type
+          , typename access_category_tag< category, reference >::type
+          , typename traversal_category_tag< category >::type
           , typename detail::ia_dflt_help<Reference   , is_same<Value, use_default>    , iterator_reference<Base> >::type
-          , typename detail::ia_dflt_help<Pointer     , is_same<Value, use_default>    , iterator_pointer<Base> >::type
           , typename detail::ia_dflt_help<Difference  , mpl::true_                     , iterator_difference<Base> >::type
         >
         type;
@@ -214,18 +205,17 @@ namespace boost
     , class Value        = use_default
     , class Category     = use_default
     , class Reference    = use_default
-    , class Pointer      = use_default
     , class Difference   = use_default
   >
   class iterator_adaptor
     : public detail::iterator_adaptor_base<
-        Derived, Base, Value, Category, Reference, Pointer, Difference
+        Derived, Base, Value, Category, Reference, Difference
       >::type
   {
       friend class iterator_core_access;
 
       typedef typename detail::iterator_adaptor_base<
-          Derived, Base, Value, Category, Reference, Pointer, Difference
+          Derived, Base, Value, Category, Reference, Difference
       >::type super_t;
 
    public:
@@ -260,13 +250,14 @@ namespace boost
         { return *m_iterator; }
 
       template <
-          class OtherDerived, class OtherIterator, class V, class C, class R, class P, class D
+      class OtherDerived, class OtherIterator, class V, class C, class R, class D
       >   
-      bool equal(iterator_adaptor<OtherDerived, OtherIterator, V, C, R, P, D> const& x) const
+      bool equal(iterator_adaptor<OtherDerived, OtherIterator, V, C, R, D> const& x) const
       {
-          BOOST_STATIC_ASSERT(
-              (detail::same_category_and_difference<Derived,OtherDerived>::value)
-              );
+        // Maybe readd with same_distance
+        //           BOOST_STATIC_ASSERT(
+        //               (detail::same_category_and_difference<Derived,OtherDerived>::value)
+        //               );
           return m_iterator == x.base();
       }
   
@@ -279,14 +270,15 @@ namespace boost
       void decrement() { --m_iterator; }
 
       template <
-          class OtherDerived, class OtherIterator, class V, class C, class R, class P, class D
+          class OtherDerived, class OtherIterator, class V, class C, class R, class D
       >   
       typename super_t::difference_type distance_to(
-          iterator_adaptor<OtherDerived, OtherIterator, V, C, R, P, D> const& y) const
+          iterator_adaptor<OtherDerived, OtherIterator, V, C, R, D> const& y) const
       {
-          BOOST_STATIC_ASSERT(
-              (detail::same_category_and_difference<Derived,OtherDerived>::value)
-              );
+        // Maybe readd with same_distance
+        //           BOOST_STATIC_ASSERT(
+        //               (detail::same_category_and_difference<Derived,OtherDerived>::value)
+        //               );
           return y.base() - m_iterator;
       }
 

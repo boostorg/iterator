@@ -96,7 +96,6 @@ namespace detail
         , Incrementable                                          // value_type
         , category
         , Incrementable const&                                   // reference
-        , Incrementable const*                                   // pointer
         , difference
       > type;
   };

@@ -29,7 +29,7 @@
 
 namespace boost
 {
-  template <class Iter, class Value, class Category, class Reference, class Pointer, class Difference>
+  template <class Iter, class Value, class Category, class Reference, class Difference>
   struct indirect_iterator;
 
   namespace detail
@@ -112,7 +112,7 @@ namespace boost
 
     // If the Value parameter is unspecified, we use this metafunction
     // to deduce the default types
-    template <class Iter, class Value, class Category, class Reference, class Pointer, class Difference>
+    template <class Iter, class Value, class Category, class Reference, class Difference>
     struct indirect_base
     {
         typedef typename iterator_value<Iter>::type dereferenceable;
@@ -138,18 +138,17 @@ namespace boost
         >::type cv_value_type;
            
         typedef iterator_adaptor<
-            indirect_iterator<Iter, Value, Category, Reference, Pointer, Difference>
+            indirect_iterator<Iter, Value, Category, Reference, Difference>
           , Iter
           , cv_value_type
           , Category
           , Reference
-          , Pointer
           , Difference
         > type;
     };
 
     template <>
-    struct indirect_base<int, int, int, int, int, int> {};
+    struct indirect_base<int, int, int, int, int> {};
   } // namespace detail
 
   template <
@@ -157,16 +156,15 @@ namespace boost
     , class Value = use_default
     , class Category = use_default
     , class Reference = use_default
-    , class Pointer = use_default
     , class Difference = use_default
   >
   class indirect_iterator
     : public detail::indirect_base<
-        Iterator, Value, Category, Reference, Pointer, Difference
+        Iterator, Value, Category, Reference, Difference
       >::type
   {
       typedef typename detail::indirect_base<
-          Iterator, Value, Category, Reference, Pointer, Difference
+          Iterator, Value, Category, Reference, Difference
       >::type super_t;
 
       friend class iterator_core_access;
@@ -179,11 +177,11 @@ namespace boost
 
       template <
           class Iterator2, class Value2, class Category2
-        , class Reference2, class Pointer2, class Difference2
+        , class Reference2, class Difference2
       >
       indirect_iterator(
           indirect_iterator<
-               Iterator2, Value2, Category2, Reference2, Pointer2, Difference2
+               Iterator2, Value2, Category2, Reference2, Difference2
           > const& y
         , typename enable_if_convertible<Iterator2, Iterator>::type* = 0
       )

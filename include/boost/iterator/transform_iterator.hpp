@@ -19,7 +19,7 @@
 
 namespace boost
 {
-  template <class AdaptableUnaryFunction, class Iterator>
+  template <class UnaryFunction, class Iterator, class Reference = use_default, class Value = use_default>
   class transform_iterator;
 
   namespace detail 
@@ -27,7 +27,7 @@ namespace boost
 
     // Given the transform iterator's transformation and iterator, this
     // is the type used as its traits.
-    template <class UnaryFunction, class Iterator>
+    template <class UnaryFunction, class Iterator, class Reference, class Value>
     struct transform_iterator_base
     {
     private:
@@ -71,12 +71,12 @@ namespace boost
 
   }
 
-  template <class AdaptableUnaryFunction, class Iterator>
+  template <class UnaryFunction, class Iterator, class Reference, class Value>
   class transform_iterator
-    : public detail::transform_iterator_base<AdaptableUnaryFunction, Iterator>::type
+    : public detail::transform_iterator_base<UnaryFunction, Iterator, Reference, Value>::type
   {
     typedef typename
-      detail::transform_iterator_base<AdaptableUnaryFunction, Iterator>::type
+    detail::transform_iterator_base<UnaryFunction, Iterator, Reference, Value>::type
     super_t;
 
     friend class iterator_core_access;
@@ -84,17 +84,17 @@ namespace boost
   public:
     transform_iterator() { }
 
-    transform_iterator(Iterator const& x, AdaptableUnaryFunction f)
+    transform_iterator(Iterator const& x, UnaryFunction f)
       : super_t(x), m_f(f) { }
 
     template<class OtherIterator>
     transform_iterator(
-          transform_iterator<AdaptableUnaryFunction, OtherIterator> const& t
+          transform_iterator<UnaryFunction, OtherIterator> const& t
         , typename enable_if_convertible<OtherIterator, Iterator>::type* = 0
     )
       : super_t(t.base()), m_f(t.functor()) {}
 
-    AdaptableUnaryFunction functor() const
+    UnaryFunction functor() const
       { return m_f; }
 
   private:
@@ -103,7 +103,7 @@ namespace boost
 
     // Probably should be the initial base class so it can be
     // optimized away via EBO if it is an empty class.
-    AdaptableUnaryFunction m_f;
+    UnaryFunction m_f;
   };
 
   template <class UnaryFunction, class Iterator>
