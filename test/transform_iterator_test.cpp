@@ -132,7 +132,6 @@ main()
     boost::random_access_readable_iterator_test(i, N, x);
   }
 
-#if !defined (BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION) 
   // Test transform_iterator with function pointers
   {
     int x[N], y[N];
@@ -156,7 +155,6 @@ main()
                                                 , x);
 
   }
-#endif
 
   // Test transform_iterator as projection iterator
   {

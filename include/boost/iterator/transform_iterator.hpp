@@ -118,49 +118,14 @@ namespace boost
     return transform_iterator<UnaryFunctionObject, Iterator>(it, fun);
   }
 
-  namespace detail {
-
-    template <class Function>
-    struct is_unary :
-      mpl::bool_<(function_traits<Function>::arity == 1)>
-    {};
-
-    template <class T>
-    struct is_unary_function;
-
-#if !BOOST_WORKAROUND(BOOST_MSVC, <= 1200)
-    template <class T>
-    struct is_unary_function :
-      mpl::apply_if< is_function<T>
-                     , is_unary<T>
-                     , mpl::bool_<false>
-      >::type
-    {};
-#endif
-
-  }
-
-  //
-  // ToDo: Think twice whether enable_if is better than an
-  // static assert. Currently we get convoluted error messages
-  // from the above overload for any pointer that is not a
-  // pointer to a unary function.
-  //
-  // If function does not accept function type syntax we are out
-  // of luck. Ok we can spell it out for <N arguments but that
-  // really isn't worth the hassle.
-  //
-#if !defined (BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION) 
-  template <class UnaryFunction, class Iterator>
-  typename detail::enable_if<
-    detail::is_unary_function<UnaryFunction>
-    , transform_iterator< function<UnaryFunction>, Iterator>
-  >::type
-  make_transform_iterator(Iterator it, UnaryFunction* fun)
+  template <class Return, class Argument, class Iterator>
+  transform_iterator< function1<Return, Argument>, Iterator>
+  make_transform_iterator(Iterator it, Return (*fun)(Argument))
   {
-    return make_transform_iterator(it, function<UnaryFunction>(fun));
+    typedef function1<Return, Argument> function_t;
+
+    return transform_iterator<function_t, Iterator>(it, function_t(fun));
   }
-#endif
 
 } // namespace boost
 
