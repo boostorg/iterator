@@ -24,6 +24,15 @@
 # include <boost/type_traits/is_convertible.hpp>
 # include <boost/type_traits/is_const.hpp>
 
+# ifdef BOOST_ITERATOR_REFERENCE_PRIMACY
+#  ifdef BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
+#   include <boost/mpl/or.hpp>
+#   include <boost/python/detail/indirect_traits.hpp>
+#  else
+#   include <boost/mpl/remove_reference.hpp>
+#  endif 
+# endif
+
 namespace boost {
 
 //
@@ -48,6 +57,23 @@ namespace detail
   struct input_output_iterator_tag
     : std::input_iterator_tag, std::output_iterator_tag {};
 
+  //
+  // Helper for iterator_tag and iterator_facade.  True iff the user
+  // has explicitly disabled writability of this iterator.
+  //
+  template <class Value, class Reference>
+  struct iterator_writability_disabled
+# ifdef BOOST_ITERATOR_REFERENCE_PRIMACY
+#  ifdef BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
+    : mpl::or_<is_const<Reference>,python::detail::is_reference_to_const<Reference> >
+#  else 
+    : is_const<typename remove_reference<Reference>::type>
+#  endif 
+# else 
+    : is_const<Value>
+# endif 
+  {};
+  
   template <class Value, class Reference, class Traversal>
   struct old_iterator_category
   {
@@ -80,7 +106,7 @@ namespace detail
                 , is_convertible<Reference, Value>
               >
             , mpl::if_<
-                  is_const<Value>
+                  iterator_writability_disabled<Value,Reference>
                 , std::input_iterator_tag
                 , input_output_iterator_tag
               >
@@ -122,7 +148,14 @@ namespace detail
           >
       >
   {};
-  
+
+# if BOOST_WORKAROUND(BOOST_MSVC, == 1200)
+  template <>
+  struct old_style_category_to_traversal<int>
+  {
+      typedef int type;
+  };
+# endif 
 } // namespace detail
 
 

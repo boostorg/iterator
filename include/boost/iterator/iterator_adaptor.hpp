@@ -26,6 +26,12 @@
 #include <boost/type_traits/is_same.hpp>
 #include <boost/type_traits/is_convertible.hpp>
 
+#ifdef BOOST_ITERATOR_REFERENCE_PRIMACY
+# include <boost/type_traits/remove_reference.hpp>
+#else 
+# include <boost/type_traits/add_reference.hpp>
+#endif 
+
 #include <boost/iterator/detail/config_def.hpp>
 
 #include <boost/iterator/iterator_traits.hpp>
@@ -142,55 +148,51 @@ namespace boost
         class Derived
       , class Base
       , class Value
-      , class Category
+      , class Traversal
       , class Reference
       , class Difference
     >
     struct iterator_adaptor_base
     {
-    private: // intermediate results
-
-        typedef typename mpl::apply_if<
-            mpl::or_< 
-                is_same<Category, use_default>
-              , is_access_tag<Category>
-              , is_traversal_tag<Category>
-            >
-          , BOOST_ITERATOR_CATEGORY<Base>
-          , mpl::identity<Category>
-        >::type category;
-
-        typedef typename detail::ia_dflt_help<
-            Reference
-          , mpl::apply_if<
-                is_same<Value, use_default>
-              , iterator_reference<Base>
-              , mpl::identity<Value&>
-            >
-        >::type reference;
-
-     public: // return type
         typedef iterator_facade<
             Derived
-         
+            
+# ifdef BOOST_ITERATOR_REFERENCE_PRIMACY
+          , typename detail::ia_dflt_help<
+                Value
+              , mpl::apply_if<
+                    is_same<Reference,use_default>
+                  , iterator_value<Base>
+                  , remove_reference<Reference>
+                >
+            >::type
+# else
           , typename detail::ia_dflt_help<
                 Value, iterator_value<Base>
             >::type
-                
-         , typename mpl::apply_if<
-               is_access_tag<Category>
-             , mpl::identity<Category>
-             , access_category_tag<category, reference>
-           >::type
+# endif
+            
+          , typename detail::ia_dflt_help<
+                Traversal
+              , iterator_traversal<Base>
+            >::type
 
-         , typename mpl::apply_if<
-               is_traversal_tag<Category>
-             , mpl::identity<Category>
-             , traversal_category_tag<category>
-           >::type
-                
-          , reference
-                
+# ifdef BOOST_ITERATOR_REFERENCE_PRIMACY
+          , typename detail::ia_dflt_help<
+                Reference
+              , iterator_reference<Base>
+            >::type
+# else
+          , typename detail::ia_dflt_help<
+                Reference
+              , mpl::apply_if<
+                    is_same<Value,use_default>
+                  , iterator_reference<Base>
+                  , add_reference<Value>
+                >
+            >::type
+# endif 
+
           , typename detail::ia_dflt_help<
                 Difference, iterator_difference<Base>
             >::type
@@ -213,8 +215,8 @@ namespace boost
   //      const. If const, a conforming compiler strips constness for the
   //      value_type. If not supplied, iterator_traits<Base>::value_type is used
   //
-  //   Category - the iterator_category of the resulting iterator. If not
-  //      supplied, iterator_traits<Base>::iterator_category is used.
+  //   Category - the traversal category of the resulting iterator. If not
+  //      supplied, iterator_traversal<Base>::type is used.
   //
   //   Reference - the reference type of the resulting iterator, and in
   //      particular, the result type of operator*(). If not supplied but
@@ -228,19 +230,19 @@ namespace boost
       class Derived
     , class Base
     , class Value        = use_default
-    , class Category     = use_default
+    , class Traversal    = use_default
     , class Reference    = use_default
     , class Difference   = use_default
   >
   class iterator_adaptor
     : public detail::iterator_adaptor_base<
-        Derived, Base, Value, Category, Reference, Difference
+        Derived, Base, Value, Traversal, Reference, Difference
       >::type
   {
       friend class iterator_core_access;
 
       typedef typename detail::iterator_adaptor_base<
-          Derived, Base, Value, Category, Reference, Difference
+          Derived, Base, Value, Traversal, Reference, Difference
       >::type super_t;
 
    public:
@@ -290,9 +292,9 @@ namespace boost
       {
 # if !BOOST_WORKAROUND(__MWERKS__, BOOST_TESTED_AT(0x3003)) // seems to get instantiated incorrectly
           BOOST_STATIC_ASSERT(
-              (detail::is_tag< 
-               random_access_traversal_tag
-               , BOOST_ARG_DEPENDENT_TYPENAME super_t::iterator_category::traversal
+              (is_convertible< 
+                   BOOST_DEDUCED_TYPENAME super_t::iterator_category
+                 , random_access_traversal_tag
                >::value)
               );
 # endif 
@@ -305,9 +307,9 @@ namespace boost
       {
 # if !BOOST_WORKAROUND(__MWERKS__, BOOST_TESTED_AT(0x3003)) // seems to get instantiated incorrectly
            BOOST_STATIC_ASSERT(
-              (detail::is_tag< 
-                   bidirectional_traversal_tag
-                 , BOOST_ARG_DEPENDENT_TYPENAME super_t::iterator_category::traversal
+              (is_convertible< 
+                   BOOST_DEDUCED_TYPENAME super_t::iterator_category
+                 , bidirectional_traversal_tag
                >::value)
               );
 # endif 
@@ -321,9 +323,9 @@ namespace boost
           iterator_adaptor<OtherDerived, OtherIterator, V, C, R, D> const& y) const
       {
           BOOST_STATIC_ASSERT(
-              (detail::is_tag< 
-                   random_access_traversal_tag
-                 , BOOST_ARG_DEPENDENT_TYPENAME super_t::iterator_category::traversal
+              (is_convertible< 
+                   BOOST_DEDUCED_TYPENAME super_t::iterator_category
+                 , random_access_traversal_tag
                >::value)
               );
           // Maybe readd with same_distance
