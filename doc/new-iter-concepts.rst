@@ -579,39 +579,29 @@ pseudo-code.
 
 ::
 
-   inherit-category(access-tag, traversal-tag) =
-     (access-tag is convertible to readable_lvalue_iterator_tag
-      or access-tag is convertible to writable_lvalue_iterator_tag
-     )
-     ? (
-         (traversal-tag is convertible to random_access_traversal_tag)
-           ? random_access_iterator_tag
-
-         : (traversal-tag is convertible to bidirectional_traversal_tag)
-           ? bidirectional_iterator_tag
-
-         : (traversal-tag is convertible to forward_traversal_tag)
-           ? forward_iterator_tag
-
-         : null_category_tag
-       )
-     : (access-tag is convertible to readable_writable_iterator_tag
-        and traversal-tag is convertible to single_pass_iterator_tag)
-       ? input_output_iterator_tag
-
-     : (access-tag is convertible to readable_iterator_tag
-         and traversal-tag is convertible to single_pass_iterator_tag)
-       ? input_iterator_tag
-
-     : (access-tag is convertible to writable_iterator_tag
-         and traversal-tag is convertible to incrementable_iterator_tag)
-       ? output_iterator_tag
-
-     : null_category_tag;
-
-.. Jeremy, I'm not attached to the rewrite above; I just did it to see
-   if I could make it clearer please feel free to rewrite if you don't
-   like it.
+    inherit-category(access-tag, traversal-tag) =
+        if (access-tag is convertible to readable_lvalue_iterator_tag
+            or access-tag is convertible to writable_lvalue_iterator_tag) {
+            if (traversal-tag is convertible to random_access_traversal_tag)
+                return random_access_iterator_tag;
+            else if (traversal-tag is convertible to bidirectional_traversal_tag)
+                return bidirectional_iterator_tag;
+            else if (traversal-tag is convertible to forward_traversal_tag)
+                return forward_iterator_tag;
+            else
+                return null_category_tag;
+        } else if (access-tag is convertible to readable_writable_iterator_tag
+                   and traversal-tag is convertible to single_pass_iterator_tag)
+            return input_output_iterator_tag;
+        else if (access-tag is convertible to readable_iterator_tag
+                 and traversal-tag is convertible to single_pass_iterator_tag)
+            return input_iterator_tag;
+        else if (access-tag is convertible to writable_iterator_tag
+                 and traversal-tag is convertible to incrementable_iterator_tag)
+            return output_iterator_tag;
+        else
+            return null_category_tag;
+     
 
 The ``access_category`` and ``traversal_category`` class templates are
 traits classes. For iterators whose
@@ -626,38 +616,38 @@ The following pseudo-code describes the algorithm.
 ::
 
   access-category(Iterator) =
-    cat = iterator_traits<Iterator>::iterator_category;
-    if (cat == iterator_tag<Access,Traversal>)
-      return Access;
-    else if (cat is convertible to forward_iterator_tag) {
-      if (iterator_traits<Iterator>::reference is a const reference)
-        return readable_lvalue_iterator_tag;
+      cat = iterator_traits<Iterator>::iterator_category;
+      if (cat == iterator_tag<Access,Traversal>)
+          return Access;
+      else if (cat is convertible to forward_iterator_tag) {
+          if (iterator_traits<Iterator>::reference is a const reference)
+              return readable_lvalue_iterator_tag;
+          else
+              return writable_lvalue_iterator_tag;
+      } else if (cat is convertible to input_iterator_tag)
+          return readable_iterator_tag;
+      else if (cat is convertible to output_iterator_tag)
+          return writable_iterator_tag;
       else
-        return writable_lvalue_iterator_tag;
-    } else if (cat is convertible to input_iterator_tag)
-      return readable_iterator_tag;
-    else if (cat is convertible to output_iterator_tag)
-      return writable_iterator_tag;
-    else
-      return null_category_tag;
+          return null_category_tag;
 
   traversal-category(Iterator) =
-    cat = iterator_traits<Iterator>::iterator_category;
-    if (cat == iterator_tag<Access,Traversal>)
-      return Traversal;
-    else if (cat is convertible to random_access_iterator_tag)
-      return random_access_traversal_tag;
-    else if (cat is convertible to bidirectional_iterator_tag)
-      return bidirectional_traversal_tag;
-    else if (cat is convertible to forward_iterator_tag)
-      return forward_traversal_tag;
-    else if (cat is convertible to input_iterator_tag)
-      return single_pass_iterator_tag;
-    else if (cat is convertible to output_iterator_tag)
-      return incrementable_iterator_tag;
-    else
-      return null_category_tag;
-  };
+      cat = iterator_traits<Iterator>::iterator_category;
+      if (cat == iterator_tag<Access,Traversal>)
+          return Traversal;
+      else if (cat is convertible to random_access_iterator_tag)
+          return random_access_traversal_tag;
+      else if (cat is convertible to bidirectional_iterator_tag)
+          return bidirectional_traversal_tag;
+      else if (cat is convertible to forward_iterator_tag)
+          return forward_traversal_tag;
+      else if (cat is convertible to input_iterator_tag)
+          return single_pass_iterator_tag;
+      else if (cat is convertible to output_iterator_tag)
+          return incrementable_iterator_tag;
+      else
+          return null_category_tag;
+
 
 The following specializations provide the access and traversal
 category tags for pointer types.

@@ -361,6 +361,16 @@ Standard compliant iterators).
  Proposed Text
 ===============
 
+
+Two forward traversal iterator types ``X`` and ``Y`` are
+*interoperable* if one and only one is convertible to the other and
+for any object ``x`` of type ``X`` and ``y`` of type ``Y``, if ``x ==
+y``, ``y == x``, ``x != y``, ``y != x`` are well-defined.  Two random
+access traversal iterators are *interoperable* if, in addition,
+``<``,``<=``,``>=``,``>``, and - are well-defined.
+
+
+
 Header ``<iterator_helper>`` synopsis    [lib.iterator.helper.synopsis]
 =======================================================================
 
@@ -430,39 +440,9 @@ Header ``<iterator_helper>`` synopsis    [lib.iterator.helper.synopsis]
 Iterator facade [lib.iterator.facade]
 =====================================
 
-
-The iterator requirements define a rich interface, containing many
-redundant operators, so that using iterators is convenient.  The
-``iterator_facade`` class template makes it easier to create iterators
-by implementing the rich interface of standard iterators in terms of a
-few core functions.  The user of ``iterator_facade`` derives his
-iterator class from an instantiation of ``iterator_facade`` and
-defines member functions implementing the core behaviors.
-
-.. Jeremy, I think this text is rather inappropriate for the
-   standard.  This is not the place to discuss motivation, for
-   example.  Compare with the standard text for vector:
-
-     1 A vector is a kind of sequence that supports random access
-     iterators. In addition, it supports (amortized) constant time
-     insert and erase operations at the end; insert and erase in the
-     middle take linear time. Storage management is handled
-     automatically, though hints can be given to improve efficiency.
-
-     2 A vector satisfies all of the requirements of a container and
-     of a reversible container (given in two tables in 23.1) and of a
-     sequence, including most of the optional sequence requirements
-     (23.1.1). The exceptions are the push_front and pop_front member
-     functions, which are not provided. Descriptions are pro- vided
-     here only for operations on vector that are not described in one
-     of these tables or for operations where there is additional
-     semantic information.
-
-   I suggest, instead:
-
-     ``iterator_facade`` is a base class template which implements the
-     interface of standard iterators in terms of a few core functions
-     and associated types, to be supplied by a derived iterator class.
+``iterator_facade`` is a base class template which implements the
+interface of standard iterators in terms of a few core functions
+and associated types, to be supplied by a derived iterator class.
 
 Template class ``iterator_facade``
 ----------------------------------
@@ -579,7 +559,7 @@ object of type ``X``, ``b`` and ``c`` are objects of type ``const X``,
 ``n`` is an object of ``X::difference_type``, ``y`` is a constant
 object of a single pass iterator type interoperable with X, and ``z``
 is a constant object of a random access traversal iterator type
-interoperable with X.
+interoperable with ``X``.
 
 +----------------------------------------+----------------------------------------+-------------------------------------------------+-------------------------------------------+
 | Expression                             | Return Type                            |    Assertion/Note/Precondition/Postcondition    | Required to implement Iterator Concept(s) |
@@ -706,33 +686,15 @@ interoperable with X.
 Iterator adaptor [lib.iterator.adaptor]
 =======================================
 
-.. Jeremy, the same argument about appropriateness applies here as well.
+The ``iterator_adaptor`` is a base class template which is a derived
+class of ``iterator_facade``. The core interface functions expected by
+``iterator_facade`` are implemented in terms of the ``Base`` template
+parameter. A class derived from ``iterator_adaptor`` typically
+overrides some of the (non-vertual) core interface functions to adapt
+the behaviour of the iterator.  The ``Base`` type need not meet the
+full requirements for an iterator. It need only support the operations
+that are not overriden by the users derived class.
 
-A common pattern of iterator construction is the adaptation of one
-iterator to form a new one.  The functionality of an iterator is
-composed of four orthogonal aspects: traversal, indirection, equality
-comparison, and distance measurement.  Adapting an old iterator to
-create a new one often saves work because one can change a few aspects
-of the functionality while retaining the rest.  For example, the
-Standard provides ``reverse_iterator``, which adapts any Bidirectional
-Iterator by inverting its direction of traversal.
-
-The ``iterator_adaptor`` class template fulfills the need for
-constructing adaptors.  Instantiations of ``iterator_adaptor`` serve
-as a base classes for new iterators, providing the default behaviour
-of forwarding all operations to the underlying iterator.  The user can
-selectively replace these features in the derived iterator class.
-
-The ``iterator_adaptor`` class template adapts a ``Base`` type to
-create a new iterator ("base" here means the type being adapted).
-The ``iterator_adaptor`` forwards all operations to an instance of the
-``Base`` type, which it stores as a member.  The user of
-``iterator_adaptor`` creates a class derived from an instantiation of
-``iterator_adaptor`` and then selectively overrides some of the core
-operations by implementing the (non-virtual) member functions
-described in [lib.iterator.facade]. The ``Base`` type need not meet
-the full requirements for an iterator. It need only support the
-operations that are not overriden by the users derived class.
 
 Template class ``iterator_adaptor``
 -----------------------------------
@@ -756,20 +718,60 @@ Template class ``iterator_adaptor``
       iterator_adaptor() {}
       explicit iterator_adaptor(Base iter);
       Base base() const;
+   protected:
+      // Default implementation of core interface for iterator_facade
+      typename super_t::reference dereference() const
+        { return *m_iterator; }
+
+      template <
+          class OtherDerived, class OtherIterator, class V, class C, class R, class P, class D
+      >   
+      bool equal(iterator_adaptor<OtherDerived, OtherIterator, V, C, R, P, D> const& x) const
+      {
+          BOOST_STATIC_ASSERT(
+              (detail::same_category_and_difference<Derived,OtherDerived>::value)
+              );
+          return m_iterator == x.base();
+      }
+      void advance(typename super_t::difference_type n)
+      {
+          m_iterator += n;
+      }
+  
+      void increment() { ++m_iterator; }
+      void decrement() { --m_iterator; }
+
+      template <
+          class OtherDerived, class OtherIterator, class V, class C, class R, class P, class D
+      >   
+      typename super_t::difference_type distance_to(
+          iterator_adaptor<OtherDerived, OtherIterator, V, C, R, P, D> const& y) const
+      {
+          BOOST_STATIC_ASSERT(
+              (detail::same_category_and_difference<Derived,OtherDerived>::value)
+              );
+          return y.base() - m_iterator;
+      }
+      Base const& base_reference() const
+        { return m_iterator; }
+
+   private: // exposition
+      Base m_iterator;
   };
 
 
 ``iterator_adaptor`` requirements
 ---------------------------------
 
-Write me.
-
-.. Make sure to mention that this words for both old and new
+.. Make sure to mention that this works for both old and new
    style iterators. -JGS
 
 .. I'm not sure we should say that in the standard text; let other
    people add non-normative  in editing if they feel the need
    ;-) -DWA
+
+.. Well, we have to specify the requirements for the template
+   parameters such as ``Category``, so this will come up. -JGS
 
 Specialized adaptors [lib.iterator.special.adaptors]
 ====================================================
@@ -870,6 +872,8 @@ indirect iterator.
 .. I don't believe the above statement is true anymore in light of the
    new categories.  I think it only applies to the traversal part of
    the concept.
+
+.. Address the above. -JGS
 
 Reverse iterator
 ----------------
