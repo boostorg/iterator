@@ -5,25 +5,24 @@
 // to its suitability for any purpose.
 
 #ifndef BOOST_ITERATOR_DETAIL_CATEGORIES_HPP
-#define BOOST_ITERATOR_DETAIL_CATEGORIES_HPP
+# define BOOST_ITERATOR_DETAIL_CATEGORIES_HPP
 
-#include <boost/config.hpp>
-#include <boost/iterator/detail/config_def.hpp>
+# include <boost/config.hpp>
+# include <boost/iterator/detail/config_def.hpp>
 
-#include <boost/detail/workaround.hpp>
+# include <boost/detail/workaround.hpp>
 
-#include <boost/type_traits/is_base_and_derived.hpp>
-#include <boost/type_traits/is_convertible.hpp>
-#include <boost/type_traits/is_same.hpp>
+# include <boost/type_traits/is_convertible.hpp>
+# include <boost/type_traits/is_same.hpp>
 
-#include <boost/mpl/if.hpp>
-#include <boost/mpl/apply_if.hpp>
-#include <boost/mpl/identity.hpp>
-#include <boost/mpl/bool.hpp>
-#include <boost/mpl/or.hpp>
-#include <boost/mpl/and.hpp>
+# include <boost/mpl/if.hpp>
+# include <boost/mpl/apply_if.hpp>
+# include <boost/mpl/identity.hpp>
+# include <boost/mpl/bool.hpp>
+# include <boost/mpl/or.hpp>
+# include <boost/mpl/and.hpp>
 
-#include <iterator>
+# include <iterator>
 
 namespace boost
 {
@@ -78,19 +77,19 @@ namespace boost
   //
   // Traversal Categories
   //
-  struct incrementable_iterator_tag
+  struct incrementable_traversal_tag
   {
       typedef std::output_iterator_tag max_category;
   };
   
-  struct single_pass_iterator_tag
-    : incrementable_iterator_tag
+  struct single_pass_traversal_tag
+    : incrementable_traversal_tag
   {
       typedef detail::input_output_iterator_tag max_category;
   };
   
   struct forward_traversal_tag
-    : single_pass_iterator_tag
+    : single_pass_traversal_tag
   {
       typedef std::forward_iterator_tag max_category;
   };
@@ -118,53 +117,36 @@ namespace boost
     // I bet this is defined somewhere else. Let's wait and see.
     struct error_type;
 
-#ifndef BOOST_NO_IS_CONVERTIBLE
-    template <class Base, class Derived>
-    struct is_same_or_derived
-# ifdef BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
-      : mpl::or_<
-            is_same<Base, Derived>
-          , is_base_and_derived<Base, Derived>
-        >
-    {};
-# else
-      : is_base_and_derived<Base, Derived>
-    {};
+# ifndef BOOST_NO_IS_CONVERTIBLE
 
-    template <class T> struct is_same_or_derived<T,T> : mpl::true_ {};
-# endif
-    
+    // True iff T is a tag "derived" from Tag
     template <class Tag, class T>
     struct is_tag
       : mpl::or_<
-# ifdef BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
-            is_same_or_derived<Tag, T>
-# else
-            is_base_and_derived<Tag, T>
-# endif 
+            is_convertible<T, Tag>
 
             // Because we can't actually get forward_iterator_tag to
             // derive from input_output_iterator_tag, we need this
             // case.
           , mpl::and_<
-                is_same_or_derived<Tag,detail::input_output_iterator_tag>
-              , is_same_or_derived<std::forward_iterator_tag,T>
+                is_convertible<T,std::forward_iterator_tag>
+              , is_convertible<detail::input_output_iterator_tag,Tag>
             >
         >
     {};
 
     
-#else 
+# else 
     template <class Tag, class T>
     struct is_tag;
-#endif
+# endif
     
     // Generate specializations which will allow us to find
     // null_category_tag as a minimum old-style category for new-style
     // iterators which don't have an actual old-style category.  We
     // need that so there is a valid base class for all new-style
     // iterators.
-#define BOOST_OLD_ITERATOR_CATEGORY(category)                   \
+# define BOOST_OLD_ITERATOR_CATEGORY(category)                   \
     template <>                                                 \
     struct is_tag <detail::null_category_tag, std::category>    \
         : mpl::true_ {};
@@ -174,7 +156,7 @@ namespace boost
     BOOST_OLD_ITERATOR_CATEGORY(forward_iterator_tag)
     BOOST_OLD_ITERATOR_CATEGORY(bidirectional_iterator_tag)
     BOOST_OLD_ITERATOR_CATEGORY(random_access_iterator_tag)
-#undef BOOST_OLD_ITERATOR_CATEGORY
+# undef BOOST_OLD_ITERATOR_CATEGORY
         
     template <>
     struct is_tag<detail::input_output_iterator_tag,std::forward_iterator_tag>
@@ -182,7 +164,7 @@ namespace boost
     {
     };
 
-#ifndef BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
+# ifndef BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
     template <class T>
     struct is_tag<T,T> : mpl::true_
     {};
@@ -214,14 +196,14 @@ namespace boost
       : is_tag_impl<Tag, T>
     {};
 
-# define BOOST_ITERATOR_DERIVED_TAG1(base, derived)     \
+#  define BOOST_ITERATOR_DERIVED_TAG1(base, derived)    \
     BOOST_ITERATOR_DERIVED_TAG1_AUX(base, _, derived)
 
-# define BOOST_ITERATOR_DERIVED_TAG1_AUX(base, underscore, derived) \
-    template<class T>                                               \
-    struct is_tag_impl<base##underscore##tag, T>                    \
-        : is_tag<derived##underscore##tag, T>                       \
-    {                                                               \
+#  define BOOST_ITERATOR_DERIVED_TAG1_AUX(base, underscore, derived)    \
+    template<class T>                                                   \
+    struct is_tag_impl<base##underscore##tag, T>                        \
+        : is_tag<derived##underscore##tag, T>                           \
+    {                                                                   \
     };
 
     // Old-style tag relations
@@ -259,17 +241,66 @@ namespace boost
     // Traversal tag relations
     BOOST_ITERATOR_DERIVED_TAG1(bidirectional_traversal, random_access_traversal)
     BOOST_ITERATOR_DERIVED_TAG1(forward_traversal, bidirectional_traversal)
-    BOOST_ITERATOR_DERIVED_TAG1(single_pass_iterator, forward_traversal)
-    BOOST_ITERATOR_DERIVED_TAG1(incrementable_iterator, single_pass_iterator)
+    BOOST_ITERATOR_DERIVED_TAG1(single_pass_traversal, forward_traversal)
+    BOOST_ITERATOR_DERIVED_TAG1(incrementable_traversal, single_pass_traversal)
 
-# endif // BOOST_NO_IS_CONVERTIBLE workarounds
+#  endif // BOOST_NO_IS_CONVERTIBLE workarounds
     
-#else // BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION case
-    
-    
-#endif 
+# endif // ndef BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
 
-        
+    template <class Tag, class Known, class Else>
+    struct known_tag
+      : mpl::apply_if<is_tag<Known,Tag>, mpl::identity<Known>, Else>
+    {};
+    
+    template <class Tag>
+    struct max_known_traversal_tag
+      : known_tag<
+            Tag, random_access_traversal_tag
+          , known_tag<
+                Tag, bidirectional_traversal_tag
+              , known_tag<
+                    Tag, forward_traversal_tag
+                  , known_tag<
+                        Tag, single_pass_traversal_tag
+                      , known_tag<
+                            Tag, incrementable_traversal_tag
+                          , error_iterator_tag
+                        >
+                    >
+                >
+            >
+        >
+    {};
+
+    // Doesn't cope with these odd combinations: readable+swappable,
+    // writable+swappable. That doesn't matter for the sake of
+    // new-style tag base computation, which is all it's used for
+    // anyway.
+    template <class Tag>
+    struct max_known_access_tag
+      : known_tag<
+            Tag, writable_lvalue_iterator_tag
+          , known_tag<
+                Tag, readable_lvalue_iterator_tag
+              , known_tag<
+                    Tag, readable_writable_iterator_tag
+                  , known_tag<
+                        Tag, writable_iterator_tag
+                      , known_tag<
+                            Tag, readable_iterator_tag
+                          , mpl::apply_if<
+                                is_tag<Tag, swappable_iterator_tag>
+                              , mpl::identity<null_category_tag>
+                              , error_iterator_tag
+                            >
+                        >
+                    >
+                >
+            >
+        >
+    {};
+    
     //
     // Returns the minimum category type or error_type
     // if T1 and T2 are unrelated.

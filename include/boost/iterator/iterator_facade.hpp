@@ -62,11 +62,22 @@ namespace boost
     };
 
 
+    //
+    // Add const qualification for iterators which are not writable
+    //
     template<class Value, class AccessCategory>
-    struct const_qualified :
+    struct const_qualified_ref :
       mpl::if_< is_tag< writable_iterator_tag, AccessCategory >,
-                Value,
-                Value const >
+                Value&,
+                Value const& >
+    {};
+
+    // The apparent duplication here works around a Borland problem
+    template<class Value, class AccessCategory>
+    struct const_qualified_ptr :
+      mpl::if_< is_tag< writable_iterator_tag, AccessCategory >,
+                Value*,
+                Value const* >
     {};
 
     //
@@ -84,7 +95,7 @@ namespace boost
 
           , Difference
 
-          , typename const_qualified<Value, AccessCategory>::type*
+          , typename const_qualified_ptr<Value, AccessCategory>::type
 
           // The use_default support is needed for iterator_adaptor.
           // For practical reasons iterator_adaptor needs to specify
@@ -93,7 +104,7 @@ namespace boost
           // is your default parameter".
           , typename mpl::if_<
                 is_same<Reference, use_default>
-              , typename const_qualified<Value, AccessCategory>::type&
+              , typename const_qualified_ref<Value, AccessCategory>::type
               , Reference
             >::type
         >
@@ -333,7 +344,7 @@ namespace boost
     , class Value
     , class AccessCategory
     , class TraversalCategory
-    , class Reference   = typename detail::const_qualified<Value, AccessCategory>::type&
+    , class Reference   = typename detail::const_qualified_ref<Value, AccessCategory>::type
     , class Difference  = std::ptrdiff_t
   >
   class iterator_facade

@@ -164,7 +164,7 @@ namespace boost_concepts {
       boost::function_requires< 
         boost::DefaultConstructibleConcept<Iterator> >();
 
-      BOOST_STATIC_ASSERT((boost::detail::is_tag<boost::incrementable_iterator_tag, traversal_category>::value));
+      BOOST_STATIC_ASSERT((boost::detail::is_tag<boost::incrementable_traversal_tag, traversal_category>::value));
 
       ++i;
       (void)i++;
@@ -182,7 +182,7 @@ namespace boost_concepts {
       boost::function_requires< IncrementableIteratorConcept<Iterator> >();
       boost::function_requires< boost::EqualityComparableConcept<Iterator> >();
 
-      BOOST_STATIC_ASSERT((boost::detail::is_tag<boost::single_pass_iterator_tag, traversal_category>::value));
+      BOOST_STATIC_ASSERT((boost::detail::is_tag<boost::single_pass_traversal_tag, traversal_category>::value));
     }
   };
 
@@ -254,7 +254,7 @@ namespace detail
   struct Operations;
     
   template <>
-  struct Operations<boost::incrementable_iterator_tag>
+  struct Operations<boost::incrementable_traversal_tag>
   {
       template <typename Iterator1, typename Iterator2>
       static void constraints(Iterator1 const& i1, Iterator2 const& i2)
@@ -264,12 +264,12 @@ namespace detail
   };
 
   template <>
-  struct Operations<boost::single_pass_iterator_tag>
+  struct Operations<boost::single_pass_traversal_tag>
   {
       template <typename Iterator1, typename Iterator2>
       static void constraints(Iterator1 const& i1, Iterator2 const& i2)
       {
-          Operations<boost::incrementable_iterator_tag>(i1, i2);
+          Operations<boost::incrementable_traversal_tag>(i1, i2);
           i1 == i2;
           i1 != i2;
 
@@ -284,7 +284,7 @@ namespace detail
       template <typename Iterator1, typename Iterator2>
       static void constraints(Iterator1 const& i1, Iterator2 const& i2)
       {
-          Operations<boost::single_pass_iterator_tag>::constraints(i1, i2);
+          Operations<boost::single_pass_traversal_tag>::constraints(i1, i2);
       }
   };
 

@@ -5,7 +5,7 @@
 // to its suitability for any purpose.
 #include <boost/iterator/iterator_adaptor.hpp>
 #include <boost/static_assert.hpp>
-#include <boost/type.hpp>
+#include "static_assert_same.hpp"
 
 struct X { int a; };
 
@@ -29,25 +29,6 @@ void operator_arrow_test()
     X x;
     take_xptr(Xiter(&x).operator->());
 }
-
-template <class T, class U>
-struct static_assert_same
-#ifdef BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
-{
-    template <class V>
-    static int check(V, V);
-    enum { value = sizeof(check(boost::type<T>(), boost::type<U>())) };
-}
-#endif 
-;
-
-#ifndef BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
-template <class T>
-struct static_assert_same<T,T>
-{
-    enum { value };
-};
-#endif
 
 template <class T, class U, class Min>
 struct static_assert_min_cat
@@ -109,6 +90,8 @@ void category_test()
     test = static_assert_min_cat<
         std::output_iterator_tag,std::random_access_iterator_tag, std::output_iterator_tag
     >::value;
+    
+    (void)test;
 }
 
 int main()

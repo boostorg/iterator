@@ -98,7 +98,7 @@ namespace boost {
     template <>
     struct std_to_new_tags<std::input_iterator_tag>
     {
-        typedef single_pass_iterator_tag type;
+        typedef single_pass_traversal_tag type;
         
         template <class Reference>
         struct apply
@@ -109,7 +109,7 @@ namespace boost {
     template <>
     struct std_to_new_tags<std::output_iterator_tag>
     {
-        typedef incrementable_iterator_tag type;
+        typedef incrementable_traversal_tag type;
         
         template <class Reference>
         struct apply
@@ -228,21 +228,54 @@ namespace boost {
   namespace detail {
 
     template <class NewCategoryTag>
-    struct get_access_category {
-      typedef typename NewCategoryTag::returns type;
-    };
-    template <class NewCategoryTag>
     struct get_traversal_category {
       typedef typename NewCategoryTag::traversal type;
     };
 
+    // Remove all writability from the given access tag.  This
+    // functionality is part of new_category_to_access in order to
+    // support deduction of the proper default access category for
+    // iterator_adaptor; when the reference type is a reference to
+    // constant we must strip writability.
+    template <class AccessTag>
+    struct remove_access_writability
+      : mpl::apply_if<
+            is_tag<writable_lvalue_iterator_tag, AccessTag>
+          , mpl::identity<readable_lvalue_iterator_tag>
+      
+          , mpl::apply_if<
+                is_tag<readable_writable_iterator_tag, AccessTag>
+              , mpl::identity<readable_iterator_tag>
+                              
+              , mpl::if_<
+                    is_tag<writable_iterator_tag, AccessTag>
+                    // Is this OK?  I think it may correct be for all
+                    // legitimate cases, because at this point the
+                    // iterator is not readable, so it could not have
+                    // been any more than writable + swappable.
+                  , swappable_iterator_tag      
+                  , AccessTag
+                >
+            >
+        >
+    {};
+  
+    template <class NewCategoryTag, class Reference>
+    struct new_category_to_access
+      : mpl::apply_if<
+            python::detail::is_reference_to_const<Reference>
+          , remove_access_writability<typename NewCategoryTag::access>
+          , mpl::identity<typename NewCategoryTag::access>
+        >
+    {};
+
     template <class CategoryTag, class Reference>
     struct access_category_tag
         : mpl::apply_if< 
-             is_new_iterator_tag<CategoryTag>
-           , get_access_category<CategoryTag>
-           , iter_category_to_access<CategoryTag, Reference>
-    >
+              is_new_iterator_tag<CategoryTag>
+            , new_category_to_access<CategoryTag, Reference>
+            , iter_category_to_access<CategoryTag, Reference>
+          >
     {
     };
   
@@ -261,7 +294,35 @@ namespace boost {
     template <> struct access_category_tag<int, int> { typedef void type; };
     template <> struct traversal_category_tag<int> { typedef void type; };
 # endif
+
+    // iterator_tag_base - a metafunction to compute the appropriate
+    // old-style tag (if any) to use as a base for a new-style tag.
+    template <class KnownAccessTag, class KnownTraversalTag>
+    struct iterator_tag_base
+      : minimum_category<
+            typename KnownAccessTag::max_category
+          , typename KnownTraversalTag::max_category
+        >
+    {};
   
+# if BOOST_WORKAROUND(BOOST_MSVC,<=1200)
+    template <>
+    struct iterator_tag_base<int,int>
+     : mpl::false_ {}; // just using false_ so that the result will be
+                       // a legal base class
+# endif 
+
+    // specialization for this special case.  Otherwise we get
+    // input_output_iterator_tag, because the standard hierarchy has a
+    // sudden anomalous distinction between readability and
+    // writability at the level of input iterator/output iterator.
+    template <>
+    struct iterator_tag_base<
+        readable_lvalue_iterator_tag,single_pass_traversal_tag>
+    {
+        typedef std::input_iterator_tag type;
+    };
+        
   } // namespace detail
 
   template <class Iterator>
@@ -279,7 +340,7 @@ namespace boost {
   {
   };
 
-#if !defined(BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION)
+# if !defined(BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION)
 
   template <typename T>
   struct access_category<T*>
@@ -296,18 +357,16 @@ namespace boost {
     typedef random_access_traversal_tag type;
   };
 
-#endif
+# endif
 
-  template <class ReturnTag, class TraversalTag>
+  template <class AccessTag, class TraversalTag>
   struct iterator_tag
-      : mpl::aux::msvc_eti_base<
-            typename detail::minimum_category<
-                typename ReturnTag::max_category
-              , typename TraversalTag::max_category
-            >::type
-        >::type
+    : detail::iterator_tag_base<
+          typename detail::max_known_access_tag<AccessTag>::type
+        , typename detail::max_known_traversal_tag<TraversalTag>::type
+      >::type
   {
-    typedef ReturnTag returns;
+    typedef AccessTag access;
     typedef TraversalTag traversal;
   };
 

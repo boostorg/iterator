@@ -90,7 +90,7 @@ namespace boost
     {};
 
     template <>
-    struct traversal_archetype_impl<incrementable_iterator_tag>
+    struct traversal_archetype_impl<incrementable_traversal_tag>
     {
         template<class Derived, class Value>
         struct archetype
@@ -103,32 +103,32 @@ namespace boost
     };
 
     template <>
-    struct traversal_archetype_impl<single_pass_iterator_tag>
+    struct traversal_archetype_impl<single_pass_traversal_tag>
     {
         template<class Derived, class Value>
         struct archetype
-            : public equality_comparable< traversal_archetype_<Derived, Value, single_pass_iterator_tag> >,
-              public traversal_archetype_<Derived, Value, incrementable_iterator_tag>
+            : public equality_comparable< traversal_archetype_<Derived, Value, single_pass_traversal_tag> >,
+              public traversal_archetype_<Derived, Value, incrementable_traversal_tag>
         {
         };
     };
 
     template <class Derived, class Value>
-    bool operator==(traversal_archetype_<Derived, Value, single_pass_iterator_tag> const&,
-                    traversal_archetype_<Derived, Value, single_pass_iterator_tag> const&);
+    bool operator==(traversal_archetype_<Derived, Value, single_pass_traversal_tag> const&,
+                    traversal_archetype_<Derived, Value, single_pass_traversal_tag> const&);
   
 #if BOOST_WORKAROUND(BOOST_MSVC, <= 1300)
   // doesn't seem to pick up != from equality_comparable
     template <class Derived, class Value>
-    bool operator!=(traversal_archetype_<Derived, Value, single_pass_iterator_tag> const&,
-                    traversal_archetype_<Derived, Value, single_pass_iterator_tag> const&);
+    bool operator!=(traversal_archetype_<Derived, Value, single_pass_traversal_tag> const&,
+                    traversal_archetype_<Derived, Value, single_pass_traversal_tag> const&);
 #endif 
     template <>
     struct traversal_archetype_impl<forward_traversal_tag>
     {
         template<class Derived, class Value>
         struct archetype
-            : public traversal_archetype_<Derived, Value, single_pass_iterator_tag>
+            : public traversal_archetype_<Derived, Value, single_pass_traversal_tag>
         {
             typedef std::ptrdiff_t difference_type;
         };

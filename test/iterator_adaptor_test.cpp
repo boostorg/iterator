@@ -13,15 +13,6 @@
 #include <functional>
 #include <numeric>
 
-#if 0
-#include <boost/iterator_adaptors.hpp>
-#include <boost/generator_iterator.hpp>
-#include <boost/pending/integer_range.hpp>
-#include <boost/concept_archetype.hpp>
-#include <boost/type_traits/same_traits.hpp>
-#include <boost/permutation_iterator.hpp>
-#endif
-
 #include <boost/iterator/iterator_adaptor.hpp>
 #include <boost/pending/iterator_tests.hpp>
 
@@ -30,6 +21,8 @@
 #include <deque>
 #include <set>
 #include <list>
+
+#include "static_assert_same.hpp"
 
 struct my_iterator_tag : public std::random_access_iterator_tag { };
 
@@ -163,9 +156,15 @@ struct constant_iterator
       , typename std::iterator_traits<Iter>::value_type const
     >
 {
+    typedef boost::iterator_adaptor<
+        constant_iterator<Iter>
+      , Iter
+      , typename std::iterator_traits<Iter>::value_type const
+    > base_t;
+    
   constant_iterator() {}
   constant_iterator(Iter it)
-    : constant_iterator::iterator_adaptor(it) {}
+    : base_t(it) {}
 };
 
 int
@@ -187,16 +186,17 @@ main()
     boost::random_access_iterator_test(j, N, array);
     boost::const_nonconst_iterator_test(i, ++j);
   }
-  
+
+  int test;
   // Test the iterator_traits
   {
     // Test computation of defaults
     typedef ptr_iterator<int> Iter1;
     // don't use std::iterator_traits here to avoid VC++ problems
-    BOOST_STATIC_ASSERT((boost::is_same<Iter1::value_type, int>::value));
-    BOOST_STATIC_ASSERT((boost::is_same<Iter1::reference, int&>::value));
-    BOOST_STATIC_ASSERT((boost::is_same<Iter1::pointer, int*>::value));
-    BOOST_STATIC_ASSERT((boost::is_same<Iter1::difference_type, std::ptrdiff_t>::value));
+    test = static_assert_same<Iter1::value_type, int>::value;
+    test = static_assert_same<Iter1::reference, int&>::value;
+    test = static_assert_same<Iter1::pointer, int*>::value;
+    test = static_assert_same<Iter1::difference_type, std::ptrdiff_t>::value;
 #if !BOOST_WORKAROUND(__MWERKS__, <= 0x2407)
     BOOST_STATIC_ASSERT((boost::is_convertible<Iter1::iterator_category, std::random_access_iterator_tag>::value));
 #endif 
@@ -205,14 +205,9 @@ main()
   {  
     // Test computation of default when the Value is const
     typedef ptr_iterator<int const> Iter1;
-    BOOST_STATIC_ASSERT((boost::is_same<Iter1::value_type, int>::value));
-    BOOST_STATIC_ASSERT((boost::is_same<Iter1::reference, const int&>::value));
-    BOOST_STATIC_ASSERT((boost::is_same<Iter1::iterator_category::returns, boost::readable_lvalue_iterator_tag>::value));
-
-#if !BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x551))
-    // Borland has known problems with const
-    BOOST_STATIC_ASSERT((boost::is_same<Iter1::pointer, const int*>::value));
-#endif 
+    test = static_assert_same<Iter1::value_type, int>::value;
+    test = static_assert_same<Iter1::reference, const int&>::value;
+    test = static_assert_same<Iter1::iterator_category::access, boost::readable_lvalue_iterator_tag>::value;    test = static_assert_same<Iter1::pointer, const int*>::value;
   }
 
   {
@@ -220,12 +215,12 @@ main()
     typedef ptr_iterator<int> BaseIter;
     typedef constant_iterator<BaseIter> Iter;
 
-    BOOST_STATIC_ASSERT((boost::is_same<Iter::value_type, int>::value));
-    BOOST_STATIC_ASSERT((boost::is_same<Iter::reference, int const&>::value));
-    BOOST_STATIC_ASSERT((boost::is_same<Iter::pointer, int const*>::value));
+    test = static_assert_same<Iter::value_type, int>::value;
+    test = static_assert_same<Iter::reference, int const&>::value;
+    test = static_assert_same<Iter::pointer, int const*>::value;
 
-    BOOST_STATIC_ASSERT((boost::is_same<BaseIter::iterator_category::returns, boost::writable_lvalue_iterator_tag>::value));
-    BOOST_STATIC_ASSERT((boost::is_same<Iter::iterator_category::returns, boost::readable_lvalue_iterator_tag>::value));
+    test = static_assert_same<BaseIter::iterator_category::access, boost::writable_lvalue_iterator_tag>::value;
+    test = static_assert_same<Iter::iterator_category::access, boost::readable_lvalue_iterator_tag>::value;
   }
   
   // Test the iterator_adaptor
@@ -261,5 +256,6 @@ main()
   }
 
   std::cout << "test successful " << std::endl;
+  (void)test;
   return 0;
 }
