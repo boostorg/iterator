@@ -69,7 +69,7 @@ namespace boost
               class Return>
     struct enable_if
 # if !defined(BOOST_NO_SFINAE) && !defined(BOOST_NO_IS_CONVERTIBLE)
-      : enabled<Cond::value>::template base<Return>
+      : enabled<(Cond::value)>::template base<Return>
 # else
       : mpl::identity<Return>
 # endif 

@@ -15,43 +15,36 @@
 
 namespace boost
 {
+  template <class AdaptableUnaryFunction, class Iterator>
+  class transform_iterator;
 
   namespace detail 
   {
-
     // Given the transform iterator's transformation and iterator, this
     // is the type used as its traits.
     template <class AdaptableUnaryFunction, class Iterator>
-    struct transform_iterator_traits
-      : iterator_traits_adaptor<
-            Iterator
+    struct transform_iterator_base
+    {
+        typedef iterator_adaptor<
+            transform_iterator<AdaptableUnaryFunction, Iterator>
+          , Iterator
           , typename AdaptableUnaryFunction::result_type  
-          , typename AdaptableUnaryFunction::result_type  
-          , typename AdaptableUnaryFunction::result_type*
           , iterator_tag<
                 readable_iterator_tag
               , typename traversal_category<Iterator>::type
             >
-        >
-    {
+          , typename AdaptableUnaryFunction::result_type  
+        > type;
     };
+  }
 
-  } // transform_iterator_traits
-   
-  //
   template <class AdaptableUnaryFunction, class Iterator>
   class transform_iterator
-    : public iterator_adaptor<
-          transform_iterator<AdaptableUnaryFunction, Iterator>
-        , Iterator
-        , detail::transform_iterator_traits<AdaptableUnaryFunction,Iterator>
-      >
+    : public detail::transform_iterator_base<AdaptableUnaryFunction, Iterator>::type
   {
-    typedef iterator_adaptor<
-        transform_iterator<AdaptableUnaryFunction, Iterator>
-      , Iterator
-      , detail::transform_iterator_traits<AdaptableUnaryFunction,Iterator>
-    > super_t;
+    typedef typename
+      detail::transform_iterator_base<AdaptableUnaryFunction, Iterator>::type
+    super_t;
 
     friend class iterator_core_access;
 

@@ -15,20 +15,18 @@
 
 namespace boost
 {
-  
-  namespace detail {
-
+  namespace detail
+  {
     template <class Iterator>
-    struct filter_iterator_traits
-      : iterator_traits<Iterator>
+    struct filter_iterator_category
     {
-      typedef iterator_tag<
-          typename return_category<Iterator>::type
-        , typename minimum_category<
-              forward_traversal_tag
-            , typename traversal_category<Iterator>::type
-          >::type 
-      > iterator_category;
+       typedef iterator_tag<
+           typename access_category<Iterator>::type
+         , typename minimum_category<
+               forward_traversal_tag
+             , typename traversal_category<Iterator>::type
+           >::type 
+       > type;
     };
 
   } // namespace detail
@@ -37,13 +35,15 @@ namespace boost
   class filter_iterator
       : public iterator_adaptor<
             filter_iterator<Predicate, Iterator>, Iterator
-          , detail::filter_iterator_traits<Iterator>
+          , not_specified
+          , typename detail::filter_iterator_category<Iterator>::type
         >
   {
       typedef iterator_adaptor<
-          filter_iterator<Predicate, Iterator>, Iterator
-        , detail::filter_iterator_traits<Iterator>
-      > super_t;
+            filter_iterator<Predicate, Iterator>, Iterator
+          , not_specified
+          , typename detail::filter_iterator_category<Iterator>::type
+        > super_t;
 
       friend class iterator_core_access;
 

@@ -43,9 +43,9 @@ namespace boost_concepts {
   template <typename Iterator>
   class ReadableIteratorConcept {
   public:
-    typedef typename boost::detail::iterator_traits<Iterator>::value_type value_type;
-    typedef typename boost::detail::iterator_traits<Iterator>::reference reference;
-    typedef typename boost::return_category<Iterator>::type return_category;
+    typedef BOOST_DEDUCED_TYPENAME ::boost::detail::iterator_traits<Iterator>::value_type value_type;
+    typedef BOOST_DEDUCED_TYPENAME ::boost::detail::iterator_traits<Iterator>::reference reference;
+    typedef BOOST_DEDUCED_TYPENAME ::boost::access_category<Iterator>::type access_category;
 
     void constraints() {
       boost::function_requires< boost::SGIAssignableConcept<Iterator> >();
@@ -53,7 +53,7 @@ namespace boost_concepts {
       boost::function_requires< 
         boost::DefaultConstructibleConcept<Iterator> >();
 
-      static_assert_base_and_derived<boost::readable_iterator_tag, return_category>();
+      static_assert_base_and_derived<boost::readable_iterator_tag, access_category>();
                           
       reference r = *i; // or perhaps read(x)
       value_type v(r);
@@ -65,7 +65,7 @@ namespace boost_concepts {
   template <typename Iterator, typename ValueType>
   class WritableIteratorConcept {
   public:
-    typedef typename boost::return_category<Iterator>::type return_category;
+    typedef typename boost::access_category<Iterator>::type access_category;
 
     void constraints() {
       boost::function_requires< boost::SGIAssignableConcept<Iterator> >();
@@ -73,7 +73,7 @@ namespace boost_concepts {
       boost::function_requires< 
         boost::DefaultConstructibleConcept<Iterator> >();
       
-      static_assert_base_and_derived<boost::writable_iterator_tag, return_category>();
+      static_assert_base_and_derived<boost::writable_iterator_tag, access_category>();
 
       *i = v; // a good alternative could be something like write(x, v)
     }
@@ -86,12 +86,12 @@ namespace boost_concepts {
   public:
     typedef typename boost::detail::iterator_traits<Iterator>::value_type value_type;
     typedef typename boost::detail::iterator_traits<Iterator>::reference reference;
-    typedef typename boost::return_category<Iterator>::type return_category;
+    typedef typename boost::access_category<Iterator>::type access_category;
 
     void constraints() {
       boost::function_requires< ReadableIteratorConcept<Iterator> >();
 
-      static_assert_base_and_derived<boost::constant_lvalue_iterator_tag, return_category>();
+      static_assert_base_and_derived<boost::readable_lvalue_iterator_tag, access_category>();
 
       BOOST_STATIC_ASSERT((boost::is_same<reference, const value_type&>::value));
 
@@ -106,14 +106,14 @@ namespace boost_concepts {
   public:
     typedef typename boost::detail::iterator_traits<Iterator>::value_type value_type;
     typedef typename boost::detail::iterator_traits<Iterator>::reference reference;
-    typedef typename boost::return_category<Iterator>::type return_category;
+    typedef typename boost::access_category<Iterator>::type access_category;
 
     void constraints() {
       boost::function_requires< ReadableIteratorConcept<Iterator> >();
       boost::function_requires< 
         WritableIteratorConcept<Iterator, value_type> >();
       
-      static_assert_base_and_derived<boost::mutable_lvalue_iterator_tag, return_category>();
+      static_assert_base_and_derived<boost::writable_lvalue_iterator_tag, access_category>();
 
       BOOST_STATIC_ASSERT((boost::is_same<reference, value_type&>::value));
 
@@ -188,54 +188,56 @@ namespace boost_concepts {
   //===========================================================================
   // Iterator Interoperability Concept
 
-  namespace detail {
+namespace detail
+{
 
-    template <typename TraversalTag>
-    struct Operations;
+  template <typename TraversalTag>
+  struct Operations;
     
-    template <>
-    struct Operations<boost::input_traversal_tag>
-    {
+  template <>
+  struct Operations<boost::incrementable_iterator_tag>
+  {
       template <typename Iterator1, typename Iterator2>
       static void constraints(Iterator1 const& i1, Iterator2 const& i2)
       {
-        i1 == i2;
-        i1 != i2;
-
-        i2 == i1;
-        i2 != i1;
+          // no interoperability constraints
       }
-    };
+  };
 
-    template <>
-    struct Operations<boost::output_traversal_tag>
-    {
+  template <>
+  struct Operations<boost::single_pass_iterator_tag>
+  {
       template <typename Iterator1, typename Iterator2>
       static void constraints(Iterator1 const& i1, Iterator2 const& i2)
       {
-        Operations<boost::input_traversal_tag>::constraints(i1, i2);
-      }
-    };
+          Operations<boost::incrementable_iterator_tag>(i1, i2);
+          i1 == i2;
+          i1 != i2;
 
-    template <>
-    struct Operations<boost::forward_traversal_tag>
-    {
+          i2 == i1;
+          i2 != i1;
+      }
+  };
+
+  template <>
+  struct Operations<boost::forward_traversal_tag>
+  {
       template <typename Iterator1, typename Iterator2>
       static void constraints(Iterator1 const& i1, Iterator2 const& i2)
       {
-        Operations<boost::input_traversal_tag>::constraints(i1, i2);
+          Operations<boost::single_pass_iterator_tag>::constraints(i1, i2);
       }
-    };
+  };
 
-    template <>
-    struct Operations<boost::bidirectional_traversal_tag>
-    {
+  template <>
+  struct Operations<boost::bidirectional_traversal_tag>
+  {
       template <typename Iterator1, typename Iterator2>
       static void constraints(Iterator1 const& i1, Iterator2 const& i2)
       {
-        Operations<boost::forward_traversal_tag>::constraints(i1, i2);
+          Operations<boost::forward_traversal_tag>::constraints(i1, i2);
       }
-    };
+  };
 
     template <>
     struct Operations<boost::random_access_traversal_tag>

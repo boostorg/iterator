@@ -13,10 +13,12 @@
 
 using boost::dummyT;
 
-struct one_or_four {
-  bool operator()(dummyT x) const {
-    return x.foo() == 1 || x.foo() == 4;
-  }
+struct one_or_four
+{
+    bool operator()(dummyT x) const
+    {
+        return x.foo() == 1 || x.foo() == 4;
+    }
 };
 
 #ifdef BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
@@ -27,6 +29,7 @@ namespace boost { namespace detail
 }}
 #endif
 
+template <class T> struct undefined;
 
 // Test filter iterator
 int main()
@@ -41,11 +44,15 @@ int main()
         filter_iter(one_or_four(), array, array+N)
         , dummyT(1), dummyT(4));
 
-    //# if 0
-    BOOST_STATIC_ASSERT(
-        (!boost::detail::is_bidirectional_traversal_iterator<
-            boost::traversal_category<filter_iter>::type
-          >::value) );
+    // Filter iterators can't be bidirectional, since we didn't choose
+    // to store the beginning of the range.
+    BOOST_STATIC_ASSERT((
+        !boost::detail::is_tag<
+         boost::bidirectional_traversal_tag
+       , boost::traversal_category<filter_iter>::type
+      >::value
+    ));
+    
     //# endif
     
     // On compilers not supporting partial specialization, we can do more type
