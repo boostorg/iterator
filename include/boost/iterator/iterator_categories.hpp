@@ -126,7 +126,8 @@ namespace boost {
                         mpl::logical_not< is_output_iterator<Tag> > >
     {};
 
-#elif BOOST_WORKAROUND(__GNUC__, == 2 && __GNUC_MINOR__ == 95)
+#elif BOOST_WORKAROUND(__GNUC__, == 2 && __GNUC_MINOR__ == 95) \
+   || BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x551))
     
     template <class Tag>
     struct is_new_iterator_tag
@@ -282,11 +283,15 @@ namespace boost {
     template <class T>
     struct is_boost_iterator_tag_impl
     {
+        typedef char (&yes)[1];
+        typedef char (&no)[2];
+        
         template <class R, class T>
-        static char (& test(iterator_tag<R,T> const&) )[1];
-        static char (& test(...) )[2];
+        static yes test(iterator_tag<R,T> const&);
+        static no test(...);
+    
         static T inst;
-        BOOST_STATIC_CONSTANT(bool, value = sizeof(test(inst)) == 1);
+        BOOST_STATIC_CONSTANT(bool, value = sizeof(test(inst)) == sizeof(yes));
     };
 
     template <class T>
