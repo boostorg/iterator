@@ -177,6 +177,19 @@ public:
     iterator_adaptor(const Iterator& iter, const Policies& p = Policies())
         : m_iter_p(iter, p) {}
 
+#ifdef BOOST_MSVC6_MEMBER_TEMPLATES
+    template <class MutableIterator, class OtherTraits>
+    iterator_adaptor(const iterator_adaptor<MutableIterator, Policies, OtherTraits, NonconstIterator>& rhs)
+        : m_iter_p(rhs.iter(), rhs.policies()) {}
+    
+    template <class MutableIterator, class OtherTraits>
+    Self& operator=(const iterator_adaptor<MutableIterator, Policies, OtherTraits, NonconstIterator>& rhs)
+    { 
+      iter() = rhs.iter(); 
+      policies() = rhs.policies();
+      return *this; 
+    }
+#else
     template <class OtherTraits>
     iterator_adaptor(const iterator_adaptor<NonconstIterator, Policies, OtherTraits, NonconstIterator>& rhs)
         : m_iter_p(rhs.iter(), rhs.policies()) {}
@@ -188,6 +201,7 @@ public:
       policies() = rhs.policies();
       return *this; 
     }
+#endif
     
     reference operator*() const {
         return policies().dereference(type<reference>(), iter());
@@ -362,7 +376,7 @@ struct transform_iterator_traits {
   
 template <class AdaptableUnaryFunction,
           class Iterator,
-#ifndef BOOST_NO_ITERATOR_TRAITS
+#ifndef BOOST_NO_STD_ITERATOR_TRAITS
           class Traits = std::iterator_traits<Iterator>
 #else
           class Traits
@@ -392,7 +406,7 @@ struct indirect_iterator_policies : public default_iterator_policies
 };
 
 template <class IndirectIterator,
-#ifdef BOOST_NO_ITERATOR_TRAITS
+#ifdef BOOST_NO_STD_ITERATOR_TRAITS
           class IndirectTraits,
           class Traits
 #else
@@ -411,7 +425,7 @@ struct indirect_traits
 };
 
 template <class IndirectIterator, class ConstIndirectIterator,
-#ifdef BOOST_NO_ITERATOR_TRAITS
+#ifdef BOOST_NO_STD_ITERATOR_TRAITS
           class IndirectTraits,
           class ConstIndirectTraits,
           class Traits
@@ -473,7 +487,7 @@ struct reverse_iterator_policies
 };
   
 template <class Iterator, class ConstIterator,
-#ifndef BOOST_NO_ITERATOR_TRAITS
+#ifndef BOOST_NO_STD_ITERATOR_TRAITS
           class Traits = std::iterator_traits<Iterator>, 
           class ConstTraits = std::iterator_traits<ConstIterator>
 #else
