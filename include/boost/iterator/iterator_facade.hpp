@@ -124,8 +124,8 @@ namespace boost
                 readable_lvalue_iterator_tag
               , typename access_category_tag<Category,Reference>::type
             >
-          , operator_arrow_proxy<Value>
           , Pointer
+          , operator_arrow_proxy<Value>
         >
     {
     };
