@@ -145,7 +145,7 @@ namespace boost {
 #else
     //
     // We cannot detect the iterator category for custom
-    // tag types. For custom tag types false_c is returned
+    // tag types. For custom tag types false_ is returned
     //
     // As a result the std iterator category detection functions
     // can't detect the iterator category of the new iterator_tag template.
@@ -157,12 +157,12 @@ namespace boost {
 
     template <class Category>
     struct is_random_access_iterator :
-      mpl::false_c
+      mpl::false_
     {};
 
     template <>
     struct is_random_access_iterator<std::random_access_iterator_tag> :
-      mpl::true_c
+      mpl::true_
     {};
 
     template <class Category>
@@ -172,7 +172,7 @@ namespace boost {
 
     template <>
     struct is_bidirectional_iterator<std::bidirectional_iterator_tag> :
-      mpl::true_c
+      mpl::true_
     {};
 
     template <class Category>
@@ -182,7 +182,7 @@ namespace boost {
 
     template <>
     struct is_forward_iterator<std::forward_iterator_tag> :
-      mpl::true_c
+      mpl::true_
     {};
 
     template <class Category>
@@ -192,7 +192,7 @@ namespace boost {
 
     template <>
     struct is_output_iterator<std::output_iterator_tag> :
-      mpl::true_c
+      mpl::true_
     {};
 
     template <class Category>
@@ -202,7 +202,7 @@ namespace boost {
 
     template <>
     struct is_input_iterator<std::input_iterator_tag> :
-      mpl::true_c
+      mpl::true_
     {};
 
     //
@@ -226,16 +226,16 @@ namespace boost {
 
     template <class Category>
     struct is_mutable_lvalue_iterator :
-      mpl::false_c
+      mpl::false_
     {
       template <class T>
       struct is_category 
-        : boost::mpl::false_c {};
+        : boost::mpl::false_ {};
     };
 
     template <>
     struct is_mutable_lvalue_iterator<mutable_lvalue_iterator_tag> :
-      mpl::true_c
+      mpl::true_
     {
       template <class Category>
       struct is_category 
@@ -249,7 +249,7 @@ namespace boost {
 
     template <>
     struct is_constant_lvalue_iterator<constant_lvalue_iterator_tag> :
-      mpl::true_c 
+      mpl::true_ 
     {
       template <class Category>
       struct is_category 
@@ -263,7 +263,7 @@ namespace boost {
 
     template <>
     struct is_swappable_iterator<swappable_iterator_tag> :
-      mpl::true_c 
+      mpl::true_ 
     {
       template <class Category>
       struct is_category 
@@ -279,7 +279,7 @@ namespace boost {
 
     template <>
     struct is_readable_iterator<readable_iterator_tag> :
-      mpl::true_c 
+      mpl::true_ 
     {
       template <class Category>
       struct is_category 
@@ -293,7 +293,7 @@ namespace boost {
 
     template <>
     struct is_writable_iterator<writable_iterator_tag> :
-      mpl::true_c 
+      mpl::true_ 
     {
       template <class Category>
       struct is_category 
@@ -314,16 +314,16 @@ namespace boost {
 
     template <class Category>
     struct is_random_access_traversal_iterator :
-      mpl::false_c
+      mpl::false_
     {
       template <class T>
       struct is_category 
-        : boost::mpl::false_c {};
+        : boost::mpl::false_ {};
     };
 
     template <>
     struct is_random_access_traversal_iterator<random_access_traversal_tag> :
-      mpl::true_c
+      mpl::true_
     {
       template <class Category>
       struct is_category 
@@ -337,7 +337,7 @@ namespace boost {
 
     template <>
     struct is_bidirectional_traversal_iterator<bidirectional_traversal_tag> :
-      mpl::true_c
+      mpl::true_
     {
       template <class Category>
       struct is_category 
@@ -351,7 +351,7 @@ namespace boost {
 
     template <>
     struct is_forward_traversal_iterator<forward_traversal_tag> :
-      mpl::true_c
+      mpl::true_
     {
       template <class Category>
       struct is_category 
@@ -365,7 +365,7 @@ namespace boost {
 
     template <>
     struct is_input_traversal_iterator<input_traversal_tag> :
-      mpl::true_c
+      mpl::true_
     {
       template <class Category>
       struct is_category 
@@ -379,7 +379,7 @@ namespace boost {
 
     template <>
     struct is_output_traversal_iterator<output_traversal_tag> :
-      mpl::true_c
+      mpl::true_
     {
       template <class Category>
       struct is_category 
