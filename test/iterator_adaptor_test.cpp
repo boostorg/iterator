@@ -155,6 +155,19 @@ public:
   in_iterator(boost::input_iterator_archetype<T> d) : super_t(d) { }
 };
 
+template <class Iter>
+struct constant_iterator
+  : boost::iterator_adaptor<
+        constant_iterator<Iter>
+      , Iter
+      , typename std::iterator_traits<Iter>::value_type const
+    >
+{
+  constant_iterator() {}
+  constant_iterator(Iter it)
+    : constant_iterator::iterator_adaptor(it) {}
+};
+
 int
 main()
 {
@@ -194,13 +207,25 @@ main()
     typedef ptr_iterator<int const> Iter1;
     BOOST_STATIC_ASSERT((boost::is_same<Iter1::value_type, int>::value));
     BOOST_STATIC_ASSERT((boost::is_same<Iter1::reference, const int&>::value));
-
     BOOST_STATIC_ASSERT((boost::is_same<Iter1::iterator_category::returns, boost::readable_lvalue_iterator_tag>::value));
 
 #if !BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x551))
     // Borland has known problems with const
     BOOST_STATIC_ASSERT((boost::is_same<Iter1::pointer, const int*>::value));
 #endif 
+  }
+
+  {
+    // Test constant iterator idiom
+    typedef ptr_iterator<int> BaseIter;
+    typedef constant_iterator<BaseIter> Iter;
+
+    BOOST_STATIC_ASSERT((boost::is_same<Iter::value_type, int>::value));
+    BOOST_STATIC_ASSERT((boost::is_same<Iter::reference, int const&>::value));
+    BOOST_STATIC_ASSERT((boost::is_same<Iter::pointer, int const*>::value));
+
+    BOOST_STATIC_ASSERT((boost::is_same<BaseIter::iterator_category::returns, boost::writable_lvalue_iterator_tag>::value));
+    BOOST_STATIC_ASSERT((boost::is_same<Iter::iterator_category::returns, boost::readable_lvalue_iterator_tag>::value));
   }
   
   // Test the iterator_adaptor
