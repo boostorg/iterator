@@ -7,6 +7,10 @@
 #ifndef BOOST_ITERATOR_CONCEPTS_HPP
 #define BOOST_ITERATOR_CONCEPTS_HPP
 
+//  Revision History
+//  22 Nov 2002 Thomas Witt
+//       Added interoperable concept.
+
 #include <boost/concept_check.hpp>
 #include <boost/iterator/iterator_categories.hpp>
 #include <boost/type_traits/conversion_traits.hpp>
@@ -180,6 +184,116 @@ namespace boost_concepts {
     }
     difference_type n;
     Iterator i, j;
+  };
+
+  //===========================================================================
+  // Iterator Interoperability Concept
+
+  namespace detail {
+
+    template <typename TraversalTag>
+    struct Operations;
+    
+    template <>
+    struct Operations<boost::input_traversal_tag>
+    {
+      template <typename Iterator1,
+                typename Iterator2>
+      static void constraints(Iterator1 const& i1, Iterator2 const& i2)
+      {
+        i1 == i2;
+        i1 != i2;
+
+        i2 == i1;
+        i2 != i1;
+      }
+    };
+
+    template <>
+    struct Operations<boost::output_traversal_tag>
+    {
+      template <typename Iterator1,
+                typename Iterator2>
+      static void constraints(Iterator1 const& i1, Iterator2 const& i2)
+      {
+        Operations<boost::input_traversal_tag>::constraints(i1, i2);
+      }
+    };
+
+    template <>
+    struct Operations<boost::forward_traversal_tag>
+    {
+      template <typename Iterator1,
+                typename Iterator2>
+      static void constraints(Iterator1 const& i1, Iterator2 const& i2)
+      {
+        Operations<boost::input_traversal_tag>::constraints(i1, i2);
+      }
+    };
+
+    template <>
+    struct Operations<boost::bidirectional_traversal_tag>
+    {
+      template <typename Iterator1,
+                typename Iterator2>
+      static void constraints(Iterator1 const& i1, Iterator2 const& i2)
+      {
+        Operations<boost::forward_traversal_tag>::constraints(i1, i2);
+      }
+    };
+
+    template <>
+    struct Operations<boost::random_access_traversal_tag>
+    {
+      template <typename Iterator1,
+                typename Iterator2>
+      static void constraints(Iterator1 const& i1, Iterator2 const& i2)
+      {
+        Operations<boost::bidirectional_traversal_tag>::constraints(i1, i2);
+
+        i1 <  i2;
+        i1 <= i2;
+        i1 >  i2;
+        i1 >= i2;
+        i1 -  i2;
+
+        i2 <  i1;
+        i2 <= i1;
+        i2 >  i1;
+        i2 >= i1;
+        i2 -  i1;
+      }
+    };
+
+  };
+
+  template <typename Iterator,
+            typename ConstIterator>
+  class InteroperableConcept
+  {
+  public:
+    typedef typename boost::traversal_category<Iterator>::type traversal_category;
+    typedef typename boost::detail::iterator_traits<Iterator>::difference_type
+      difference_type;
+
+    typedef typename boost::traversal_category<ConstIterator>::type
+      const_traversal_category;
+    typedef typename boost::detail::iterator_traits<ConstIterator>::difference_type
+      const_difference_type;
+
+    void constraints() {
+      BOOST_STATIC_ASSERT((boost::is_same< difference_type,
+                                           const_difference_type>::value));
+      BOOST_STATIC_ASSERT((boost::is_same< traversal_category,
+                                           const_traversal_category>::value));
+
+      detail::Operations<traversal_category>::constraints(i, ci);
+
+      ci = i;
+
+    }
+    Iterator      i;
+    ConstIterator ci;
   };
 
 } // namespace boost_concepts
