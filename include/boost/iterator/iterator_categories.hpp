@@ -13,12 +13,13 @@
 #include <boost/config.hpp>
 #include <boost/type_traits/conversion_traits.hpp>
 #include <boost/type_traits/cv_traits.hpp>
-#include <boost/pending/ct_if.hpp>
 #include <boost/detail/iterator.hpp>
 #include <boost/mpl/apply_if.hpp>
 #include <boost/mpl/if.hpp>
 #include <boost/mpl/bool_c.hpp>
 #include <boost/mpl/aux_/has_xxx.hpp>
+#include <boost/mpl/logical/or.hpp>
+#include <boost/mpl/logical/and.hpp>
 #include <iterator>
 
 namespace boost {
@@ -68,106 +69,58 @@ namespace boost {
   // traversal_category.
   struct new_iterator_base { };
 
-  namespace detail {
-
-    struct return_category_from_nested_type {
-      template <typename Iterator> struct bind {
-        typedef typename Iterator::return_category type;
-      };
-    };
-
-    struct traversal_category_from_nested_type {
-      template <typename Iterator> struct bind {
-        typedef typename Iterator::traversal_category type;
-      };
-    };
+  namespace detail
+  {
 
     template <typename ValueType>
-    struct choose_lvalue_return {
-      typedef typename ct_if<is_const<ValueType>::value,
-                             boost::constant_lvalue_iterator_tag,
-                             boost::mutable_lvalue_iterator_tag>::type type;
+    struct choose_lvalue_return
+        : mpl::if_<
+            is_const<ValueType>
+            , boost::constant_lvalue_iterator_tag
+            , boost::mutable_lvalue_iterator_tag>
+    {
     };
     
     
     template <typename Category, typename ValueType>
-    struct iter_category_to_return {
-      typedef typename ct_if<
-        is_convertible<Category*, std::forward_iterator_tag*>::value,
-        typename choose_lvalue_return<ValueType>::type,
-        typename ct_if<
-          is_convertible<Category*, std::input_iterator_tag*>::value,
-          boost::readable_iterator_tag,
-          typename ct_if<
-            is_convertible<Category*, std::output_iterator_tag*>::value,
-            boost::writable_iterator_tag,
-            boost::error_iterator_tag
-          >::type
-       >::type
-      >::type type;
+    struct iter_category_to_return
+        : mpl::if_<
+           is_convertible<Category*, std::forward_iterator_tag*>
+           , typename choose_lvalue_return<ValueType>::type
+           , typename mpl::if_<
+                is_convertible<Category*, std::input_iterator_tag*>
+                , boost::readable_iterator_tag
+                , typename mpl::if_<
+                    is_convertible<Category*, std::output_iterator_tag*>
+                    , boost::writable_iterator_tag
+                    , boost::error_iterator_tag
+                  >::type
+             >::type
+         >
+    {
     };
 
     template <typename Category>
-    struct iter_category_to_traversal {
-      typedef typename ct_if<
-        is_convertible<Category*, std::random_access_iterator_tag*>::value,
-        random_access_traversal_tag,
-        typename ct_if<
-          is_convertible<Category*, std::bidirectional_iterator_tag*>::value,
-          bidirectional_traversal_tag,
-          typename ct_if<
-            is_convertible<Category*, std::forward_iterator_tag*>::value,
-            forward_traversal_tag,
-            typename ct_if<
-              is_convertible<Category*, std::input_iterator_tag*>::value,
-              input_traversal_tag,
-              output_traversal_tag
-              >::type
+    struct iter_category_to_traversal
+      : mpl::if_<
+          is_convertible<Category*, std::random_access_iterator_tag*>
+          , random_access_traversal_tag
+          , typename mpl::if_<
+              is_convertible<Category*, std::bidirectional_iterator_tag*>
+              , bidirectional_traversal_tag
+              , typename mpl::if_<
+                  is_convertible<Category*, std::forward_iterator_tag*>
+                  , forward_traversal_tag
+                  , typename mpl::if_<
+                      is_convertible<Category*, std::input_iterator_tag*>
+                      , input_traversal_tag
+                      , output_traversal_tag
+                    >::type
+                >::type
             >::type
-          >::type
-        >::type type;
+        >
+    {
     };
-
-#if 0
-    struct return_category_from_old_traits {
-      template <typename Iterator> class bind {
-        typedef boost::detail::iterator_traits<Iterator> OldTraits;
-        typedef typename OldTraits::iterator_category Cat;
-        typedef typename OldTraits::value_type value_type;
-      public:
-        typedef typename iter_category_to_return<Cat, value_type>::type type;
-      };      
-    };
-
-    struct traversal_category_from_old_traits {
-      template <typename Iterator> class bind {
-        typedef boost::detail::iterator_traits<Iterator> OldTraits;
-        typedef typename OldTraits::iterator_category Cat;
-      public:
-        typedef typename iter_category_to_traversal<Cat>::type type;
-      };      
-    };
-
-    template <typename Iterator>
-    class choose_return_category {
-      typedef typename ct_if<is_convertible<Iterator*,
-                                            new_iterator_base*>::value,
-                             return_category_from_nested_type,
-                             return_category_from_old_traits>::type Choice;
-    public:
-      typedef typename Choice:: template bind<Iterator>::type type;
-    };
-
-    template <typename Iterator>
-    class choose_traversal_category {
-      typedef typename ct_if<is_convertible<Iterator*,
-                                            new_iterator_base*>::value,
-                             traversal_category_from_nested_type,
-                             traversal_category_from_old_traits>::type Choice;
-    public:
-      typedef typename Choice:: template bind<Iterator>::type type;
-    };
-#else
 
   BOOST_MPL_HAS_XXX_TRAIT_DEF(traversal)
 
@@ -180,23 +133,8 @@ namespace boost {
           , mpl::bool_c<false> >::type
     {
     };
-#endif
-    
   } // namespace detail
   
-#if 0
-  template <class Iterator>
-  struct return_category {
-    typedef typename detail::choose_return_category<Iterator>::type type;
-  };
-
-
-  template <class Iterator>
-  struct traversal_category {
-    typedef typename detail::choose_traversal_category<Iterator>::type type;
-  };
-#else
-
   namespace detail {
 
     template <class NewCategoryTag>
@@ -231,28 +169,29 @@ namespace boost {
   } // namespace detail
 
   template <class Iterator>
-  struct return_category {
-    typedef typename detail::return_category_tag<
-      typename detail::iterator_traits<Iterator>::iterator_category
-      , typename detail::iterator_traits<Iterator>::value_type>::type type;
-  };
+  struct return_category
+      : detail::return_category_tag<
+           typename detail::iterator_traits<Iterator>::iterator_category
+          , typename detail::iterator_traits<Iterator>::value_type>
+  {};
 
   template <class Iterator>
-  struct traversal_category {
-    typedef typename detail::traversal_category_tag<
-      typename detail::iterator_traits<Iterator>::iterator_category
-      , typename detail::iterator_traits<Iterator>::value_type>::type type;
+  struct traversal_category
+      : detail::traversal_category_tag<
+          typename detail::iterator_traits<Iterator>::iterator_category
+         , typename detail::iterator_traits<Iterator>::value_type>
+  {
   };
-#endif
 
 #if !defined(BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION)
 
   template <typename T>
   struct return_category<T*>
+      : mpl::if_<
+          is_const<T>
+          , constant_lvalue_iterator_tag
+          , mutable_lvalue_iterator_tag>
   {
-    typedef typename ct_if<is_const<T>::value,
-      constant_lvalue_iterator_tag,
-      mutable_lvalue_iterator_tag>::type type;
   };
 
   template <typename T>
@@ -264,34 +203,43 @@ namespace boost {
 #endif
 
   template <class RC, class TC>
-  struct cvt_iterator_category {
-    typedef 
-      typename mpl::if_c<
-        (is_convertible<RC*, mutable_lvalue_iterator_tag*>::value || is_convertible<RC*, constant_lvalue_iterator_tag*>::value)
-        , typename mpl::if_c<
-            is_convertible<TC*, random_access_traversal_tag*>::value
-            , std::random_access_iterator_tag
-            , typename mpl::if_<
-                is_convertible<TC*, bidirectional_traversal_tag*>
-                , std::bidirectional_iterator_tag
-                , typename mpl::if_<
-                    is_convertible<TC*, forward_traversal_tag*>
-                    , std::forward_iterator_tag
-	            , error_iterator_tag
+  struct cvt_iterator_category
+      : mpl::if_<
+          mpl::logical_or<
+             is_convertible<RC*, mutable_lvalue_iterator_tag*>
+             , is_convertible<RC*, constant_lvalue_iterator_tag*>
+          >
+          , typename mpl::if_<
+              is_convertible<TC*, random_access_traversal_tag*>
+              , std::random_access_iterator_tag
+              , typename mpl::if_<
+                  is_convertible<TC*, bidirectional_traversal_tag*>
+                  , std::bidirectional_iterator_tag
+                  , typename mpl::if_<
+                      is_convertible<TC*, forward_traversal_tag*>
+                      , std::forward_iterator_tag
+                      , error_iterator_tag
+                    >::type
                   >::type
                 >::type
-              >::type,
-        typename mpl::if_c<
-          (is_convertible<RC*, readable_iterator_tag*>::value && is_convertible<TC*, input_traversal_tag*>::value)
-          , std::input_iterator_tag
-          , typename mpl::if_c<
-              (is_convertible<RC*, writable_iterator_tag*>::value
-               && is_convertible<TC*, output_traversal_tag*>::value)
-              , std::output_iterator_tag
-              , error_iterator_tag
-           >::type
-        >::type 
-    >::type type;
+
+          , typename mpl::if_<
+            mpl::logical_and<
+               is_convertible<RC*, readable_iterator_tag*>
+               , is_convertible<TC*, input_traversal_tag*>
+            >
+            , std::input_iterator_tag
+            , typename mpl::if_<
+                mpl::logical_and<
+                  is_convertible<RC*, writable_iterator_tag*>
+                  , is_convertible<TC*, output_traversal_tag*>
+                >
+                , std::output_iterator_tag
+                , error_iterator_tag
+             >::type
+          >::type 
+    >
+  {
   };
 
   template <class ReturnTag, class TraversalTag>
