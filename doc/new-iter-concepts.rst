@@ -18,7 +18,7 @@
            concepts to more closely match the requirements
            of algorithms and provides better categorizations
            of iterators that are used in practice. This proposal
-           is a revised version of paper n1297_.
+           is a revision of paper n1297_.
           
 .. contents:: Table of Contents
 
@@ -402,8 +402,8 @@ Iterator Traversal Concepts [lib.iterator.traversal]
 
 In the tables below, ``X`` is an iterator type, ``a`` and ``b`` are
 constant objects of type ``X``, ``r`` and ``s`` are mutable objects of
-type ``X``, ``T`` is ``std::iterator_traits<X>::value_type``, and
-``v`` is a constant object of type ``T``.
+type ``X``, ``T`` is ``std::iterator_traits<X>::value_type``, 
+``v`` is a constant object of type ``T``, and ``u`` is an identifier.
 
 
 Incrementable Iterators [lib.incrementable.iterators]
@@ -461,6 +461,8 @@ semantics.
  +------------------------------------------+--------------+------------------------------------------------------------------------+
  | Expression                               | Return Type  |   Assertion/Note/Precondition/Postcondition/Semantics                  |
  +==========================================+==============+========================================================================+
+ | ``X u;``                                 | ``X&``       |   ``note: u may have a singular value.``                               |
+ +------------------------------------------+--------------+------------------------------------------------------------------------+
  | ``++r``                                  | ``X&``       |   ``r == s`` and ``r`` is dereferenceable implies ``++r == ++s.``      |
  +------------------------------------------+--------------+------------------------------------------------------------------------+
  | ``iterator_traits<X>::difference_type``  |              |   A signed integral type representing the distance between iterators   |

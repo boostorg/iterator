@@ -228,7 +228,16 @@ briefly below and in more detail in the `iterator facade requirements`_.
 .. Should we add a comment that a zero overhead implementation of iterator_facade
    is possible with proper inlining?
 
-.. Would this be a good place to talk about constructors? -JGS
+In addition to implementing the core interface functions, an iterator
+derived from ``iterator_facade`` typically defines several
+constructors. To model any of the standard iterator concepts, the
+iterator must at least have a copy constructor. Also, if the iterator
+is meant to be interoperable (between for example, constant and
+mutable versions of the iterator) then there must be a conversion
+constructor. Also, if the iterator is to model Forward Traversal
+Iterator, a default constructor is required.
+
+
 
 Iterator Core Access
 ====================
@@ -331,14 +340,14 @@ need not meet the full requirements for an iterator. It need
 only support the operations that are not overriden by the
 users derived class.
 
+Several of the template parameters of ``iterator_adaptor`` have
+``use_default`` as their default. The reason for this is twofold.
+First, it allows the user to make use of a default parameter even when
+the user wants to specify a parameter later in the parameter list.
+Second, the defaults are fairly complicated, so metafunctions are
+required, and ``use_default`` is a way to hide the metafunctions.
 
-.. In addition, the derived
-   class will typically need to define some constructors.
-
-.. Jeremy, that last sentence is also true of iterator_facade.
-   Perhaps we ought to cover the issue of constructors separately.
-
-.. Talk about why we use use_default. -JGS
+.. Dave, is the above accurate? -JGS
 
 
 Specialized Adaptors
@@ -392,13 +401,6 @@ Standard compliant iterators).
 Header ``<iterator_helper>`` synopsis    [lib.iterator.helper.synopsis]
 =======================================================================
 
-.. How's that for a name for the header? -JGS
-.. Also, below I changed "not_specified" to the user-centric "use_default" -JGS
-
-.. Isn't use_default an implementation detail ? -thw
-
-.. Not if we want to allow the user to write stuff like
-   iterator_facade<Iter, use_default, some_category>. -JGS
 
 ::
 
@@ -782,11 +784,12 @@ The ``iterator_adaptor`` is a base class template derived from an
 instantiation of ``iterator_facade``. The core interface functions
 expected by ``iterator_facade`` are implemented in terms of the
 ``iterator_adaptor``\ 's ``Base`` template parameter. A class derived
-from ``iterator_adaptor`` typically implements some of
-the (non-virtual) core interface functions to adapt the behaviour of
-the ``Base`` type.  The ``Base`` type need not meet the full
-requirements of an iterator; it need only support the default
-operations that are not implemented by the users derived class.
+from ``iterator_adaptor`` typically implements some of the
+(non-virtual) core interface functions to adapt the behaviour of the
+``Base`` type.  Whether the derived class models any of the standard
+iterator concepts depends on what operations are supported by the
+``Base`` type and which core interface functions of
+``iterator_facade`` are overriden in the ``Derived`` class.
 
 
 Class template ``iterator_adaptor``
@@ -807,48 +810,35 @@ Class template ``iterator_adaptor``
     : public iterator_facade<Derived, /* see details ...*/>
   {
       friend class iterator_core_access;
-  public:
+   public:
       iterator_adaptor();
       explicit iterator_adaptor(Base iter);
       Base base() const;
    protected:
-      // Default implementation of core interface for iterator_facade
-      typename super_t::reference dereference() const
-        { return *m_iterator; }
+      Base const& base_reference() const;
+      Base& base_reference();
+   private: // Core iterator interface for iterator_facade.  
+      typename super_t::reference dereference() const;
 
       template <
-          class OtherDerived, class OtherBase, class V, class C, class R, class P, class D
+      class OtherDerived, class OtherIterator, class V, class C, class R, class D
       >   
-      bool equal(iterator_adaptor<OtherDerived, OtherBase, V, C, R, P, D> const& x) const
-      {
-          return m_iterator == x.base();
-      }
-      void advance(typename super_t::difference_type n)
-      {
-          m_iterator += n;
-      }
+      bool equal(iterator_adaptor<OtherDerived, OtherIterator, V, C, R, D> const& x) const;
   
-      void increment() { ++m_iterator; }
-      void decrement() { --m_iterator; }
+      void advance(typename super_t::difference_type n);
+      void increment();
+      void decrement();
 
       template <
-          class OtherDerived, class OtherBase, class V, class C, class R, class P, class D
+          class OtherDerived, class OtherIterator, class V, class C, class R, class D
       >   
       typename super_t::difference_type distance_to(
-          iterator_adaptor<OtherDerived, OtherBase, V, C, R, P, D> const& y) const
-      {
-          return y.base() - m_iterator;
-      }
+          iterator_adaptor<OtherDerived, OtherIterator, V, C, R, D> const& y) const;
 
-      Base& base_reference()
-        { return m_iterator; }
-
-      Base const& base_reference() const
-        { return m_iterator; }
-
-   private: // exposition
+   private:
       Base m_iterator;
   };
+
 
 
 ``iterator_adaptor`` requirements
@@ -856,11 +846,14 @@ Class template ``iterator_adaptor``
 
 The ``Derived`` template parameter must be a derived class of
 ``iterator_adaptor``. The ``Base`` type must implement the expressions
-used in the protected member functions of ``iterator_adaptor`` that
-are not overriden by the ``Derived`` class.  The rest of the template
-parameters specify the types for the member typedefs in
-``iterator_facade``.  The following pseudo-code specifies the traits
-types for ``iterator_adaptor``.
+involving ``m_iterator`` in the specifications of those private member
+functions of ``iterator_adaptor`` that are not overriden by the
+``Derived`` class and that are needed to model the concept
+corresponding to the chosen ``Category`` according to the requirements
+of ``iterator_facade``.  The rest of the template parameters specify
+the types for the member typedefs in ``iterator_facade``.  The
+following pseudo-code specifies the traits types for
+``iterator_adaptor``.
 
 ::
 
@@ -897,25 +890,77 @@ types for ``iterator_adaptor``.
 
 
 
-``iterator_adaptor`` operations
--------------------------------
+``iterator_adaptor`` public operations
+--------------------------------------
 
 ``iterator_adaptor();``
 
 :Requires: The ``Base`` type must be Default Constructible.
-:Returns: An instance of ``iterator_adaptor`` with a 
-    default constructed base iterator.
+:Returns: An instance of ``iterator_adaptor`` with 
+    ``m_iterator`` default constructed.
 
 
 ``explicit iterator_adaptor(Base iter);``
 
-:Returns: An instance of ``iterator_adaptor`` whose base() member
-    function returns a copy of iter.
+:Returns: An instance of ``iterator_adaptor`` with
+    ``m_iterator`` copy constructed from ``iter``.
 
 ``Base base() const;``
 
-:Returns: A copy of base iterator object used to construct
-  ``*this``, but at the same position as ``*this``. 
+:Returns: ``m_iterator``
+
+
+``iterator_adaptor`` protected member functions
+-----------------------------------------------
+
+``Base const& base_reference() const;``
+
+:Returns: A const reference to ``m_iterator``.
+
+
+``Base& base_reference();``
+
+:Returns: A non-const reference to ``m_iterator``.
+
+
+``iterator_adaptor`` private member functions
+---------------------------------------------
+
+``typename super_t::reference dereference() const;``
+
+:Returns: ``*m_iterator``
+
+::
+
+  template <
+  class OtherDerived, class OtherIterator, class V, class C, class R, class D
+  >   
+  bool equal(iterator_adaptor<OtherDerived, OtherIterator, V, C, R, D> const& x) const;
+
+:Returns: ``m_iterator == x.base()``
+
+
+``void advance(typename super_t::difference_type n);``
+
+:Effects: ``m_iterator += n;``
+
+``void increment();``
+
+:Effects: ``++m_iterator;``
+
+``void decrement();``
+
+:Effects: ``--m_iterator;``
+
+::
+
+  template <
+      class OtherDerived, class OtherIterator, class V, class C, class R, class D
+  >   
+  typename super_t::difference_type distance_to(
+      iterator_adaptor<OtherDerived, OtherIterator, V, C, R, D> const& y) const;
+
+:Returns: ``y.base() - m_iterator``
 
 
 
