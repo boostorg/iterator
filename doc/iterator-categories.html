@@ -135,6 +135,8 @@ will need a category tag. <PRE>namespace std {
   struct constant_lvalue_iterator_tag : public readable_iterator_tag { };
 
   // Traversal Categories
+  struct input_traversal_tag { };
+  struct output_traversal_tag { };
   struct forward_traversal_tag { };
   struct bidirectional_traversal_tag : public forward_traversal_tag { };
   struct random_access_traversal_tag : public bidirectional_traversal_tag { };
@@ -203,6 +205,10 @@ for <TT>T*</TT> are provided. <PRE>namespace std {
 	typedef boost::bidirectional_traversal_tag type;
       else if (Cat inherits from std::forward_iterator_tag)
 	typedef boost::forward_traversal_tag type;
+      else if (Cat inherits from std::input_iterator_tag)
+	typedef boost::input_traversal_tag type;
+      else if (Cat inherits from std::output_iterator_tag)
+	typedef boost::output_traversal_tag type;
     }
   };
 
