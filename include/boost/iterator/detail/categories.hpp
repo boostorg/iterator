@@ -13,8 +13,8 @@
 #include <boost/type_traits/is_convertible.hpp>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/mpl/if.hpp>
-#include <boost/mpl/bool_c.hpp>
-#include <boost/mpl/logical/or.hpp>
+#include <boost/mpl/bool.hpp>
+#include <boost/mpl/or.hpp>
 #include <iterator>
 
 #if BOOST_WORKAROUND(__MWERKS__, <=0x2407)
@@ -431,7 +431,7 @@ namespace boost {
 
     template <class Base, class Derived>
     struct is_base_or_same :
-      mpl::logical_or< is_same< Base, Derived >,
+      mpl::or_< is_same< Base, Derived >,
                        is_base_and_derived< Base, Derived > >
     {};
 

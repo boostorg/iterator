@@ -16,8 +16,8 @@
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/iterator/detail/enable_if.hpp>
 
-#include <boost/mpl/logical/and.hpp>
-#include <boost/mpl/logical/or.hpp>
+#include <boost/mpl/and.hpp>
+#include <boost/mpl/or.hpp>
 
 #include <boost/type_traits/is_same.hpp>
 #include <boost/type_traits/is_convertible.hpp>
@@ -31,16 +31,16 @@ namespace boost
   {
     template <class Traits, class Other>
     struct same_category_and_difference
-      : mpl::logical_and<
-      is_same<
-      typename Traits::iterator_category
-      , typename Other::iterator_category
-      >
-      , is_same<
-      typename Traits::iterator_category
-      , typename Other::iterator_category
-      >
-    >
+      : mpl::and_<
+          is_same<
+              typename Traits::iterator_category
+            , typename Other::iterator_category
+          >
+          , is_same<
+              typename Traits::iterator_category
+            , typename Other::iterator_category
+          >
+        >
     {};
 
 
@@ -106,7 +106,7 @@ namespace boost
 #  if BOOST_WORKAROUND(_MSC_FULL_VER, BOOST_TESTED_AT(13102292) && BOOST_MSVC > 1300)
           // For some reason vc7.1 needs us to "cut off" instantiation
           // of is_convertible in the case where From == To.
-          mpl::logical_or<is_same<From,To>, is_convertible<From, To> >
+          mpl::or_<is_same<From,To>, is_convertible<From, To> >
 #  else 
           ::boost::is_convertible<From, To>
 #  endif 

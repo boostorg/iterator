@@ -17,6 +17,7 @@
 #ifdef BOOST_NO_MPL_AUX_HAS_XXX
 # include <boost/shared_ptr.hpp>
 # include <boost/scoped_ptr.hpp>
+# include <boost/mpl/bool.hpp>
 # include <memory>
 #endif 
 
@@ -43,12 +44,12 @@ namespace boost
 
     template <class T>
     struct has_element_type
-      : mpl::if_<
+    {
+      typedef typename mpl::if_<
           is_class<T>
         , aux::has_element_type<T>
-        , mpl::false_c
-      >::type
-    {
+        , mpl::false_
+          >::type type;
     };
 # else
     template <class T>

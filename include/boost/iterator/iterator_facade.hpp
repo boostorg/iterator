@@ -128,65 +128,95 @@ namespace boost
   // (broken) implementations. 
   //
   template <
-        class Derived
-      , class Traits
+      class Derived
+    , class Traits
   >
   class iterator_facade
-    : detail::std_iterator_from_traits<Traits>
+      : public detail::std_iterator_from_traits<Traits>
   {
-    typedef detail::std_iterator_from_traits<Traits> super_t;
+      typedef detail::std_iterator_from_traits<Traits> super_t;
 
    public:
-    //
-    // CRT interface. There is no simple way to remove this
-    // from the public interface without template friends
-    //
-    typedef Derived                           derived_t;
+      //
+      // CRT interface. There is no simple way to remove this
+      // from the public interface without template friends
+      //
+      typedef Derived derived_t;
       
-    Derived& derived()
-    {
-      return static_cast<Derived&>(*this);
-    }
+      Derived& derived()
+      {
+          return static_cast<Derived&>(*this);
+      }
 
-    Derived const& derived() const 
-    {
-      return static_cast<Derived const&>(*this);
-    }
+      Derived const& derived() const 
+      {
+          return static_cast<Derived const&>(*this);
+      }
 
 
-    typedef typename super_t::reference       reference;
-    typedef typename super_t::difference_type difference_type;
-    typedef typename super_t::pointer         pointer;
+      typedef typename super_t::reference reference;
+      typedef typename super_t::difference_type difference_type;
+      typedef typename super_t::pointer pointer;
 
-    reference operator*() const
-    { return iterator_core_access::dereference(this->derived()); }
+      reference operator*() const
+      {
+          return iterator_core_access::dereference(this->derived());
+      }
 
-    // Needs eventual help for input iterators
-    pointer operator->() const { return &iterator_core_access::dereference(this->derived()); }
+      // Needs eventual help for input iterators
+      pointer operator->() const
+      {
+          return &iterator_core_access::dereference(this->derived());
+      }
         
-    reference operator[](difference_type n) const
-    { return *(*this + n); }
+      reference operator[](difference_type n) const
+      {
+          return *(*this + n);
+      }
 
-    Derived& operator++()
-    { iterator_core_access::increment(this->derived()); return this->derived(); }
+      Derived& operator++()
+      {
+          iterator_core_access::increment(this->derived());
+          return this->derived();
+      }
 
-    Derived operator++(int)
-    { Derived tmp(this->derived()); ++*this; return tmp; }
+      Derived operator++(int)
+      {
+          Derived tmp(this->derived());
+          ++*this;
+          return tmp;
+      }
   
-    Derived& operator--()
-    { iterator_core_access::decrement(this->derived()); return this->derived(); }
+      Derived& operator--()
+      {
+          iterator_core_access::decrement(this->derived());
+          return this->derived();
+      }
   
-    Derived operator--(int)
-    { Derived tmp(this->derived()); --*this; return tmp; }
+      Derived operator--(int)
+      {
+          Derived tmp(this->derived());
+          --*this;
+          return tmp;
+      }
   
-    Derived& operator+=(difference_type n)
-    { iterator_core_access::advance(this->derived(), n); return this->derived(); }
+      Derived& operator+=(difference_type n)
+      {
+          iterator_core_access::advance(this->derived(), n);
+          return this->derived();
+      }
   
-    Derived& operator-=(difference_type n)
-    { iterator_core_access::advance(this->derived(), -n); return this->derived(); }
+      Derived& operator-=(difference_type n)
+      {
+          iterator_core_access::advance(this->derived(), -n);
+          return this->derived();
+      }
   
-    Derived operator-(difference_type x) const
-    { Derived result(this->derived()); return result -= x; }
+      Derived operator-(difference_type x) const
+      {
+          Derived result(this->derived());
+          return result -= x;
+      }
   };
 
   //

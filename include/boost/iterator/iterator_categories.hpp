@@ -18,11 +18,11 @@
 #include <boost/detail/workaround.hpp>
 #include <boost/mpl/apply_if.hpp>
 #include <boost/mpl/if.hpp>
-#include <boost/mpl/bool_c.hpp>
+#include <boost/mpl/bool.hpp>
 #include <boost/mpl/aux_/has_xxx.hpp>
-#include <boost/mpl/logical/not.hpp>
-#include <boost/mpl/logical/or.hpp>
-#include <boost/mpl/logical/and.hpp>
+#include <boost/mpl/not.hpp>
+#include <boost/mpl/or.hpp>
+#include <boost/mpl/and.hpp>
 #include <iterator>
 
 #if BOOST_WORKAROUND(__MWERKS__, <=0x2407)
@@ -99,8 +99,8 @@ namespace boost {
     //
     template <class Tag>
     struct is_new_iterator_tag :
-      mpl::logical_and< mpl::logical_not< is_input_iterator<Tag> >,
-                        mpl::logical_not< is_output_iterator<Tag> > >
+      mpl::and_< mpl::not_< is_input_iterator<Tag> >,
+                        mpl::not_< is_output_iterator<Tag> > >
     {};
 
 #elif BOOST_WORKAROUND(__GNUC__, == 2 && __GNUC_MINOR__ == 95) \
@@ -120,9 +120,10 @@ namespace boost {
     struct is_new_iterator_tag
         : //has_traversal<Tag>
           mpl::if_<
-          is_class<Tag>
-          , has_traversal<Tag>
-          , mpl::bool_c<false> >::type
+              is_class<Tag>
+            , has_traversal<Tag>
+            , mpl::false_
+          >::type
     {
     };
 
@@ -202,7 +203,7 @@ namespace boost {
   template <class RC, class TC>
   struct cvt_iterator_category
       : mpl::if_<
-          mpl::logical_or<
+          mpl::or_<
              detail::is_mutable_lvalue_iterator<RC>
              , detail::is_constant_lvalue_iterator<RC>
           >
@@ -221,13 +222,13 @@ namespace boost {
                 >::type
 
           , typename mpl::if_<
-            mpl::logical_and<
+            mpl::and_<
                detail::is_readable_iterator<RC>
                , detail::is_input_traversal_iterator<TC>
             >
             , std::input_iterator_tag
             , typename mpl::if_<
-                mpl::logical_and<
+                mpl::and_<
                   detail::is_writable_iterator<RC>
                   , detail::is_output_traversal_iterator<TC>
                 >
@@ -251,14 +252,14 @@ namespace boost {
 # ifndef BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
     template <class T>
     struct is_boost_iterator_tag
-        : mpl::false_c {};
+        : mpl::false_ {};
 
     template <class R, class T>
     struct is_boost_iterator_tag<iterator_tag<R,T> >
-        : mpl::true_c {};
+        : mpl::true_ {};
 # else
     template <class T>
-    struct is_boost_iterator_tag_impl
+    struct is_boost_iterator_tag
     {
         typedef char (&yes)[1];
         typedef char (&no)[2];
@@ -269,12 +270,8 @@ namespace boost {
     
         static T inst;
         BOOST_STATIC_CONSTANT(bool, value = sizeof(test(inst)) == sizeof(yes));
+        typedef mpl::bool_<value> type;
     };
-
-    template <class T>
-    struct is_boost_iterator_tag
-        : mpl::bool_c<is_boost_iterator_tag_impl<T>::value>
-    {};
 # endif
   }
 

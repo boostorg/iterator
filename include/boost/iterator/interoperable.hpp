@@ -9,8 +9,8 @@
 #ifndef BOOST_INTEROPERABLE_23022003THW_HPP
 #define BOOST_INTEROPERABLE_23022003THW_HPP
 
-#include <boost/mpl/bool_c.hpp>
-#include <boost/mpl/logical/or.hpp>
+#include <boost/mpl/bool.hpp>
+#include <boost/mpl/or.hpp>
 
 #include <boost/type_traits/is_convertible.hpp>
 
@@ -36,9 +36,9 @@ namespace boost
   template <typename A, typename B>
   struct is_interoperable
 #if defined(BOOST_NO_IS_CONVERTIBLE)
-    : mpl::true_c
+    : mpl::true_
 #else
-    : mpl::logical_or<
+    : mpl::or_<
         is_convertible< A, B >
         , is_convertible< B, A > >
 #endif
