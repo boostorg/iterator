@@ -29,7 +29,9 @@
 #  define BOOST_ARG_DEP_TYPENAME typename
 #endif
 
-#if BOOST_WORKAROUND(__MWERKS__, <=0x2407)
+// CWPro7 never works, and unfortunately vc7.1 final beta sometimes fails
+#if BOOST_WORKAROUND(__MWERKS__, <=0x2407) \
+ || BOOST_WORKAROUND(_MSC_FULL_VER, BOOST_TESTED_AT(13102292))
 #  define BOOST_NO_IS_CONVERTIBLE // "is_convertible doesn't work"
 #endif
 
