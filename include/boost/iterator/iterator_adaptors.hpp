@@ -149,6 +149,7 @@ namespace boost
     //
     struct enable_type;
 
+#if 0
     // traits_iterator<It> has two important properties:
     //
     //   1. It is derived from boost::iterator<...>, which is
@@ -172,7 +173,79 @@ namespace boost
         >
     {
     };
+#endif
 
+    template <class Traits>
+    struct std_iterator_from_traits
+         : iterator<
+             typename Traits::iterator_category
+           , typename Traits::value_type
+           , typename Traits::difference_type
+           , typename Traits::pointer
+           , typename Traits::reference
+        >
+    {
+    };
+
+    // 
+    // I bet this is defined somewhere else. Let's wait and see.
+    //
+    struct error_type;
+
+#ifdef BOOST_NO_IS_CONVERTIBLE
+    template <class Cat1, class Cat2>
+    struct minimum_return_category 
+      : mpl::if_< is_return_category< Cat1 >::template is_category< Cat2 >, 
+                  Cat1,
+                  mpl::if_< is_return_category<Cat2>::template is_category<Cat1>,
+                            Cat2,
+                            error_type 
+                            >
+    > {};
+
+    template <class Cat1, class Cat2>
+    struct minimum_traversal_category 
+      : mpl::if_< is_traversal_category< Cat1 >::template is_category< Cat2 >, 
+                  Cat1,
+                  mpl::if_< is_traversal_category<Cat2>::template is_category<Cat1>,
+                            Cat2,
+                            error_type 
+                            >
+    > {};
+
+    template <class T1, class T2>
+    struct minimum_category_select
+      : mpl::if_< is_same< typename T1::type, error_type >,
+                  T2,
+                  T1 >
+    {};
+#endif
+
+    //
+    // Returns the minimum category type or error_type
+    // if T1 and T2 are unrelated.
+    //
+    // For compilers not supporting is_convertible this only
+    // works with the new boost return and traversal category
+    // types. The exect boost _types_ are required. No derived types
+    // will work. 
+    //
+    //
+    template <class T1, class T2>
+    struct minimum_category :
+#ifndef BOOST_NO_IS_CONVERTIBLE
+      // We may need a VC7.1 is_same shortcut here
+      mpl::if_< is_base_and_derived< T1, T2 >,
+                T1,
+                mpl::if_< is_base_and_derived< T2, T1 >,
+                          T2,
+                          error_type > >
+#else
+      minimum_category_select< minimum_return_category<T1, T2>,
+                               minimum_traversal_category<T1, T2> >
+#endif
+    {};
+    
   } // namespace detail
 
   //
@@ -539,21 +612,29 @@ namespace boost
                                              lhs.derived());
   }
 
+  //
+  //
+  // iterator_facade applies iterator_traits_adaptor to it's traits argument.
+  // The net effect is that iterator_facade is derived from std::iterator. This
+  // is important for standard library interoperability of iterator types on some
+  // (broken) implementations. 
+  //
   template <
         class Derived
       , class Traits
-      , class Super = iterator_arith<  
-                        iterator_comparisons<
-                            downcastable<Derived, Traits> > >
   >
   class iterator_facade
-      : public Super
+      : public iterator_arith<  
+                   iterator_comparisons<
+                       downcastable<Derived, detail::std_iterator_from_traits<Traits> > > >
   {
-      typedef Super super_t;
+      typedef iterator_arith<  
+                  iterator_comparisons<
+        downcastable<Derived, detail::std_iterator_from_traits<Traits> > > > super_t;
    public:
     typedef typename super_t::reference       reference;
     typedef typename super_t::difference_type difference_type;
-    typedef typename super_t::pointer pointer;
+    typedef typename super_t::pointer         pointer;
 
     reference operator*() const
     { return iterator_core_access::dereference(this->derived()); }
@@ -604,13 +685,34 @@ namespace boost
   }
   
   //
-  // TODO Handle default arguments the same way as
-  // in former ia lib
+  // iterator_traits_adaptor can be used to create new iterator traits by adapting
+  // the traits of a given iterator type. Together with iterator_adaptor it simplifies
+  // the creation of adapted iterator types. Therefore the ordering the template
+  // argument ordering is different from the std::iterator template, so that default 
+  // arguments can be used effectivly.
+  //
+  template <class Iterator,
+            class ValueType        = typename detail::iterator_traits<Iterator>::value_type,
+            class Reference        = ValueType&,
+            class Pointer          = ValueType*,
+            class IteratorCategory = typename detail::iterator_traits<Iterator>::iterator_category,
+            class DifferenceType   = typename detail::iterator_traits<Iterator>::difference_type >
+  struct iterator_traits_adaptor
+    : iterator<IteratorCategory,
+               ValueType,
+               DifferenceType,
+               Pointer,
+               Reference>
+  {
+  };
+
+  //
+  //
   //
   template <
       class Derived
       , class Iterator
-      , class Traits = detail::traits_iterator<Iterator>
+      , class Traits = detail::iterator_traits<Iterator>
   >
   class iterator_adaptor
       : public iterator_facade<Derived,Traits>
@@ -630,6 +732,7 @@ namespace boost
   protected:
     // Core iterator interface for iterator_facade
     // 
+
     typename Traits::reference dereference() const { return *m_iterator; }
 
     template <
@@ -719,17 +822,15 @@ namespace boost
   // is the type used as its traits.
   template <class AdaptableUnaryFunction, class Iterator>
   struct transform_iterator_traits
-      : iterator<
-              typename detail::iterator_traits<Iterator>::iterator_category
-            , typename AdaptableUnaryFunction::result_type
-            , typename detail::iterator_traits<Iterator>::difference_type
-            , typename AdaptableUnaryFunction::result_type*
-            , typename AdaptableUnaryFunction::result_type
-      >
-  {};
+    : iterator_traits_adaptor<Iterator
+                              ,typename AdaptableUnaryFunction::result_type  
+                              ,typename AdaptableUnaryFunction::result_type  
+                              ,typename AdaptableUnaryFunction::result_type*
+                              ,iterator_tag< readable_iterator_tag, 
+                                             typename traversal_category<Iterator>::type > >
+  {
+  };
    
-  //
-  // TODO fix category
   //
   template <class AdaptableUnaryFunction, class Iterator>
   class transform_iterator
@@ -847,13 +948,11 @@ namespace boost
     // is ultimately derived from boost::iterator<...>
     template <class Base, class Traits>
     struct indirect_traits
-      : traits_iterator<
-           typename mpl::if_<
-              is_same<Traits,unspecified>
+      : mpl::if_<
+            is_same<Traits,unspecified>
             , indirect_defaults<Base>
             , Traits
            >::type
-        >
     {
     };
   } // namespace detail
@@ -907,26 +1006,35 @@ namespace boost
     return indirect_iterator<Iter, Traits>(x);
   }
 
-  template <class Iterator>
-  struct filter_iterator_traits
-      : detail::iterator_traits<Iterator>
-  {
+  namespace detail {
+
+    template <class Iterator>
+    struct filter_iterator_traits
+      : iterator_traits<Iterator>
+    {
+#if !BOOST_WORKAROUND(BOOST_MSVC,  BOOST_TESTED_AT(1300))                      
+      BOOST_STATIC_ASSERT((detail::is_forward_traversal_iterator< 
+                           typename traversal_category<Iterator>::type >::value));
+#endif
+
       typedef iterator_tag<
-            typename return_category<Iterator>::type
-          , forward_traversal_tag
-      > iterator_category;
-  };
+        typename return_category<Iterator>::type
+        , forward_traversal_tag
+        > iterator_category;
+    };
+
+  } // namespace detail
 
   template <class Predicate, class Iterator>
   class filter_iterator
       : public iterator_adaptor<
            filter_iterator<Predicate, Iterator>, Iterator
-           , detail::traits_iterator<filter_iterator_traits<Iterator> >
+           , detail::filter_iterator_traits<Iterator>
         >
   {
       typedef iterator_adaptor<
            filter_iterator<Predicate, Iterator>, Iterator
-          , detail::traits_iterator<filter_iterator_traits<Iterator> >
+          , detail::filter_iterator_traits<Iterator>
       > super_t;
 
       friend class iterator_core_access;

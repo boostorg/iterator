@@ -40,12 +40,12 @@ int main()
         filter_iter(one_or_four(), array, array+N)
         , dummyT(1), dummyT(4));
 
-# if 0
+    //# if 0
     BOOST_STATIC_ASSERT(
         (!boost::detail::is_bidirectional_traversal_iterator<
             boost::traversal_category<filter_iter>::type
           >::value) );
-# endif
+    //# endif
     
     // On compilers not supporting partial specialization, we can do more type
     // deduction with deque iterators than with pointers... unless the library

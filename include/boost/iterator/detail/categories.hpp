@@ -12,7 +12,6 @@
 #include <boost/type_traits/conversion_traits.hpp>
 #include <boost/mpl/if.hpp>
 #include <boost/mpl/bool_c.hpp>
-#include <boost/mpl/logical/or.hpp>
 #include <iterator>
 
 #if BOOST_WORKAROUND(__MWERKS__, <=0x2407)
@@ -20,6 +19,13 @@
 #endif
 
 namespace boost {
+
+  //
+  // Categories
+  //
+  // !! Fix detection functions if categories
+  //    are changed.
+  //
 
   // Return Type Categories
   struct readable_iterator_tag { };
@@ -199,16 +205,39 @@ namespace boost {
     //
     // Return type
     //
+    // The nested is_category template class are used for 
+    // minimum category detection in iterator_adaptors. 
+    // They are basically a pore mans is_derived replacement.
+    //
+    // A implementation may look like this
+    //
+    // template <class Cat1, class Cat2>
+    // struct min_cat 
+    //   : mpl::if_< is_return_category< Cat1 >::template is_category< Cat2 >, 
+    //               Cat1,
+    //               mpl::if_< is_return_category<Cat2>::template is_category<Cat1>,
+    //                         Cat2,
+    //                         error_type 
+    //                       >
+    //              > {};
 
     template <class Category>
     struct is_mutable_lvalue_iterator :
       mpl::false_c
-    {};
+    {
+      template <class T>
+      struct is_category 
+        : boost::mpl::false_c {};
+    };
 
     template <>
     struct is_mutable_lvalue_iterator<mutable_lvalue_iterator_tag> :
       mpl::true_c
-    {};
+    {
+      template <class Category>
+      struct is_category 
+        : is_mutable_lvalue_iterator<Category> {};
+    };
 
     template <class Category>
     struct is_constant_lvalue_iterator :
@@ -218,7 +247,11 @@ namespace boost {
     template <>
     struct is_constant_lvalue_iterator<constant_lvalue_iterator_tag> :
       mpl::true_c 
-    {};
+    {
+      template <class Category>
+      struct is_category 
+        : is_constant_lvalue_iterator<Category> {};
+    };
 
     template <class Category>
     struct is_swappable_iterator :
@@ -228,18 +261,27 @@ namespace boost {
     template <>
     struct is_swappable_iterator<swappable_iterator_tag> :
       mpl::true_c 
-    {};
+    {
+      template <class Category>
+      struct is_category 
+        : is_swappable_iterator<Category> {};
+    };
 
     template <class Category>
     struct is_readable_iterator :
-      mpl::logical_or< is_swappable_iterator<Category>,
-                       is_constant_lvalue_iterator<Category> >
+      mpl::if_< is_swappable_iterator<Category>,
+                is_swappable_iterator<Category>,
+                is_constant_lvalue_iterator<Category> >::type
     {};
 
     template <>
     struct is_readable_iterator<readable_iterator_tag> :
       mpl::true_c 
-    {};
+    {
+      template <class Category>
+      struct is_category 
+        : is_readable_iterator<Category> {};
+    };
 
     template <class Category>
     struct is_writable_iterator :
@@ -249,7 +291,19 @@ namespace boost {
     template <>
     struct is_writable_iterator<writable_iterator_tag> :
       mpl::true_c 
-    {};
+    {
+      template <class Category>
+      struct is_category 
+        : is_writable_iterator<Category> {};
+    };
+
+    template <class Category>
+    struct is_return_category
+      : mpl::if_< is_writable_iterator<Category>,
+                  is_writable_iterator<Category>,
+                  is_readable_iterator<Category> >::type
+    {
+    };
 
     //
     // Traversal
@@ -258,12 +312,20 @@ namespace boost {
     template <class Category>
     struct is_random_access_traversal_iterator :
       mpl::false_c
-    {};
+    {
+      template <class T>
+      struct is_category 
+        : boost::mpl::false_c {};
+    };
 
     template <>
     struct is_random_access_traversal_iterator<random_access_traversal_tag> :
       mpl::true_c
-    {};
+    {
+      template <class Category>
+      struct is_category 
+        : is_random_access_traversal_iterator<Category> {};
+    };
 
     template <class Category>
     struct is_bidirectional_traversal_iterator :
@@ -273,7 +335,11 @@ namespace boost {
     template <>
     struct is_bidirectional_traversal_iterator<bidirectional_traversal_tag> :
       mpl::true_c
-    {};
+    {
+      template <class Category>
+      struct is_category 
+        : is_bidirectional_traversal_iterator<Category> {};
+    };
 
     template <class Category>
     struct is_forward_traversal_iterator :
@@ -283,7 +349,11 @@ namespace boost {
     template <>
     struct is_forward_traversal_iterator<forward_traversal_tag> :
       mpl::true_c
-    {};
+    {
+      template <class Category>
+      struct is_category 
+        : is_forward_traversal_iterator<Category> {};
+    };
 
     template <class Category>
     struct is_input_traversal_iterator :
@@ -293,7 +363,11 @@ namespace boost {
     template <>
     struct is_input_traversal_iterator<input_traversal_tag> :
       mpl::true_c
-    {};
+    {
+      template <class Category>
+      struct is_category 
+        : is_input_traversal_iterator<Category> {};
+    };
 
     template <class Category>
     struct is_output_traversal_iterator :
@@ -303,6 +377,17 @@ namespace boost {
     template <>
     struct is_output_traversal_iterator<output_traversal_tag> :
       mpl::true_c
+    {
+      template <class Category>
+      struct is_category 
+        : is_output_traversal_iterator<Category> {};
+    };
+
+    template <class Category>
+    struct is_traversal_category 
+      : mpl::if_< is_input_traversal_iterator<Category>,
+                  is_input_traversal_iterator<Category>,
+                  is_output_traversal_iterator<Category> >::type
     {};
 
 #endif
