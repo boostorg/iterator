@@ -682,9 +682,7 @@ namespace boost
     template<class OtherIterator>
     reverse_iterator(
         reverse_iterator<OtherIterator> const& r
-# ifndef BOOST_NO_ENABLE_IF_CONSTRUCTORS
         , typename enable_if_convertible<OtherIterator, Iterator>::type* = 0
-# endif 
         )
       : super_t(r.base()) {}
 
@@ -755,9 +753,7 @@ namespace boost
     template<class OtherIterator>
     transform_iterator(
         transform_iterator<AdaptableUnaryFunction, OtherIterator> const& t
-# ifndef BOOST_NO_ENABLE_IF_CONSTRUCTORS
         , typename enable_if_convertible<OtherIterator, Iterator>::type* = 0
-# endif 
         )
       : super_t(t.base()), m_f(t.functor()) {}
 
@@ -883,9 +879,7 @@ namespace boost
               class OtherTraits>
     indirect_iterator(
         indirect_iterator<OtherIterator, OtherTraits> const& y
-# ifndef BOOST_NO_ENABLE_IF_CONSTRUCTORS
         , typename enable_if_convertible<OtherIterator, Iterator>::type* = 0
-# endif 
         )
       : super_t(y.base())
       {}
@@ -951,9 +945,7 @@ namespace boost
       template<class OtherIterator>
       filter_iterator(
           filter_iterator<Predicate, OtherIterator> const& t
-  # ifndef BOOST_NO_ENABLE_IF_CONSTRUCTORS
           , typename enable_if_convertible<OtherIterator, Iterator>::type* = 0
-  # endif 
           )
           : super_t(t.base()), m_predicate(t.predicate()), m_end(t.end()) {}
 
