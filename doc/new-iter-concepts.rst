@@ -30,10 +30,13 @@
 
 The standard iterator categories and requirements are flawed because
 they use a single hierarchy of concepts to address two orthogonal
-issues: *iterator traversal* and *value access*. As a result
-algorithms with type requirements expressed by the iterator
-requirements are too strict. Also many concrete iterators can not be
-accurately categorized.  The current iterator concept hierarchy is
+issues: *iterator traversal* and *value access*. As a result, many
+algorithms with requirements expressed in terms of the iterator
+categories are too strict. Also, many real-world iterators can not be
+accurately categorized.  A proxy-based iterator with random-access
+traversal, for example, may only legally have a category of "input
+iterator", so generic algorithms are unable to take advantage of its
+random-access capabilities.  The current iterator concept hierarchy is
 geared towards iterator traversal (hence the category names), while
 requirements that address value access sneak in at various places. The
 following table gives a summary of the current value access
@@ -70,8 +73,8 @@ disk-based collections.
 
 .. _issue 96: http://anubis.dkuug.dk/JTC1/SC22/WG21/docs/lwg-active.html#96
 
-Another example of a difficult to categorize iterator is a counting
-iterator, an iterator the returns a sequence of integers when
+Another example of a hard-to-categorize iterator is a counting
+iterator: an iterator the returns a sequence of integers when
 incremented and dereferenced (see counting_iterator_).  There are two
 ways to implement this iterator, 1) return a true reference from
 ``operator[]`` (a reference to an integer data member of the counting
@@ -80,6 +83,11 @@ iterator) or 2) return the ``value_type`` or a proxy from
 198`_, the reference will not be valid after the iterator is
 destroyed. Option 2) is therefore a better choice, but then we have a
 counting iterator that cannot be a random access iterator.
+
+.. Jeremy, option 1 is NOT an option, since there's no way to return a
+   live reference from operator[].  I think you need to clarify/rework
+   what you're saying here.  I'd fix it myself, but I'm not sure what
+   you're getting at. -DWA
 
 .. _counting_iterator: http://www.boost.org/libs/utility/counting_iterator.htm
 .. _issue 198: http://anubis.dkuug.dk/JTC1/SC22/WG21/docs/lwg-active.html#198
@@ -123,12 +131,16 @@ things happen:
  Impact on the Standard
 ========================
 
-The new iterator concepts are backwards compatible with the old
-iterator requirements, and old iterators are forward compatible with
+The new iterator concepts are backward-compatible with the old
+iterator requirements, and old iterators are forward-compatible with
 the new iterator concepts. That is to say, iterators that satisfy the
 old requirements also satisfy appropriate concepts in the new system,
 and iterators modeling the new concepts will automatically satisfy the
 appropriate old requirements.
+
+.. I think we need to say something about the resolution to allow
+   convertibility to any of the old-style tags as a TR issue (hope it
+   made it). -DWA
 
 The algorithms in the standard library benefit from the new iterator
 concepts because the new concepts provide a more accurate way to
@@ -230,7 +242,7 @@ combined into a single type using the following `iterator_tag` class.
 ::
 
   template <class AccessTag, class TraversalTag>
-  struct iterator_tag : /* appropriate old category */
+  struct iterator_tag : /* appropriate old category or categories */
   {
     typedef AccessTag access;
     typedef TraversalTag traversal;
@@ -530,7 +542,7 @@ Addition to [lib.iterator.synopsis]
   template <class Iterator> struct traversal_category;
 
   template <class AccessTag, class TraversalTag>
-  struct iterator_tag : /* appropriate old category */ {
+  struct iterator_tag : /* appropriate old category or categories */ {
     typedef AccessTag access;
     typedef TraversalTag traversal;
   };
@@ -556,7 +568,6 @@ Addition to [lib.iterator.synopsis]
   struct null_category_tag { };
   struct input_output_iterator_tag : input_iterator_tag, output_iterator_tag {};
 
-
 Addition to [lib.iterator.traits]
 =================================
 
@@ -569,28 +580,38 @@ pseudo-code.
 ::
 
    inherit-category(access-tag, traversal-tag) =
-     if (access-tag is convertible to readable_lvalue_iterator_tag
-         or access-tag is convertible to writable_lvalue_iterator_tag) {
-       if (traversal-tag is convertible to random_access_traversal_tag)
-         return random_access_iterator_tag;
-       else if (traversal-tag is convertible to bidirectional_traversal_tag)
-         return bidirectional_iterator_tag;
-       else if (traversal-tag is convertible to forward_traversal_tag)
-         return forward_iterator_tag;
-       else
-         return null_category_tag;
-     } else if (access-tag is convertible to readable_writable_iterator_tag
-                and traversal-tag is convertible to single_pass_iterator_tag)
-       return input_output_iterator_tag;
-     else if (access-tag is convertible to readable_iterator_tag
-              and traversal-tag is convertible to single_pass_iterator_tag)
-       return input_iterator_tag;
-     else if (access-tag is convertible to writable_iterator_tag
-              and traversal-tag is convertible to incrementable_iterator_tag)
-       return output_iterator_tag;
-     else
-       return null_category_tag;
+     (access-tag is convertible to readable_lvalue_iterator_tag
+      or access-tag is convertible to writable_lvalue_iterator_tag
+     )
+     ? (
+         (traversal-tag is convertible to random_access_traversal_tag)
+           ? random_access_iterator_tag
 
+         : (traversal-tag is convertible to bidirectional_traversal_tag)
+           ? bidirectional_iterator_tag
+
+         : (traversal-tag is convertible to forward_traversal_tag)
+           ? forward_iterator_tag
+
+         : null_category_tag
+       )
+     : (access-tag is convertible to readable_writable_iterator_tag
+        and traversal-tag is convertible to single_pass_iterator_tag)
+       ? input_output_iterator_tag
+
+     : (access-tag is convertible to readable_iterator_tag
+         and traversal-tag is convertible to single_pass_iterator_tag)
+       ? input_iterator_tag
+
+     : (access-tag is convertible to writable_iterator_tag
+         and traversal-tag is convertible to incrementable_iterator_tag)
+       ? output_iterator_tag
+
+     : null_category_tag;
+
+.. Jeremy, I'm not attached to the rewrite above; I just did it to see
+   if I could make it clearer please feel free to rewrite if you don't
+   like it.
 
 The ``access_category`` and ``traversal_category`` class templates are
 traits classes. For iterators whose
