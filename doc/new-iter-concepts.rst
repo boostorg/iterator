@@ -13,7 +13,7 @@
 .. _`Open Systems Lab`: http://www.osl.iu.edu
 .. _`Institute for Transport Railway Operation and Construction`: http://www.ive.uni-hannover.de
 
-:abstract: We propose a new system of iterator concepts that treat
+:Abstract: We propose a new system of iterator concepts that treat
            access and positioning independently. This allows the
            concepts to more closely match the requirements
            of algorithms and provides better categorizations
@@ -30,11 +30,14 @@
 
 The standard iterator categories and requirements are flawed because
 they use a single hierarchy of concepts to address two orthogonal
-issues: *iterator traversal* and *value access*. The current iterator
-concept hierarchy is geared towards iterator traversal (hence the
-category names), while requirements that address value access sneak in
-at various places. The following table gives a summary of the current
-value access requirements in the iterator categories.
+issues: *iterator traversal* and *value access*. As a result
+algorithms with type requirements expressed by the iterator
+requirements are too strict. Also many concrete iterators can not be
+accurately categorized.  The current iterator concept hierarchy is
+geared towards iterator traversal (hence the category names), while
+requirements that address value access sneak in at various places. The
+following table gives a summary of the current value access
+requirements in the iterator categories.
 
 +------------------------+-------------------------------------------------------------------------+
 | Output Iterator        |  ``*i = a``                                                             |
@@ -57,25 +60,26 @@ single hierarchy, many useful iterators can not be appropriately
 categorized. For example, ``vector<bool>::iterator`` is almost a
 random access iterator, but the return type is not ``bool&`` (see
 `issue 96`_ and Herb Sutter's paper J16/99-0008 = WG21
-N1185). Therefore, its iterators only meet the requirements of input
-iterator and output iterator. This is so nonintuitive that at least
-one implementation erroneously assigns ``random_access_iterator_tag``
-as its ``iterator_category``. Also, ``vector<bool>`` is not the only
-example of useful iterators that do not return true references: there
-is the often cited example of disk-based collections.
+N1185). Therefore, the iterators of ``vector<bool>`` only meet the
+requirements of input iterator and output iterator. This is so
+nonintuitive that at least one implementation erroneously assigns
+``random_access_iterator_tag`` as its ``iterator_category``. Also,
+``vector<bool>`` is not the only example of useful iterators that do
+not return true references: there is the often cited example of
+disk-based collections.
 
 .. _issue 96: http://anubis.dkuug.dk/JTC1/SC22/WG21/docs/lwg-active.html#96
 
-Another example is a counting iterator, an iterator the returns a
-sequence of integers when incremented and dereferenced (see
-counting_iterator_).  There are two ways to implement this iterator,
-1) return a true reference from ``operator[]`` (a reference to an
-integer data member of the counting iterator) or 2) return the
-``value_type`` or a proxy from ``operator[]``. Option 1) runs into the
-problems discussed in `issue 198`_, the reference will not be valid
-after the iterator is destroyed. Option 2) is therefore a better
-choice, but then we have a counting iterator that cannot be a random
-access iterator.
+Another example of a difficult to categorize iterator is a counting
+iterator, an iterator the returns a sequence of integers when
+incremented and dereferenced (see counting_iterator_).  There are two
+ways to implement this iterator, 1) return a true reference from
+``operator[]`` (a reference to an integer data member of the counting
+iterator) or 2) return the ``value_type`` or a proxy from
+``operator[]``. Option 1) runs into the problems discussed in `issue
+198`_, the reference will not be valid after the iterator is
+destroyed. Option 2) is therefore a better choice, but then we have a
+counting iterator that cannot be a random access iterator.
 
 .. _counting_iterator: http://www.boost.org/libs/utility/counting_iterator.htm
 .. _issue 198: http://anubis.dkuug.dk/JTC1/SC22/WG21/docs/lwg-active.html#198
@@ -99,7 +103,7 @@ iterator category is ``input_iterator_tag``, which means that,
 strictly speaking, you could not use these iterators with algorithms
 like ``min_element()``. As a temporary solution, the concept
 `Multi-Pass Input Iterator`_ was introduced to describe the vertex and
-edge descriptors, but as the design notes for concept suggest, a
+edge descriptors, but as the design notes for the concept suggest, a
 better solution is needed.
 
 .. _Boost Graph Library: http://www.boost.org/libs/graph/doc/table_of_contents.html
@@ -120,15 +124,18 @@ things happen:
 ========================
 
 The new iterator concepts are backwards compatible with the old
-iterator requirements. Iterators that satisfy the old requirements
-also satisfy appropriate concepts in the new system, and iterators
-modeling the new concepts will automatically satisfy the appropriate
-old requirements.
+iterator requirements, and old iterators are forward compatible with
+the new iterator concepts. That is to say, iterators that satisfy the
+old requirements also satisfy appropriate concepts in the new system,
+and iterators modeling the new concepts will automatically satisfy the
+appropriate old requirements.
 
 The algorithms in the standard library benefit from the new iterator
 concepts because the new concepts provide a more accurate way to
 express their type requirements. The result is algorithms that are
-usable in more situations and have fewer type requirements.
+usable in more situations and have fewer type requirements. The
+following lists the proposed changes to the type requirements of
+algorithms.
 
 Forward Iterator -> Forward Traversal Iterator and Readable Iterator
   ``find_end, find_first_of, adjacent_find, search, search_n, rotate_copy, lower_bound, upper_bound, equal_range, binary_search, min_element, max_element``
@@ -216,14 +223,14 @@ Like the old iterator requirements, we provide tags for purposes of
 dispatching. There are two hierarchies of tags, one for the access
 concepts and one for the traversal concepts. We provide an access
 mechanism for mapping iterator types to these new tags. Our design
-opts to reuse ``iterator_traits<Iter>::iterator_category`` as the
-access mechanism. To enable this, a pair of access and traversal tags
-are combined using the new `iterator_tag` class.
+reuses ``iterator_traits<Iter>::iterator_category`` as the access
+mechanism. To enable this, a pair of access and traversal tags are
+combined into a single type using the following `iterator_tag` class.
 
 ::
 
   template <class AccessTag, class TraversalTag>
-  struct iterator_tag : <appropriate old category>
+  struct iterator_tag : appropriate old category
   {
     typedef AccessTag access;
     typedef TraversalTag traversal;
@@ -234,11 +241,11 @@ iterator tag or tags from the old requirements based on the new-style
 tags passed as template parameters. The algorithm for determining the
 old tag or tags from the new tags picks the least-refined old concepts
 that include all of the requirements of the access and traversal
-concepts, if any such category exists.  For example, a the category
-tag for a Readable Single Pass Iterator will always be derived from
-``input_iterator_tag``, while the category tag for a Single Pass
-Iterator that is both Readable and Writable will be derived from both
-``input_iterator_tag`` and ``writable_iterator_tag``.
+concepts (that is, the closest fit), if any such category exists.  For
+example, a the category tag for a Readable Single Pass Iterator will
+always be derived from ``input_iterator_tag``, while the category tag
+for a Single Pass Iterator that is both Readable and Writable will be
+derived from both ``input_iterator_tag`` and ``output_iterator_tag``.
 
 We also provide two helper classes that make it convenient to obtain
 the access and traversal tags of an iterator. These helper classes
@@ -523,7 +530,7 @@ Addition to [lib.iterator.synopsis]
   template <class Iterator> struct traversal_category;
 
   template <class AccessTag, class TraversalTag>
-  struct iterator_tag : <appropriate old category> {
+  struct iterator_tag : appropriate old category {
     typedef AccessTag access;
     typedef TraversalTag traversal;
   };
@@ -558,7 +565,7 @@ pseudo-code.
 
 ::
 
-   inherit-category(access-tag, traversal-tag) {
+   inherit-category(access-tag, traversal-tag) =
      if (access-tag is convertible to readable_lvalue_iterator_tag
          or access-tag is convertible to writable_lvalue_iterator_tag) {
        if (traversal-tag is convertible to random_access_traversal_tag)
@@ -579,8 +586,7 @@ pseudo-code.
               and traversal-tag is convertible to incrementable_iterator_tag)
        return output_iterator_tag;
      else
-       return null_category_tag
-   }
+       return null_category_tag;
 
 
 The ``access_category`` and ``traversal_category`` class templates are
@@ -590,32 +596,28 @@ the ``access_category`` and ``traversal_category`` traits access the
 ``access`` and ``traversal`` member types within ``iterator_tag``.
 For iterators whose ``iterator_traits<Iter>::iterator_category`` type
 is not ``iterator_tag`` and instead is a tag convertible to one of the
-original tags, an appropriate traversal and access tags are deduced.
+original tags, the appropriate traversal and access tags is deduced.
+The following pseudo-code describes the algorithm.
 
 ::
 
-  template <class Iterator>
-  struct access_category {
-    // pseudo code
+  access-category(Iterator) =
     cat = iterator_traits<Iterator>::iterator_category;
     if (cat == iterator_tag<Access,Traversal>)
       return Access;
-    else if (cat is convertible to forward_iterator_tag)
+    else if (cat is convertible to forward_iterator_tag) {
       if (iterator_traits<Iterator>::reference is a const reference)
         return readable_lvalue_iterator_tag;
       else
         return writable_lvalue_iterator_tag;
-    else if (cat is convertible to input_iterator_tag)
+    } else if (cat is convertible to input_iterator_tag)
       return readable_iterator_tag;
     else if (cat is convertible to output_iterator_tag)
       return writable_iterator_tag;
     else
       return null_category_tag;
-  };
 
-  template <class Iterator>
-  struct traversal_category {
-    // pseudo code
+  traversal-category(Iterator) =
     cat = iterator_traits<Iterator>::iterator_category;
     if (cat == iterator_tag<Access,Traversal>)
       return Traversal;
@@ -634,7 +636,7 @@ original tags, an appropriate traversal and access tags are deduced.
   };
 
 The following specializations provide the access and traversal
-categories for pointer types.
+category tags for pointer types.
 
 ::
 
