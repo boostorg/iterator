@@ -28,9 +28,9 @@
 #include <stdlib.h>
 #include <set>
 
-#if defined(BOOST_MSVC_STD_ITERATOR)                                    \
- || BOOST_WORKAROUND(_CPPLIB_VER, <= 310)                               \
- || BOOST_WORKAROUND(__GNUC__, <= 2 && !defined(__SGI_STL_PORT))
+#if defined(BOOST_MSVC_STD_ITERATOR)                    \
+ || BOOST_WORKAROUND(_CPPLIB_VER, <= 310)               \
+ || BOOST_WORKAROUND(__GNUC__, <= 2 && !__SGI_STL_PORT)
 
 // std container random-access iterators don't support mutable/const
 // interoperability (but may support const/mutable interop).
@@ -108,7 +108,6 @@ namespace boost { namespace detail
 
 void more_indirect_iterator_tests()
 {
-// For some reason all heck breaks loose in the compiler under these conditions.
     storage store(1000);
     std::generate(store.begin(), store.end(), rand);
     
@@ -154,7 +153,10 @@ void more_indirect_iterator_tests()
 
     // Borland C++ is getting very confused about the typedefs here
     typedef boost::indirect_iterator<iterator_set::iterator> indirect_set_iterator;
-    typedef boost::indirect_iterator<iterator_set::const_iterator> const_indirect_set_iterator;
+    typedef boost::indirect_iterator<
+        iterator_set::iterator
+        , indirect_const_iterator_traits<iterator_set::iterator>
+        > const_indirect_set_iterator;
 
     indirect_set_iterator sb(iter_set.begin());
     indirect_set_iterator se(iter_set.end());
@@ -189,8 +191,19 @@ main()
   
   // Concept checks
   {
-    typedef boost::indirect_iterator<shared_t::iterator>       iter_t;
-    typedef boost::indirect_iterator<shared_t::const_iterator> c_iter_t;
+    typedef boost::indirect_iterator<shared_t::iterator> iter_t;
+
+    BOOST_STATIC_ASSERT(
+        boost::detail::has_element_type<
+        boost::shared_ptr<dummyT>
+        // std::iterator_traits<shared_t::iterator>::value_type
+        >::value
+        );
+    
+    typedef boost::indirect_iterator<
+        shared_t::iterator
+        , indirect_const_iterator_traits<shared_t::iterator>
+        > c_iter_t;
 
 # ifndef NO_MUTABLE_CONST_RA_ITERATOR_INTEROPERABILITY
     boost::function_requires< boost_concepts::InteroperableConcept<iter_t, c_iter_t> >();

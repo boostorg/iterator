@@ -21,6 +21,10 @@
  || BOOST_WORKAROUND(__GNUC__, <= 2 && __GNUC_MINOR__ <= 95)    \
  || BOOST_WORKAROUND(__MWERKS__, <= 0x3000)
 #  define BOOST_NO_SFINAE // "Substitution Failure Is Not An Error not implemented"
+#endif
+
+#if BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x551))
+# define BOOST_NO_ENABLE_IF_CONSTRUCTORS // Can't parse the syntax needed for enable_if in constructors
 #endif 
 
 #if BOOST_WORKAROUND(BOOST_MSVC, <=1200)
@@ -35,8 +39,9 @@
 #  define BOOST_NO_IS_CONVERTIBLE // "is_convertible doesn't work"
 #endif
 
-#if BOOST_WORKAROUND(__GNUC__, == 2 && __GNUC_MINOR__ == 95) \
-  || BOOST_WORKAROUND(__MWERKS__, <= 0x2407)
+#if BOOST_WORKAROUND(__GNUC__, == 2 && __GNUC_MINOR__ == 95)    \
+  || BOOST_WORKAROUND(__MWERKS__, <= 0x2407)                    \
+  || BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x551))
 # define BOOST_NO_MPL_AUX_HAS_XXX  // "MPL's has_xxx facility doesn't work"
 #endif 
 
@@ -126,7 +131,9 @@ namespace boost {
               class Return>
     struct enable_if_interoperable
 # if !defined(BOOST_NO_SFINAE) && !defined(BOOST_NO_IS_CONVERTIBLE)
-      : enabled< is_interoperable<Facade1, Facade2>::value >::template base<Return>
+      : detail::enabled<
+           ::boost::detail::is_interoperable<Facade1, Facade2>::value
+        >::template base<Return>
 # else
       : mpl::identity<Return>
 # endif 
@@ -188,7 +195,9 @@ namespace boost {
            typename To>
   struct enable_if_convertible
 #if !defined(BOOST_NO_IS_CONVERTIBLE) && !defined(BOOST_NO_SFINAE)
-      : detail::enabled< is_convertible<From, To>::value >::template base<detail::enable_type>
+      : detail::enabled<
+          ::boost::is_convertible<From, To>::value
+        >::template base<detail::enable_type>
 #else
       : mpl::identity<detail::enable_type>
 #endif 
@@ -657,8 +666,12 @@ namespace boost {
       : super_t(x) {}
 
     template<class OtherIterator>
-    reverse_iterator(reverse_iterator<OtherIterator> const& r,
-                     typename enable_if_convertible<OtherIterator, Iterator>::type* = 0)
+    reverse_iterator(
+        reverse_iterator<OtherIterator> const& r
+# ifndef BOOST_NO_ENABLE_IF_CONSTRUCTORS
+        , typename enable_if_convertible<OtherIterator, Iterator>::type* = 0
+# endif 
+        )
       : super_t(r.base()) {}
 
   private:
@@ -708,8 +721,12 @@ namespace boost {
       : super_t(x), m_f(f) { }
 
     template<class OtherIterator>
-    transform_iterator(transform_iterator<AdaptableUnaryFunction, OtherIterator> const& t,
-                       typename enable_if_convertible<OtherIterator, Iterator>::type* = 0)
+    transform_iterator(
+        transform_iterator<AdaptableUnaryFunction, OtherIterator> const& t
+# ifndef BOOST_NO_ENABLE_IF_CONSTRUCTORS
+        , typename enable_if_convertible<OtherIterator, Iterator>::type* = 0
+# endif 
+        )
       : super_t(t.base()), m_f(t.functor()) {}
 
     AdaptableUnaryFunction functor() const { return m_f; }
@@ -826,8 +843,13 @@ namespace boost {
 
     template <class OtherIterator,
               class OtherTraits>
-    indirect_iterator(indirect_iterator<OtherIterator, OtherTraits> const& y,
-                      typename enable_if_convertible<OtherIterator, Iterator>::type* = 0)
+    indirect_iterator(
+        indirect_iterator<OtherIterator, OtherTraits> const& y
+# ifndef BOOST_NO_ENABLE_IF_CONSTRUCTORS
+        , typename enable_if_convertible<OtherIterator, Iterator>::type* = 0
+# endif 
+        )
+        
       : super_t(y.base())  {}
 
   private:    
