@@ -293,6 +293,11 @@ namespace boost
         >
     {};
     
+# if BOOST_WORKAROUND(BOOST_MSVC, <= 1200)
+    // Deal with ETI
+    template <> struct minimum_category<int, int> { typedef minimum_category type; };
+# endif
+
   } // namespace detail
 
 } // namespace boost
