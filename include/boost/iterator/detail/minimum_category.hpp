@@ -63,7 +63,7 @@ struct minimum_category_impl<false,false>
     };
 };
 
-template <class T1, class T2>
+template <class T1 = mpl::_1, class T2 = mpl::_2>
 struct minimum_category
 {
     typedef minimum_category_impl< 
@@ -75,7 +75,15 @@ struct minimum_category
     typedef typename inner::type type;
       
     BOOST_MPL_AUX_LAMBDA_SUPPORT(2,minimum_category,(T1,T2))
-        };
+};
+    
+template <>
+struct minimum_category<mpl::_1,mpl::_2>
+{
+    template <class T1, class T2>
+    struct apply : minimum_category<T1,T2>
+    {};
+};
     
 # if BOOST_WORKAROUND(BOOST_MSVC, == 1200)
 template <>

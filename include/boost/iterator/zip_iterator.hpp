@@ -261,16 +261,17 @@ namespace boost {
       )
       { 
           typedef typename tuple_meta_transform<
-              typename Tuple::tail_type
+              BOOST_DEDUCED_TYPENAME Tuple::tail_type
             , Fun
           >::type transformed_tail_type;
 
         return tuples::cons<
-             typename mpl::apply1<Fun, typename Tuple::head_type>::type
+            BOOST_DEDUCED_TYPENAME mpl::apply1<
+                Fun, BOOST_DEDUCED_TYPENAME Tuple::head_type
+             >::type
            , transformed_tail_type
         >( 
-            f(boost::tuples::get<0>(t)),
-          tuple_transform(t.get_tail(), f)
+            f(boost::tuples::get<0>(t)), tuple_transform(t.get_tail(), f)
         );
       }
 
@@ -382,12 +383,12 @@ namespace boost {
     {
       typedef typename tuple_impl_specific::tuple_meta_transform<
           IteratorTuple
-        , iterator_traversal<mpl::_1>
+        , iterator_traversal<>
       >::type tuple_of_traversal_tags;
           
       typedef typename tuple_impl_specific::tuple_meta_accumulate<
           tuple_of_traversal_tags
-        , minimum_category<mpl::_1,mpl::_2>
+        , minimum_category<>
         , random_access_traversal_tag
       >::type type;
     };
@@ -557,7 +558,7 @@ namespace boost {
     { 
       detail::tuple_impl_specific::tuple_for_each(
           m_iterator_tuple,
-          detail::advance_iterator<typename super_t::difference_type>(n)
+          detail::advance_iterator<BOOST_DEDUCED_TYPENAME super_t::difference_type>(n)
           );
     }
     // Incrementing a zip iterator means to increment all iterators in
