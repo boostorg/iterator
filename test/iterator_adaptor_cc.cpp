@@ -4,6 +4,17 @@
 #include <boost/cstdlib.hpp>
 #include <list>
 
+#ifdef BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
+namespace boost { namespace detail
+{
+  template<> struct iterator_traits<int*>
+  : ptr_iter_traits<int> {};
+  
+  template<> struct iterator_traits<int const*>
+  : ptr_iter_traits<int, int const> {};
+}}
+#endif
+
 int main()
 {
   {
