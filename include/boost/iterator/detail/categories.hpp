@@ -21,6 +21,7 @@
 # include <boost/mpl/bool.hpp>
 # include <boost/mpl/or.hpp>
 # include <boost/mpl/and.hpp>
+# include <boost/mpl/integral_c.hpp>
 # include <boost/mpl/aux_/lambda_support.hpp>
 
 # include <iterator>
@@ -84,7 +85,7 @@ namespace boost
   namespace detail
   {
     template <unsigned access>
-    access_c : mpl::integral_c<iterator_access,access>
+    struct access_c : mpl::integral_c<iterator_access,(iterator_access)access>
     {};
       
     
@@ -226,22 +227,28 @@ namespace boost
     
 # endif // ndef BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
 
-    template <class Tag, class Known, class Else>
-    struct known_tag
-      : mpl::apply_if<is_tag<Known,Tag>, mpl::identity<Known>, Else>
+    // If TraversalTag is convertible to Known, return it, otherwise
+    // return the result of invoking NullaryElse
+    template <class TraversalTag, class Known, class NullaryElse>
+    struct known_traversal_tag
+      : mpl::apply_if<
+            is_convertible<TraversalTag,Known>
+          , mpl::identity<Known>
+          , NullaryElse
+        >
     {};
     
     template <class Tag>
     struct max_known_traversal_tag
-      : known_tag<
+      : known_traversal_tag<
             Tag, random_access_traversal_tag
-          , known_tag<
+          , known_traversal_tag<
                 Tag, bidirectional_traversal_tag
-              , known_tag<
+              , known_traversal_tag<
                     Tag, forward_traversal_tag
-                  , known_tag<
+                  , known_traversal_tag<
                         Tag, single_pass_traversal_tag
-                      , known_tag<
+                      , known_traversal_tag<
                             Tag, incrementable_traversal_tag
                           , error_iterator_tag
                         >
@@ -251,24 +258,34 @@ namespace boost
         >
     {};
 
+    template <class AccessTag, unsigned Known, class NullaryElse>
+    struct known_access_tag
+      : mpl::apply_if_c<
+            ((AccessTag::value & Known) == Known)
+          , mpl::identity<access_c<Known> >
+          , NullaryElse
+        >
+    {};
+
+      
     // Doesn't cope with these odd combinations: readable+swappable,
     // writable+swappable. That doesn't matter for the sake of
     // new-style tag base computation, which is all it's used for
     // anyway.
     template <class Tag>
     struct max_known_access_tag
-      : known_tag<
-            Tag, writable_lvalue_iterator_tag
-          , known_tag<
-                Tag, readable_lvalue_iterator_tag
-              , known_tag<
-                    Tag, readable_writable_iterator_tag
-                  , known_tag<
-                        Tag, writable_iterator_tag
-                      , known_tag<
-                            Tag, readable_iterator_tag
-                          , mpl::apply_if<
-                                is_tag<Tag, swappable_iterator_tag>
+      : known_access_tag<
+            Tag, (writable_iterator|readable_iterator|swappable_iterator|lvalue_iterator)
+          , known_access_tag<
+                Tag, (readable_iterator|lvalue_iterator)
+              , known_access_tag<
+                    Tag, (writable_iterator|readable_iterator|swappable_iterator)
+                  , known_access_tag<
+                        Tag, writable_iterator
+                      , known_access_tag<
+                            Tag, readable_iterator
+                          , mpl::apply_if_c<
+                                (swappable_iterator & Tag::value)
                               , mpl::identity<null_category_tag>
                               , error_iterator_tag
                             >
@@ -308,25 +325,6 @@ namespace boost
     // Deal with ETI
     template <> struct minimum_category<int, int> { typedef minimum_category type; };
 # endif
-
-    //
-    // Tag classification for use in iterator_adaptor
-    //
-    template <class Tag>
-    struct is_access_tag
-      : mpl::or_<
-            is_tag<readable_iterator_tag, Tag>
-          , mpl::or_< 
-                is_tag<writable_iterator_tag, Tag>
-              , is_tag<swappable_iterator_tag, Tag>
-            >
-        >
-    {};
-
-    template <class Tag>
-    struct is_traversal_tag
-      : is_tag<incrementable_traversal_tag, Tag>
-    {};
 
   } // namespace detail
 

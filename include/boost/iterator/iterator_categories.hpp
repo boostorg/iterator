@@ -237,12 +237,14 @@ namespace boost {
         typedef typename NewCategoryTag::traversal type;
     };
 
-    template <class NewCategoryTag, class Reference>
+    template <class NewCategoryTag>
     struct new_tag_to_access
     {
         typedef typename NewCategoryTag::access_type type;
-    }
+    };
 #if 0 // what was this all about?
+    template <class NewCategoryTag, class Reference>
+    struct new_tag_to_access
       : mpl::apply_if<
             python::detail::is_reference_to_const<Reference>
           , remove_access_writability<typename NewCategoryTag::access>
@@ -300,7 +302,9 @@ namespace boost {
     // writability at the level of input iterator/output iterator.
     template <>
     struct iterator_tag_base<
-        readable_lvalue_iterator_tag,single_pass_traversal_tag>
+        readable_iterator|lvalue_iterator
+      , single_pass_traversal_tag
+    >
     {
         typedef std::input_iterator_tag type;
     };
@@ -369,7 +373,7 @@ namespace boost {
   template <unsigned Access, class TraversalTag>
   struct iterator_tag
     : detail::iterator_tag_base<
-          typename detail::max_known_access_tag<Access>::type
+          typename detail::max_known_access_tag<detail::access_c<Access> >::type::value
         , typename detail::max_known_traversal_tag<TraversalTag>::type
       >::type
   {
