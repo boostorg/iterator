@@ -187,7 +187,7 @@ The access concepts describe requirements related to ``operator*`` and
 The other set of concepts handles traversal:
 
 - Incrementable Iterator
-- Single-Pass Iterator
+- Single Pass Iterator
 - Forward Traversal Iterator
 - Bidirectional Traversal Iterator
 - Random Access Traversal Iterator
@@ -199,7 +199,10 @@ following diagram.
 
 In addition to the iterator movement operators, such as
 ``operator++``, the traversal concepts also include requirements on
-position comparison such as ``operator==`` and ``operator<``.
+position comparison such as ``operator==`` and ``operator<``.  The
+reason for the fine grain slicing of the concepts into the
+Incrementable and Single Pass is to provide concepts that are exact
+matches with the original input and output iterator requirements.
 
 The relationship between the new iterator concepts and the old are
 given in the following diagram.
