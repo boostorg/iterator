@@ -113,9 +113,10 @@ namespace boost_concepts {
   // Iterator Traversal Concepts
 
   template <typename Iterator>
-  class ForwardIteratorConcept {
+  class ForwardTraversalConcept {
   public:
-    typedef typename boost::traversal_category<Iterator>::type traversal_category;
+    typedef typename boost::traversal_category<Iterator>::type
+      traversal_category;
 
     void constraints() {
       boost::function_requires< boost::SGIAssignableConcept<Iterator> >();
@@ -132,9 +133,10 @@ namespace boost_concepts {
   };
   
   template <typename Iterator>
-  class BidirectionalIteratorConcept {
+  class BidirectionalTraversalConcept {
   public:
-    typedef typename boost::traversal_category<Iterator>::type traversal_category;
+    typedef typename boost::traversal_category<Iterator>::type 
+      traversal_category;
 
     void constraints() {
       boost::function_requires< ForwardIteratorConcept<Iterator> >();
@@ -149,9 +151,10 @@ namespace boost_concepts {
   };
 
   template <typename Iterator>
-  class RandomAccessIteratorConcept {
+  class RandomAccessTraversalConcept {
   public:
-    typedef typename boost::traversal_category<Iterator>::type traversal_category;
+    typedef typename boost::traversal_category<Iterator>::type
+      traversal_category;
     typedef typename std::iterator_traits<Iterator>::difference_type
       difference_type;
 
