@@ -265,7 +265,7 @@ namespace boost_concepts {
       }
     };
 
-  };
+  } // namespace detail
 
   template <typename Iterator,
             typename ConstIterator>
