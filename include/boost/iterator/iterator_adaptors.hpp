@@ -693,6 +693,12 @@ namespace boost {
     }
   };
 
+  template <class BidirectionalIterator>
+  reverse_iterator<BidirectionalIterator> make_reverse_iterator(BidirectionalIterator x)
+  {
+      return reverse_iterator<BidirectionalIterator>(x);
+  }
+
   //
   // TODO fix category
   //
@@ -734,6 +740,8 @@ namespace boost {
   private:
     typename super_t::value_type dereference() const { return m_f(super_t::dereference()); }
 
+    // Probably should be the initial base class so it can be
+    // optimized away via EBO if it is an empty class.
     AdaptableUnaryFunction m_f;
   };
 
@@ -744,7 +752,7 @@ namespace boost {
     //
     // Detection for whether a type has a nested `element_type'
     // typedef. Used to detect smart pointers. For compilers not
-    // supporting mpl's has_xxx, we supply specialzations. However, we
+    // supporting mpl's has_xxx, we supply specializations. However, we
     // really ought to have a specializable is_pointer template which
     // can be used instead with something like
     // boost/python/pointee.hpp to find the value_type.
@@ -849,9 +857,9 @@ namespace boost {
         , typename enable_if_convertible<OtherIterator, Iterator>::type* = 0
 # endif 
         )
-        
-      : super_t(y.base())  {}
-
+      : super_t(y.base())
+      {}
+      
   private:    
     typename super_t::reference dereference() const { return **this->base(); }
 
@@ -871,6 +879,90 @@ namespace boost {
     return indirect_iterator<Iter, Traits>(x);
   }
 
+  template <class Iterator>
+  struct filter_iterator_traits
+      : detail::iterator_traits<Iterator>
+  {
+      typedef iterator_tag<
+            typename return_category<Iterator>::type
+          , forward_traversal_tag
+      > iterator_category;
+  };
+
+  template <class Predicate, class Iterator>
+  class filter_iterator
+      : public iterator_adaptor<
+           filter_iterator<Predicate, Iterator>, Iterator,
+           typename filter_iterator_traits<Iterator>::value_type,
+           typename filter_iterator_traits<Iterator>::reference,
+           typename filter_iterator_traits<Iterator>::pointer,
+           typename filter_iterator_traits<Iterator>::iterator_category,
+           typename filter_iterator_traits<Iterator>::difference_type
+        >
+  {
+      typedef iterator_adaptor<
+           filter_iterator<Predicate, Iterator>, Iterator,
+           typename filter_iterator_traits<Iterator>::value_type,
+           typename filter_iterator_traits<Iterator>::reference,
+           typename filter_iterator_traits<Iterator>::pointer,
+           typename filter_iterator_traits<Iterator>::iterator_category,
+           typename filter_iterator_traits<Iterator>::difference_type > super_t;
+
+      friend class iterator_core_access;
+
+   public:
+      filter_iterator() { }
+
+      filter_iterator(Predicate f, Iterator x, Iterator end = Iterator())
+          : super_t(x), m_predicate(f), m_end(end)
+      {
+          satisfy_predicate();
+      }
+
+      filter_iterator(Iterator x, Iterator end = Iterator())
+          : super_t(x), m_predicate(), m_end(end)
+      {
+          satisfy_predicate();
+      }
+
+      template<class OtherIterator>
+      filter_iterator(
+          filter_iterator<Predicate, OtherIterator> const& t
+  # ifndef BOOST_NO_ENABLE_IF_CONSTRUCTORS
+          , typename enable_if_convertible<OtherIterator, Iterator>::type* = 0
+  # endif 
+          )
+          : super_t(t.base()), m_predicate(t.predicate()), m_end(t.end()) {}
+
+      Predicate predicate() const { return m_predicate; }
+
+      Iterator end() const { return m_end; }
+
+   private:
+      void increment()
+      {
+          super_t::increment();
+          satisfy_predicate();
+      }
+
+      void satisfy_predicate()
+      {
+          while (this->base() != this->m_end && !this->m_predicate(*this->base()))
+              super_t::increment();
+      }
+
+      // Probably should be the initial base class so it can be
+      // optimized away via EBO if it is an empty class.
+      Predicate m_predicate;
+      Iterator m_end;
+  };
+
+  template <class Predicate, class Iterator>
+  filter_iterator<Predicate,Iterator>
+  make_filter_iterator(Predicate f, Iterator x, Iterator end = Iterator())
+  {
+      return filter_iterator<Predicate,Iterator>(f,x,end);
+  }
 } // namespace boost
 
 //
