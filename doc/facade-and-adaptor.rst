@@ -28,7 +28,7 @@ iterator is the central abstraction of the algorithms of the Standard
 Library, allowing algorithms to be re-used in in a wide variety of
 contexts.  The C++ Standard Library contains a wide variety of useful
 iterators. Every one of the standard containers comes with constant
-and mutable iterators[#mutable]_, and also reverse versions of those
+and mutable iterators [#mutable]_, and also reverse versions of those
 same iterators which traverse the container in the opposite direction.
 The Standard also supplies ``istream_iterator`` and
 ``ostream_iterator`` for reading from and writing to streams,
@@ -36,38 +36,38 @@ The Standard also supplies ``istream_iterator`` and
 ``back_insert_iterator`` for inserting elements into containers, and
 ``raw_storage_iterator`` for initializing raw memory [7].
 
-Despite the many iterators supplied by the Standard Library, many
-obvious iterators are missing, and creating new iterator types is
+Despite the many iterators supplied by the Standard Library, obvious
+and useful iterators are missing, and creating new iterator types is
 still a common task for C++ programmers.  The literature documents
 several of these, for example line_iterator [3] and Constant_iterator
-[9]. The iterator abstraction is so powerful, however, that we expect
+[9].  The iterator abstraction is so powerful that we expect
 programmers will always need to invent new iterator types.
 
-Creating a standards conforming iterator is a non-trivial task.
-Despite the fact that it is easy to create iterators that almost
-conform to the standard, there are several subtle points that make
-creating a conforming iterator difficult. Further, the iterator
-interface is rich, containing many operators that are technically
-redundant. As a result, much of the work of creating an iterator is
-tedious. To automate the repetitive work of constructing iterators, we
-propose ``iterator_facade``, an iterator base class template which
-provides the rich interface of standard iterators and delegates its
-implementation to member functions of the derived class. In addition
-to shortening the amount of code necessary to create an iterator, the
-``iterator_facade`` also provides compile-time error detection.  Many
-iterator implementation mistakes that often go unnoticed are turned
+Although it is easy to create iterators that *almost* conform to the
+standard, the iterator requirements contain subtleties which can make
+creating an iterator which *actually* conforms quite difficult.
+Further, the iterator interface is rich, containing many operators
+that are technically redundant and tedious to implement.  To automate
+the repetitive work of constructing iterators, we propose
+``iterator_facade``, an iterator base class template which provides
+the rich interface of standard iterators and delegates its
+implementation to member functions of the derived class.  In addition
+to reducing the amount of code necessary to create an iterator, the
+``iterator_facade`` also provides compile-time error detection.
+Iterator implementation mistakes that often go unnoticed are turned
 into compile-time errors because the derived class implementation must
 match the expectations of the ``iterator_facade``.
 
-A common pattern of iterator construction is adapting one iterator to
-form a new one.  The functionality of an iterator is composed of two
-orthogonal aspects: traversal and indirection.  Adapting an old
-iterator to create a new one often saves work because one can reuse
-one aspect of functionality while redefining the other.
-For example, the Standard provides ``reverse_iterator``, which adapts
-any Bidirectional Iterator by inverting its direction of traversal.
-As with plain iterators, iterator adaptors defined outside the
-Standard have become commonplace in the literature:
+A common pattern of iterator construction is the adaptation of one
+iterator to form a new one.  The functionality of an iterator is
+composed of four orthogonal aspects: traversal, indirection, equality
+comparison and distance measurement.  Adapting an old iterator to
+create a new one often saves work because one can reuse one aspect of
+functionality while redefining the other.  For example, the Standard
+provides ``reverse_iterator``, which adapts any Bidirectional Iterator
+by inverting its direction of traversal.  As with plain iterators,
+iterator adaptors defined outside the Standard have become commonplace
+in the literature:
 
 * Checked iter[13] adds bounds-checking to an existing iterator.
 
@@ -82,11 +82,10 @@ Standard have become commonplace in the literature:
 
 * Compound iterators [1], which access a slice out of a container of containers.
 
-* Several iterator adaptors from the MTL [12]. The MTL contains a
+* Several iterator adaptors from the MTL [12].  The MTL contains a
   strided iterator, where each call to ``operator++()`` moves the
   iterator ahead by some constant factor, and a scaled iterator, which
   multiplies the dereferenced value by some constant.
-
 
 .. [#concept] We use the term concept to mean a set of requirements
    that a type must satisfy to be used with a particular template
@@ -98,13 +97,14 @@ Standard have become commonplace in the literature:
    modified.
 
 To fulfill the need for constructing adaptors, we propose the
-``iterator_adaptor`` class template. The ``iterator_adaptor`` serves
-as a base class for an iterator, providing the default behaviour of
-forwarding all operations to the adapted iterator.  The user can
-selectively replace these features in a derived iterator class. The
-proposal also includes a number of more specialized adaptors, such as
-the ``transform_iterator`` that applies some user-specified function
-during the dereference of the iterator.
+``iterator_adaptor`` class template.  Instantiations of
+``iterator_adaptor`` serve as a base classes for new iterators,
+providing the default behaviour of forwarding all operations to the
+underlying iterator.  The user can selectively replace these features
+in the derived iterator class.  This proposal also includes a number
+of more specialized adaptors, such as the ``transform_iterator`` that
+applies some user-specified function during the dereference of the
+iterator.
 
 ========================
  Impact on the Standard
@@ -122,7 +122,7 @@ Iterator Facade
 ===============
 
 While the iterator interface is rich, there is a core subset of the
-interface that is necessary for all the functionality. We have
+interface that is necessary for all the functionality.  We have
 identified the following core behaviors for iterators:
 
 * dereferencing
@@ -133,11 +133,11 @@ identified the following core behaviors for iterators:
 * distance measurement
 
 In addition to the behaviors listed above, the core interface elements
-include the associated types exposed through iterator traits: value
-type, reference, pointer, and iterator category. 
+include the associated types exposed through iterator traits:
+``value_type``, ``reference``, ``pointer``, and ``iterator_category``.
 
-The user of the ``iterator_facade`` creates a class derived from an
-instantiation of ``iterator_facade`` which defines member functions
+The user of ``iterator_facade`` derives his iterator class from an
+instantiation of ``iterator_facade`` and defines member functions
 implementing the core behaviors.  The following table describes
 expressions which are required to be valid depending on the category
 of the derived iterator type.
@@ -176,13 +176,11 @@ Iterator Adaptor
 ================
 
 The ``iterator_adaptor`` class template adapts some ``Base`` [#base]_
-type to create a new iterator. Instantiations of ``iterator_adaptor``
+type to create a new iterator.  Instantiations of ``iterator_adaptor``
 are derived from a corresponding instantiation of ``iterator_facade``
 and implement the core behaviors in terms of the ``Base`` type. In
-essence, the ``iterator_adaptor`` merely forwards all operations to
-the ``Base`` type. An object of the ``Base`` type is a data member of
-``iterator_adaptor``.
-
+essence, ``iterator_adaptor`` merely forwards all operations to an
+instance of the ``Base`` type, which it stores as a member.
 
 .. [#base] The term "Base" here does not refer to a base class and is
    not meant to imply the use of derivation. We have followed the lead
@@ -192,51 +190,54 @@ the ``Base`` type. An object of the ``Base`` type is a data member of
 The user of ``iterator_adaptor`` creates a class derived from an
 instantiation of ``iterator_adaptor`` and then selectively overrides
 some of the core operations by implementing the (non-virtual) member
-functions described in the table above.  In addition, the derived
-class will typically need to define some constructors.
+functions described in the table above.   
 
-The library also contains several examples of specialized adaptors
+.. In addition, the derived
+   class will typically need to define some constructors.
+
+.. Jeremy, that last sentence is also true of iterator_facade.
+   Perhaps we ought to cover the issue of constructors separately.
+
+Specialized Adaptors
+====================
+
+This proposal also contains several examples of specialized adaptors
 which were easily implemented using ``iterator_adaptor``:
 
-* Indirect Iterator Adaptor, which iterates over iterators, pointers, or smart pointers
-  and applies an extra level of dereferencing.
+* ``indirect_iterator``, which iterates over iterators, pointers,
+  or smart pointers and applies an extra level of dereferencing.
 
-* Reverse Iterator Adaptor, which inverts the direction of a Base iterator's motion,
-  while allowing adapted constant and mutable iterators to interact in the expected
-  ways. We will discuss this further in Section 5.2.1.
+* A new ``reverse_iterator``, which inverts the direction of a Base
+  iterator's motion, while allowing adapted constant and mutable
+  iterators to interact in the expected ways (unlike those in most
+  implementations of C++98).
 
-* Transform Iterator Adaptor, which applies a user-defined function object to the
-  underlying values when dereferenced. We will show how this adaptor is implemented
-  in Section 3.1.
+* ``transform_iterator``, which applies a user-defined function object
+  to the underlying values when dereferenced.
 
-* Projection Iterator Adaptor, which is similar to Transform Iterator Adaptor except
-  that when dereferenced it returns by-reference instead of by-value.
+* ``projection_iterator``, which is similar to ``transform_iterator``
+  except that when dereferenced it returns a reference instead of
+  a value.
 
-* Filter Iterator Adaptor, which provides a view of an iterator range in which some
-  elements of the underlying range are skipped.
+* ``filter_iterator``, which provides a view of an iterator range in
+  which some elements of the underlying range are skipped.
 
-* Counting Iterator Adaptor, which adapts any incrementable
-  type (e.g. integers, iterators) so that incrementing/decrementing
-  the adapted iterator and dereferencing it produces successive values
-  of the Base type.
+* ``counting_iterator``, which adapts any incrementable type
+  (e.g. integers, iterators) so that incrementing/decrementing the
+  adapted iterator and dereferencing it produces successive values of
+  the Base type.
 
-* Function Output Iterator Adaptor, which makes it easier to create custom output
-  iterators.
+* ``function_output_iterator``, which makes it easier to create custom
+  output iterators.
 
-Based on the examples in the library, users have generated many new adaptors,
-among them a permutation adaptor which applies some permutation to a RandomAccessIterator,
-and a strided adaptor, which adapts a RandomAccessIterator by multiplying
-its unit of motion by a constant factor. In addition, the Boost Graph Library
-(BGL) uses iterator adaptors to adapt other graph libraries, such as
-LEDA [10] and Stanford GraphBase [8], to the BGL interface (which
-requires C++ Standard compliant iterators).
-
-
-
-
-
-
-
+Based on examples in the Boost library, users have generated many new
+adaptors, among them a permutation adaptor which applies some
+permutation to a RandomAccessIterator, and a strided adaptor, which
+adapts a RandomAccessIterator by multiplying its unit of motion by a
+constant factor.  In addition, the Boost Graph Library (BGL) uses
+iterator adaptors to adapt other graph libraries, such as LEDA [10]
+and Stanford GraphBase [8], to the BGL interface (which requires C++
+Standard compliant iterators).
 
 ===============
  Proposed Text
