@@ -6,46 +6,54 @@
 
 #include <boost/iterator/reverse_iterator.hpp>
 #include <boost/iterator/new_iterator_tests.hpp>
+#include <algorithm>
+#include <deque>
+
+using boost::dummyT;
+
+#ifdef BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
+namespace boost
+{
+  namespace detail
+  {
+    template<> struct iterator_traits<dummyT*>
+    : ptr_iter_traits<dummyT> {};
+    template<> struct iterator_traits<dummyT const*>
+    : ptr_iter_traits<dummyT const> {};
+  }
+}
+#endif
 
 // Test reverse iterator
 int main()
 {
-#if 0
+  dummyT array[] = { dummyT(0), dummyT(1), dummyT(2), 
+                     dummyT(3), dummyT(4), dummyT(5) };
+  const int N = sizeof(array)/sizeof(dummyT);
+
   // Test reverse_iterator_generator
   {
     dummyT reversed[N];
     std::copy(array, array + N, reversed);
     std::reverse(reversed, reversed + N);
     
-    typedef boost::reverse_iterator_generator<dummyT*
-#if defined(BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION) || defined(BOOST_NO_STD_ITERATOR_TRAITS)
-        , dummyT
-#endif
-      >::type reverse_iterator;
+    typedef boost::reverse_iterator<dummyT*> reverse_iterator;
     
     reverse_iterator i(reversed + N);
     boost::random_access_iterator_test(i, N, array);
 
-#if !defined(BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION) && !defined(BOOST_NO_STD_ITERATOR_TRAITS)
     boost::random_access_iterator_test(boost::make_reverse_iterator(reversed + N), N, array);
-#endif
 
-    typedef boost::reverse_iterator_generator<const dummyT*
-#if defined(BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION) || defined(BOOST_NO_STD_ITERATOR_TRAITS)
-      , dummyT, const dummyT&, const dummyT
-#endif
-      >::type const_reverse_iterator;
+    typedef boost::reverse_iterator<const dummyT*> const_reverse_iterator;
     
     const_reverse_iterator j(reversed + N);
     boost::random_access_iterator_test(j, N, array);
 
     const dummyT* const_reversed = reversed;
     
-#if !defined(BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION) && !defined(BOOST_NO_STD_ITERATOR_TRAITS)
     boost::random_access_iterator_test(boost::make_reverse_iterator(const_reversed + N), N, array);
-#endif
     
-    boost::const_nonconst_iterator_test(i, ++j);    
+    boost::const_nonconst_iterator_test(i, ++j);
   }
 
   // Test reverse_iterator_generator again, with traits fully deducible on all platforms
@@ -55,10 +63,10 @@ int main()
     const std::deque<dummyT>::iterator reversed = reversed_container.begin();
 
 
-    typedef boost::reverse_iterator_generator<
-        std::deque<dummyT>::iterator>::type reverse_iterator;
-    typedef boost::reverse_iterator_generator<
-        std::deque<dummyT>::const_iterator, const dummyT>::type const_reverse_iterator;
+    typedef boost::reverse_iterator<
+        std::deque<dummyT>::iterator> reverse_iterator;
+    typedef boost::reverse_iterator<
+        std::deque<dummyT>::const_iterator> const_reverse_iterator;
 
     // MSVC/STLport gives an INTERNAL COMPILER ERROR when any computation
     // (e.g. "reversed + N") is used in the constructor below.
@@ -76,12 +84,14 @@ int main()
     
     // Many compilers' builtin deque iterators don't interoperate well, though
     // STLport fixes that problem.
-#if defined(__SGI_STL_PORT) || !defined(__GNUC__) && !defined(__BORLANDC__) && (!defined(BOOST_MSVC) || BOOST_MSVC > 1200)
+#if defined(__SGI_STL_PORT)                                     \
+    || !BOOST_WORKAROUND(__GNUC__, <= 2)                        \
+    && !BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x551))  \
+    && !BOOST_WORKAROUND(BOOST_DINKUMWARE_STDLIB, <= 1)
+    
     boost::const_nonconst_iterator_test(i, ++j);
+    
 #endif
   }
-
-#endif
-
-
+  return 0;
 }

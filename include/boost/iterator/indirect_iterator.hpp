@@ -12,11 +12,11 @@
 #include <boost/iterator.hpp>
 #include <boost/iterator/iterator_adaptor.hpp>
 
-#include <boost/iterator/detail/config_def.hpp>
 #include <boost/iterator/iterator_traits.hpp>
 
 #include <boost/python/detail/indirect_traits.hpp>
 #include <boost/mpl/not.hpp>
+#include <boost/mpl/aux_/has_xxx.hpp>
 
 #ifdef BOOST_NO_MPL_AUX_HAS_XXX
 # include <boost/shared_ptr.hpp>
@@ -24,6 +24,8 @@
 # include <boost/mpl/bool.hpp>
 # include <memory>
 #endif 
+
+#include <boost/iterator/detail/config_def.hpp> // must be last #include
 
 namespace boost
 {
@@ -42,7 +44,7 @@ namespace boost
     // can be used instead with something like
     // boost/python/pointee.hpp to find the value_type.
     //
-# if !defined BOOST_NO_MPL_AUX_HAS_XXX
+# ifndef BOOST_NO_MPL_AUX_HAS_XXX
     namespace aux
     {
       BOOST_MPL_HAS_XXX_TRAIT_DEF(element_type)
@@ -136,13 +138,13 @@ namespace boost
         >::type cv_value_type;
            
         typedef iterator_adaptor<
-              indirect_iterator<Iter, Value, Category, Reference, Pointer, Difference>
-            , Iter
-            , cv_value_type
-            , Category
-            , Reference
-            , Pointer
-            , Difference
+            indirect_iterator<Iter, Value, Category, Reference, Pointer, Difference>
+          , Iter
+          , cv_value_type
+          , Category
+          , Reference
+          , Pointer
+          , Difference
         > type;
     };
 
@@ -152,48 +154,42 @@ namespace boost
 
   template <
       class Iterator
-      , class Value = not_specified
-      , class Category = not_specified
-      , class Reference = not_specified
-      , class Pointer = not_specified
-      , class Difference = not_specified
+    , class Value = not_specified
+    , class Category = not_specified
+    , class Reference = not_specified
+    , class Pointer = not_specified
+    , class Difference = not_specified
   >
   class indirect_iterator
     : public detail::indirect_base<
-        Iterator
-      , Value
-      , Category
-      , Reference
-      , Pointer
-      , Difference
+        Iterator, Value, Category, Reference, Pointer, Difference
       >::type
   {
-    typedef typename detail::indirect_base<
-        Iterator
-      , Value
-      , Category
-      , Reference
-      , Pointer
-      , Difference
-    >::type super_t;
+      typedef typename detail::indirect_base<
+          Iterator, Value, Category, Reference, Pointer, Difference
+      >::type super_t;
 
-    friend class iterator_core_access;
+      friend class iterator_core_access;
 
-  public:
-    indirect_iterator() {}
+   public:
+      indirect_iterator() {}
 
-    indirect_iterator(Iterator iter)
-      : super_t(iter) {}
+      indirect_iterator(Iterator iter)
+        : super_t(iter) {}
 
-    template <class OtherIterator,
-              class OtherTraits>
-    indirect_iterator(
-        indirect_iterator<OtherIterator, OtherTraits> const& y
-        , typename enable_if_convertible<OtherIterator, Iterator>::type* = 0
-        )
-      : super_t(y.base())
+      template <
+          class Iterator2, class Value2, class Category2
+        , class Reference2, class Pointer2, class Difference2
+      >
+      indirect_iterator(
+          indirect_iterator<
+               Iterator2, Value2, Category2, Reference2, Pointer2, Difference2
+          > const& y
+        , typename enable_if_convertible<Iterator2, Iterator>::type* = 0
+      )
+        : super_t(y.base())
       {}
-      
+
   private:    
       typename super_t::reference dereference() const
       {
@@ -203,7 +199,6 @@ namespace boost
           return **this->base();
 # endif 
       }
-
   };
 
   template <class Iter>

@@ -8,21 +8,22 @@
 #define BOOST_ITERATOR_DETAIL_CATEGORIES_HPP
 
 #include <boost/config.hpp>
+#include <boost/iterator/detail/config_def.hpp>
+
 #include <boost/detail/workaround.hpp>
+
 #include <boost/type_traits/is_base_and_derived.hpp>
 #include <boost/type_traits/is_convertible.hpp>
 #include <boost/type_traits/is_same.hpp>
+
 #include <boost/mpl/if.hpp>
 #include <boost/mpl/apply_if.hpp>
 #include <boost/mpl/identity.hpp>
 #include <boost/mpl/bool.hpp>
 #include <boost/mpl/or.hpp>
 #include <boost/mpl/and.hpp>
-#include <iterator>
 
-#if BOOST_WORKAROUND(__MWERKS__, <=0x2407)
-#  define BOOST_NO_IS_CONVERTIBLE // "Convertible does not provide enough/is not working"
-#endif
+#include <iterator>
 
 namespace boost
 {
@@ -296,8 +297,6 @@ namespace boost
 
 } // namespace boost
 
-#ifdef BOOST_NO_IS_CONVERTIBLE
-#  undef BOOST_NO_IS_CONVERTIBLE
-#endif
+#include <boost/iterator/detail/config_undef.hpp>
 
 #endif // BOOST_ITERATOR_DETAIL_CATEGORIES_HPP

@@ -97,29 +97,40 @@ namespace boost
   // false positives for user/library defined iterator types. See comments
   // on operator implementation for consequences.
   //
-  template<
-      typename From
-    , typename To>
+#  if defined(BOOST_NO_IS_CONVERTIBLE) || defined(BOOST_NO_SFINAE)
+  
+  template <class From, class To>
   struct enable_if_convertible
   {
-      // Borland 551 and vc6 have a problem with the use of base class
-      // forwarding in this template, so  we write it all out here
-# if defined(BOOST_NO_IS_CONVERTIBLE) || defined(BOOST_NO_SFINAE)
       typedef detail::enable_type type;
-# else
-      typedef typename detail::enable_if<
-#  if BOOST_WORKAROUND(_MSC_FULL_VER, BOOST_TESTED_AT(13102292) && BOOST_MSVC > 1300)
-          // For some reason vc7.1 needs us to "cut off" instantiation
-          // of is_convertible in the case where From == To.
-          mpl::or_<is_same<From,To>, is_convertible<From, To> >
-#  else 
-          ::boost::is_convertible<From, To>
-#  endif 
-        , detail::enable_type
-      >::type type;
-# endif 
   };
-
+  
+#  elif BOOST_WORKAROUND(_MSC_FULL_VER, BOOST_TESTED_AT(13102292)) && BOOST_MSVC > 1300
+  
+  // For some reason vc7.1 needs us to "cut off" instantiation
+  // of is_convertible in a few cases.
+  template<typename From, typename To>
+  struct enable_if_convertible
+    : detail::enable_if<
+        mpl::or_<
+            is_same<From,To>
+          , is_convertible<From, To>
+        >
+      , detail::enable_type
+    >
+  {};
+  
+#  else 
+  
+  template<typename From, typename To>
+  struct enable_if_convertible
+    : detail::enable_if<
+          is_convertible<From, To>
+        , detail::enable_type
+      >
+  {};
+      
+# endif
   
   //
   // iterator_traits_adaptor can be used to create new iterator traits by adapting
@@ -201,9 +212,9 @@ namespace boost
       class Derived
     , class Base
     , class Value        = not_specified
-    , class Category = not_specified
-    , class Reference        = not_specified
-    , class Pointer          = not_specified
+    , class Category     = not_specified
+    , class Reference    = not_specified
+    , class Pointer      = not_specified
     , class Difference   = not_specified
   >
   class iterator_adaptor

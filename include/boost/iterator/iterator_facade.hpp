@@ -20,9 +20,11 @@
 #include <boost/type_traits/is_convertible.hpp>
 
 #include <boost/iterator/iterator_traits.hpp>
-#include <boost/iterator/detail/config_def.hpp>
 
 #include <boost/mpl/apply_if.hpp>
+#include <boost/mpl/or.hpp>
+
+#include <boost/iterator/detail/config_def.hpp> // this goes last
 
 namespace boost
 {
@@ -44,14 +46,19 @@ namespace boost
       , class Return
     >
     struct enable_if_interoperable
+#ifndef BOOST_NO_STRICT_ITERATOR_INTEROPERABILITY
       : ::boost::detail::enable_if<
-           is_convertible<Facade1, Facade2>
+           mpl::or_<
+               is_convertible<Facade1, Facade2>
+             , is_convertible<Facade2, Facade1>
+           >
          , Return
         >
+#endif 
     {
-# if BOOST_WORKAROUND(BOOST_MSVC, <= 1200)
+#ifdef BOOST_NO_STRICT_ITERATOR_INTEROPERABILITY
         typedef Return type;
-# endif 
+#endif 
     };
 
 
@@ -483,8 +490,8 @@ namespace boost
       -
     , typename Derived1::difference_type
     , (is_same<
-           BOOST_ARG_DEP_TYPENAME Derived1::difference_type
-         , BOOST_ARG_DEP_TYPENAME Derived2::difference_type
+           BOOST_DEDUCED_TYPENAME Derived1::difference_type
+         , BOOST_DEDUCED_TYPENAME Derived2::difference_type
        >::value)
     , return
     , distance_to )

@@ -36,9 +36,10 @@ namespace boost
     template<class OtherIterator>
     reverse_iterator(
         reverse_iterator<OtherIterator> const& r
-        , typename enable_if_convertible<OtherIterator, Iterator>::type* = 0
-        )
-      : super_t(r.base()) {}
+      , typename enable_if_convertible<OtherIterator, Iterator>::type* = 0
+    )
+      : super_t(r.base())
+    {}
 
   private:
     typename super_t::reference dereference() const { return *boost::prior(this->base()); }

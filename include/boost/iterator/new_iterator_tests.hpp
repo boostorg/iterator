@@ -45,8 +45,8 @@ void readable_iterator_test(const Iterator i1, T v)
   T v2 = r2;
   assert(v1 == v);
   assert(v2 == v);
-  typename access_category<Iterator>::type result_category;
-  is_readable(result_category);
+  typedef typename access_category<Iterator>::type result_category;
+  is_readable(result_category());
 }
 
 template <class Iterator, class T>

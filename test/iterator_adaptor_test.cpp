@@ -113,7 +113,7 @@ public:
   template <class V2>
   ptr_iterator(
         const ptr_iterator<V2>& x
-      , typename boost::enable_if_convertible<V2, V>::type* = 0
+      , typename boost::enable_if_convertible<V2*, V*>::type* = 0
   )
     : super_t(x.base())
   {}

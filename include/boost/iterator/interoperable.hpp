@@ -7,14 +7,14 @@
 // "as is" without express or implied warranty, and with no claim as
 // to its suitability for any purpose.
 #ifndef BOOST_INTEROPERABLE_23022003THW_HPP
-#define BOOST_INTEROPERABLE_23022003THW_HPP
+# define BOOST_INTEROPERABLE_23022003THW_HPP
 
-#include <boost/mpl/bool.hpp>
-#include <boost/mpl/or.hpp>
+# include <boost/mpl/bool.hpp>
+# include <boost/mpl/or.hpp>
 
-#include <boost/type_traits/is_convertible.hpp>
+# include <boost/type_traits/is_convertible.hpp>
 
-#include <boost/iterator/detail/config_def.hpp>
+# include <boost/iterator/detail/config_def.hpp> // must appear last
 
 namespace boost
 {
@@ -35,18 +35,18 @@ namespace boost
   //
   template <typename A, typename B>
   struct is_interoperable
-#if defined(BOOST_NO_IS_CONVERTIBLE)
+# ifdef BOOST_NO_STRICT_ITERATOR_INTEROPERABILITY
     : mpl::true_
-#else
+# else
     : mpl::or_<
           is_convertible< A, B >
         , is_convertible< B, A > >
-#endif
+# endif
   { 
   };
 
 } // namespace boost
 
-#include <boost/iterator/detail/config_undef.hpp>
+# include <boost/iterator/detail/config_undef.hpp>
 
 #endif // BOOST_INTEROPERABLE_23022003THW_HPP
