@@ -118,6 +118,19 @@ Iterator Concepts.
  Design
 ========
 
+Iterator Concepts
+=================
+
+This proposal is formulated in terms of the new ``iterator concepts`` 
+as proposed in `n1477`_. This is due to the fact that especially 
+adapted and user defined iterators suffer from the well known 
+categorisation problems that are inherent to the current iterator
+categories.
+
+Though this proposal does not strictly depend on proposal `n1477`_,
+as there is a direct mapping between new and old categories. The proposal
+could be reformulated using this mapping.
+
 Interoperability
 ================
 
@@ -252,6 +265,27 @@ It is important to note that ``iterator_core_access`` does not open a
 safety loophole, as every core member function preserves the
 invariants of the iterator.
 
+operator[]()
+============
+
+For operator[]() ``iterator_facade`` implements the semantics required
+in the proposed resolution to issue `299`_ and adopted by proposal `n1477`_.
+I.e. operator[]() is not required to return an lvalue.
+
+.. _`299`: http://anubis.dkuug.dk/jtc1/sc22/wg21/docs/lwg-active.html#299
+
+operator->()
+============
+
+For ``readable iterators`` the reference type is only required to 
+be convertible to the value type. Though accessing members through
+operator->() must still be possible. As a result a conformant
+``readable iterator`` needs to return a proxy from operator->().
+
+This proposal does not explicitly specify the return type for 
+operator->() and operator[](). Instead it requires each ``iterator_facade``
+instantiation to meet the requirements according to its ``iterator_category``.
+
 Iterator Adaptor
 ================
 
@@ -332,6 +366,8 @@ Header ``<iterator_helper>`` synopsis    [lib.iterator.helper.synopsis]
 
 .. How's that for a name for the header? -JGS
 .. Also, below I changed "not_specified" to the user-centric "use_default" -JGS
+
+.. Isn't use_default an implementation detail ? -thw
 
 ::
 
@@ -712,7 +748,10 @@ Template class ``iterator_adaptor``
     , class Pointer    = use_default
     , class Difference = use_default
   >
-  class iterator_adaptor : public iterator_facade<Derived, /*impl detail ...*/> {
+  class iterator_adaptor 
+    : public iterator_facade<Derived, /*impl detail ...*/>
+  {
+      friend class iterator_core_access;
   public:
       iterator_adaptor() {}
       explicit iterator_adaptor(Base iter);
@@ -837,12 +876,7 @@ Reverse iterator
 
 The reverse iterator adaptor flips the direction of a base iterator's
 motion. Invoking ``operator++()`` moves the base iterator backward and
-invoking ``operator--()`` moves the base iterator forward. The Boost
-reverse iterator adaptor is better to use than the
-``std::reverse_iterator`` class in situations where pairs of
-mutable/constant iterators are needed (e.g., in containers) because
-comparisons and conversions between the mutable and const versions are
-implemented correctly.
+invoking ``operator--()`` moves the base iterator forward.
 
 Template class ``reverse_iterator``
 ...................................
