@@ -1,400 +1,660 @@
 #ifndef BOOST_ITERATOR_ADAPTORS_HPP
 #define BOOST_ITERATOR_ADAPTORS_HPP
 
+#include <boost/static_assert.hpp>
 #include <boost/utility.hpp> // for prior
 #include <boost/iterator.hpp>
 #include <boost/iterator/iterator_categories.hpp>
 #include <boost/mpl/aux_/has_xxx.hpp>
+#include <boost/mpl/logical/or.hpp>
 #include <boost/type_traits/is_same.hpp>
+#include <boost/type_traits/is_convertible.hpp>
 
 #include "boost/type_traits/detail/bool_trait_def.hpp"
 
 namespace boost {
 
-template <class Final, class V, class R, class P, class C, class D>
-struct repository : iterator<C, V, D, P, R>
+  namespace detail {
 
-{
-    typedef Final final;
-};
+    template<bool>
+    struct enabled
+    {
+      template<typename T>
+      struct base
+      {
+        typedef T type;
+      };
+    };
+    
+    template<>
+    struct enabled<false>
+    {
+      template<typename T>
+      struct base
+      {
+      };
+    };
 
-template <class Base>
-struct downcastable : Base
-{
-    typedef typename Base::final final_t;
-public:
-    final_t& self() { return static_cast<final_t&>(*this); }
-    const final_t& self() const { return static_cast<const final_t&>(*this); }
-};
+    struct enable_type {};
 
-template <class Base>
-struct iterator_comparisons : Base
-{
-};
+    template <typename A, typename B>
+    struct is_interoperable :
+      mpl::logical_or< is_convertible< A, B >,
+                       is_convertible< B, A > >
+    {
+    };
 
-template <class Base1, class Base2>
-inline bool operator==(const iterator_comparisons<Base1>& xb,
-                       const iterator_comparisons<Base2>& yb)
-{
-    return xb.self().equal(yb.self());
-}
+    template <class Facade1,
+              class Facade2,
+              class Return>
+    struct enable_if_interoperable :
+      enabled<(is_interoperable<Facade1, Facade2>::value)>::template base<Return>
+    {
+    };
 
-template <class Base1, class Base2>
-inline bool operator!=(const iterator_comparisons<Base1>& xb,
-                       const iterator_comparisons<Base2>& yb)
-{
-    return !xb.self().equal(yb.self());
-}
-
-template <class Base1, class Base2>
-inline bool operator<(const iterator_comparisons<Base1>& xb,
-                      const iterator_comparisons<Base2>& yb)
-{
-    return xb.self().distance_to(yb.self()) > 0;
-}
-
-template <class Base1, class Base2>
-inline bool operator>(const iterator_comparisons<Base1>& xb,
-                      const iterator_comparisons<Base2>& yb)
-{
-    return xb.self().distance_to(yb.self()) < 0;
-}
-
-template <class Base1, class Base2>
-inline bool operator>=(const iterator_comparisons<Base1>& xb,
-                       const iterator_comparisons<Base2>& yb)
-{
-    return xb.self().distance_to(yb.self()) <= 0;
-}
-
-template <class Base1, class Base2>
-inline bool operator<=(const iterator_comparisons<Base1>& xb,
-                       const iterator_comparisons<Base2>& yb)
-{
-    return xb.self().distance_to(yb.self()) >= 0;
-}
+  } // namespace detail
 
 
-template <class B>
-struct iterator_arith :  B { };
+  template<typename From,
+           typename To>
+  struct enable_if_convertible :
+    detail::enabled<(is_convertible<From, To>::value)>::template base<detail::enable_type>
+  {
+  };
 
-template <class Base>
-typename Base::final operator+(
-    const iterator_arith<Base>& i, // pass by ref, not value to avoid slicing -JGS
-    typename Base::difference_type n)
-{
-    typename Base::final tmp(i.self());
-    return tmp += n;
-}
+  //
+  // Helper class for granting access to the iterator core interface.
+  //
+  // The simple core interface is used by iterator_facade. The core
+  // interface should not be made public so that it does not clutter
+  // the public interface of user defined iterators. Instead iterator_core_access
+  // should be made friend so that iterator_facade can access the core
+  // interface through iterator_core_access.
+  //
+  struct iterator_core_access
+  {
+    template <class Facade>
+    static typename Facade::reference dereference(Facade const& f)
+    {
+      return f.dereference();
+    }
 
-template <class Base>
-typename Base::final operator+(
-    typename Base::difference_type n,  
-    const iterator_arith<Base>& i) // pass by ref, not value to avoid slicing -JGS
-{
-    typename Base::final tmp(i.self());
-    return tmp += n;
-}
+    template <class Facade>
+    static void increment(Facade& f)
+    {
+      f.increment();
+    }
 
-template <class Base1, class Base2>
-typename Base1::difference_type operator-(
-    const iterator_arith<Base1>& i,
-    const iterator_arith<Base2>& j)
-{
-    return j.self().distance_to(i.self());
-}
+    template <class Facade>
+    static void decrement(Facade& f)
+    {
+      f.decrement();
+    }
 
-// Used for a default template argument, when we can't afford to
-// instantiate the default calculation if unused.
-struct unspecified {};
+    template <class Facade1, class Facade2>
+    static bool equal(Facade1 const& f1, Facade2 const& f2, Facade1* = 0, Facade2* = 0)
+    {
+      return f1.equal(f2);
+    }
+
+    template <class Facade>
+    static void advance(Facade& f, typename Facade::difference_type n)
+    {
+      f.advance(n);
+    }
+
+    template <class Facade1, class Facade2>
+    static typename Facade1::difference_type distance_to(Facade1 const& f1,
+                                                         Facade2 const& f2,
+                                                         Facade1* = 0,
+                                                         Facade2* = 0)
+    {
+      return f1.distance_to(f2);
+    }
+
+  };
+
+  template <class Derived,
+            class V,
+            class R,
+            class P,
+            class C,
+            class D>
+  class repository :
+    public iterator<C, V, D, P, R>
+  {
+    typedef Derived derived_t;
+  };
+
+  template <class Base>
+  class downcastable :
+    public Base
+  {
+  public:
+    typename Base::derived_t& derived()
+    {
+      return static_cast<typename Base::derived_t&>(*this);
+    }
+
+    typename Base::derived_t const& derived() const 
+    {
+      return static_cast<typename Base::derived_t const&>(*this);
+    }
+  };
 
 #if 0
-// Beginnings of a failed attempt to conditionally provide base()
-// functions in iterator_adaptor. It may be that a public m_base
-// member is the only way to avoid boilerplate!
+  namespace detail {
 
-template <class Base>
-struct base_wrapper_impl
-{
-    template <class Super>
-    struct apply : Super
-    {
-        apply() {}
-        apply(Base b) : m_base(b) {}
-    
-        Base base() const { return m_base; }
-        Base& base() { return m_base; }
-     private:
-        Base m_base;
-    };
-};
-
-template <>
-struct base_wrapper_impl<unspecified>
-{
-    template <class Super>
-    struct apply : Super
+    template <class Final1,
+              class Final2>
+    struct compare_traits :
+      mpl::if_< is_convertible<Final2, Final1>,
+                Final1,
+                Final2 >
     {
     };
-};
+
+  } // namespace detail
 #endif
 
-template <class Final
-          , class V, class R, class P, class C, class D
-          , class B = iterator_arith<
-             iterator_comparisons<
-        downcastable<repository<Final, V, R, P, C, D> > > >
-         >
-struct iterator_adaptor : B 
-{
-    typedef V value_type;
-    typedef R reference;
-    typedef P pointer;
-    typedef C iterator_category;
-    typedef D difference_type;
+  template <class Base>
+  class iterator_comparisons :
+    public Base
+  {
+  };
+
+  template <class Base1,
+            class Base2>
+  inline
+  typename detail::enable_if_interoperable<typename Base1::derived_t,
+                                           typename Base2::derived_t,
+                                           bool>::type
+  operator==(iterator_comparisons<Base1> const& lhs,
+             iterator_comparisons<Base2> const& rhs)
+  {
+    // For those compilers that do not support enable_if
+    BOOST_STATIC_ASSERT((detail::is_interoperable< 
+                         typename Base1::derived_t,
+                         typename Base2::derived_t >::value));
+
+    return iterator_core_access::equal(lhs.derived(),
+                                       rhs.derived());
+  }
+
+  template <class Base1,
+            class Base2>
+  inline
+  typename detail::enable_if_interoperable<typename Base1::derived_t,
+                                           typename Base2::derived_t,
+                                           bool>::type
+  operator!=(iterator_comparisons<Base1> const& lhs,
+             iterator_comparisons<Base2> const& rhs)
+  {
+    // For those compilers that do not support enable_if
+    BOOST_STATIC_ASSERT((detail::is_interoperable< 
+                         typename Base1::derived_t,
+                         typename Base2::derived_t >::value));
+
+    return !iterator_core_access::equal(lhs.derived(),
+                                        rhs.derived());
+  }
+
+  template <class Base1,
+            class Base2>
+  inline
+  typename detail::enable_if_interoperable<typename Base1::derived_t,
+                                           typename Base2::derived_t,
+                                           bool>::type
+  operator<(iterator_comparisons<Base1> const& lhs,
+                        iterator_comparisons<Base2> const& rhs)
+  {
+    // For those compilers that do not support enable_if
+    BOOST_STATIC_ASSERT((detail::is_interoperable< 
+                         typename Base1::derived_t,
+                         typename Base2::derived_t >::value));
+
+    return iterator_core_access::distance_to(lhs.derived(),
+                                             rhs.derived()) > 0;
+  }
+
+  template <class Base1,
+            class Base2>
+  inline
+  typename detail::enable_if_interoperable<typename Base1::derived_t,
+                                           typename Base2::derived_t,
+                                           bool>::type
+  operator>(iterator_comparisons<Base1> const& lhs,
+                        iterator_comparisons<Base2> const& rhs)
+  {
+    // For those compilers that do not support enable_if
+    BOOST_STATIC_ASSERT((detail::is_interoperable< 
+                         typename Base1::derived_t,
+                         typename Base2::derived_t >::value));
+
+    return iterator_core_access::distance_to(lhs.derived(),
+                                             rhs.derived()) < 0;
+  }
+
+  template <class Base1,
+            class Base2>
+  inline
+  typename detail::enable_if_interoperable<typename Base1::derived_t,
+                                           typename Base2::derived_t,
+                                           bool>::type
+  operator<=(iterator_comparisons<Base1> const& lhs,
+                        iterator_comparisons<Base2> const& rhs)
+  {
+    // For those compilers that do not support enable_if
+    BOOST_STATIC_ASSERT((detail::is_interoperable< 
+                         typename Base1::derived_t,
+                         typename Base2::derived_t >::value));
+
+    return iterator_core_access::distance_to(lhs.derived(),
+                                             rhs.derived()) >= 0;
+  }
+
+  template <class Base1,
+            class Base2>
+  inline
+  typename detail::enable_if_interoperable<typename Base1::derived_t,
+                                           typename Base2::derived_t,
+                                           bool>::type
+  operator>=(iterator_comparisons<Base1> const& lhs,
+             iterator_comparisons<Base2> const& rhs)
+  {
+    // For those compilers that do not support enable_if
+    BOOST_STATIC_ASSERT((detail::is_interoperable< 
+                         typename Base1::derived_t,
+                         typename Base2::derived_t >::value));
+
+    return iterator_core_access::distance_to(lhs.derived(),
+                                             rhs.derived()) <= 0;
+  }
+
+
+  template <class Base>
+  class iterator_arith :
+    public Base 
+  {
+  };
+
+  template <class Base>
+  inline
+  typename Base::derived_t operator+(iterator_arith<Base> const&    i,
+                                     typename Base::difference_type n)
+  {
+    typename Base::derived_t tmp(i.derived());
+    return tmp += n;
+  }
+
+  template <class Base>
+  inline
+  typename Base::derived_t operator+(typename Base::difference_type n,
+                                     iterator_arith<Base> const&    i)
+  {
+    typename Base::derived_t tmp(i.derived());
+    return tmp += n;
+  }
+
+  template <class Base1,
+            class Base2>
+  inline
+  typename detail::enable_if_interoperable<typename Base1::derived_t,
+                                           typename Base2::derived_t,
+                                           typename Base1::difference_type>::type
+  operator-(iterator_arith<Base1> const& lhs,
+            iterator_arith<Base2> const& rhs)
+  {
+    // For those compilers that do not support enable_if
+    BOOST_STATIC_ASSERT((detail::is_interoperable< 
+                         typename Base1::derived_t,
+                         typename Base2::derived_t >::value));
+
+    BOOST_STATIC_ASSERT((is_same<typename Base1::difference_type,
+                                 typename Base2::difference_type>::value));
+
+    return iterator_core_access::distance_to(lhs.derived(),
+                                             rhs.derived());
+  }
+
+  template <class Derived,
+            class V,
+            class R,
+            class P,
+            class C, 
+            class D,
+            // We do not use the name base here, as base is used in
+            // reverse iterator.
+            class Super = iterator_arith<
+    iterator_comparisons<
+    downcastable<
+    repository< Derived, V, R, P, C, D > > > >
+  >
+  class iterator_facade : 
+    public Super
+  {
+    typedef Super super_t;
+
+  public:
+    typedef typename super_t::reference       reference;
+    typedef typename super_t::difference_type difference_type;
 
     reference operator*() const
-    { return self().dereference(); }
+    { return iterator_core_access::dereference(this->derived()); }
 
     // Needs eventual help for input iterators
-    P operator->() const { return &self().dereference(); }
-    
-    //operator->() const { return detail::operator_arrow(*this, iterator_category()); }
-    
+    P operator->() const { return &iterator_core_access::dereference(this->derived()); }
+        
     reference operator[](difference_type n) const
     { return *(*this + n); }
-    Final& operator++()
-    { self().increment(); return self(); }
-    Final operator++(int)
-    { Final tmp(self()); ++*this; return tmp; }
-    Final& operator--()
-    { self().decrement(); return self(); }
-    Final operator--(int)
-    { Final tmp(self()); --*this; return tmp; }
-    Final& operator+=(difference_type n)
-    { self().advance(n); return self(); }
-    Final& operator-=(difference_type n)
-    { self().advance(-n); return self(); }
-    Final operator-(difference_type x) const
-    { Final result(self()); return result -= x; }
 
-    template <class Final2, class V2, class R2, class P2, class B2>
-    bool equal(iterator_adaptor<Final2,V2,R2,P2,C,D,B2> const& x) const
+    Derived& operator++()
+    { iterator_core_access::increment(this->derived()); return this->derived(); }
+
+    Derived operator++(int)
+    { Derived tmp(this->derived()); ++*this; return tmp; }
+  
+    Derived& operator--()
+    { iterator_core_access::decrement(this->derived()); return this->derived(); }
+  
+    Derived operator--(int)
+    { Derived tmp(this->derived()); --*this; return tmp; }
+  
+    Derived& operator+=(difference_type n)
+    { iterator_core_access::advance(this->derived(), n); return this->derived(); }
+  
+    Derived& operator-=(difference_type n)
+    { iterator_core_access::advance(this->derived(), -n); return this->derived(); }
+  
+    Derived operator-(difference_type x) const
+    { Derived result(this->derived()); return result -= x; }
+  };
+
+  //
+  // We should provide NTP here
+  //
+  // TODO Handle default arguments the same way as
+  // in former ia lib
+  //
+  template <class Derived,
+            class Iterator,
+            class Value     = typename std::iterator_traits<Iterator>::value_type,
+            class Reference = typename std::iterator_traits<Iterator>::reference,
+            class Pointer   = typename std::iterator_traits<Iterator>::pointer,
+            class Category  = typename std::iterator_traits<Iterator>::iterator_category,
+            class Distance  = typename std::iterator_traits<Iterator>::difference_type>
+  class iterator_adaptor :
+    public iterator_facade<Derived,
+                           Value,
+                           Reference,
+                           Pointer,
+                           Category,
+                           Distance>
+  {
+    friend class iterator_core_access;
+
+  public:
+    iterator_adaptor() {}
+
+    explicit iterator_adaptor(Iterator iter)
+      : m_iterator(iter)
     {
-        return self().base() == x.self().base();
-    }
-    void advance(difference_type n)
-    {
-        self().base() += n;
-    }
-
-    reference dereference() const { return *self().base(); }  
-    
-    void increment() { ++self().base(); }
-    void decrement() { --self().base(); }
-
-    template <class Final2, class B2, class V2, class R2, class P2>
-    difference_type
-    distance_to(const iterator_adaptor<Final2,V2,R2,P2,C,D,B2>& y) const
-    {
-        return y.self().base() - self().base();//?
-    }
-
-    // Can't be private, or const/non-const interactions don't work
-    using B::self;
-};
-
-
-template <class Base, 
-          class V, class R, class P, class C, class D>
-struct reverse_iterator
-    : iterator_adaptor<
-         reverse_iterator<Base, V, R, P, C, D>, V, R, P, C, D
-      >
-{
-    typedef iterator_adaptor<reverse_iterator<Base, V, R, P, C, D>, V, R, P, C, D> super;
-    
-//  friend class super;
-    // hmm, I don't like the next two lines
-//  template <class Der> friend struct iterator_comparisons;
-//  template <class Der, class Dist> friend struct iterator_arith;
-    
- public:
-    reverse_iterator(const Base& x) : m_base(x) { }
-
-    reverse_iterator() { }
-
-    Base const& base() const { return m_base; }
-    
-    template <class B2, class V2, class R2, class P2>
-    reverse_iterator(const reverse_iterator<B2,V2,R2,P2,C,D>& y)
-        : m_base(y.m_base) { }
-
-
-    typename super::reference dereference() const { return *boost::prior(m_base); }
-    
-    void increment() { --m_base; }
-    void decrement() { ++m_base; }
-    void advance(typename super::difference_type n)
-    {
-        m_base -= n;
     }
 
-    template <class B2, class V2, class R2, class P2>
-    typename super::difference_type
-    distance_to(const reverse_iterator<B2,V2,R2,P2,C,D>& y) const
+    Iterator base() const { return m_iterator; }
+
+  protected:
+    // Core iterator interface for iterator_facade
+    // 
+    Reference dereference() const { return *m_iterator; }
+
+    template <class OtherDerived,
+              class OtherIterator,
+              class OtherValue,     
+              class OtherReference, 
+              class OtherPointer >   
+    bool equal(iterator_adaptor<OtherDerived,
+                                OtherIterator,
+                                OtherValue,
+                                OtherReference,
+                                OtherPointer,
+                                Category,
+                                Distance> const& x) const
     {
-        return y.m_base - m_base;
+      return m_iterator == x.base();
     }
- private:
-    Base m_base;
-};
+  
+    void advance(Distance n)
+    {
+      m_iterator += n;
+    }
+  
+    void increment() { ++m_iterator; }
+    void decrement() { --m_iterator; }
 
-template <class AdaptableUnaryFunction, class Base>
-struct transform_iterator
-    : iterator_adaptor<
-         transform_iterator<AdaptableUnaryFunction, Base>, 
-         typename AdaptableUnaryFunction::result_type,
-         typename AdaptableUnaryFunction::result_type, 
-         typename AdaptableUnaryFunction::result_type*, 
-         iterator_tag<readable_iterator_tag,
-                      typename traversal_category<Base>::type>, 
-         typename detail::iterator_traits<Base>::difference_type
-      >
-{
- public: // types
-  typedef typename AdaptableUnaryFunction::result_type value_type;
+    template <class OtherDerived,
+              class OtherIterator,
+              class OtherValue,     
+              class OtherReference, 
+              class OtherPointer >   
+    Distance distance_to(iterator_adaptor<OtherDerived,
+                                          OtherIterator,
+                                          OtherValue,
+                                          OtherReference,
+                                          OtherPointer,
+                                          Category,
+                                          Distance> const& y) const
+    {
+      return y.base() - m_iterator;
+    }
 
- public: // member functions
-  transform_iterator() { }
+  private:
+    Iterator m_iterator;
 
-  transform_iterator(const Base& x, AdaptableUnaryFunction f)
-    : m_base(x), m_f(f) { }
+  };
 
-  value_type dereference() const { return m_f(*m_base); }
+  //
+  //
+  //
+  template <class Iterator>
+  class reverse_iterator :
+    public iterator_adaptor< reverse_iterator<Iterator>, Iterator >
+  {
+    typedef iterator_adaptor< reverse_iterator<Iterator>, Iterator > super_t;
 
-  template <class F2, class B2>
-  transform_iterator(const transform_iterator<F2,B2>& y)
-	: m_base(y.m_base), m_f(y.m_f) { }
+    friend class iterator_core_access;
 
-  Base& base() { return m_base; }
-  Base const& base() const { return m_base; }
+  public:
+    reverse_iterator() {}
+
+    explicit reverse_iterator(Iterator x) 
+      : super_t(x) {}
+
+    template<class OtherIterator>
+    reverse_iterator(reverse_iterator<OtherIterator> const& r,
+                     typename enable_if_convertible<OtherIterator, Iterator>::type* = 0)
+      : super_t(r.base()) {}
+
+  private:
+    typename super_t::reference dereference() const { return *boost::prior(this->base()); }
     
-private:
-  Base m_base;
-  AdaptableUnaryFunction m_f;
-};
+    void increment() { super_t::decrement(); }
+    void decrement() { super_t::increment(); }
 
-// This macro definition is only temporary in this file
+    void advance(typename super_t::difference_type n)
+    {
+      super_t::advance(-n);
+    }
+
+    template <class OtherIterator>
+    typename super_t::difference_type
+    distance_to(reverse_iterator<OtherIterator> const& y) const
+    {
+      return -super_t::distance_to(y);
+    }
+  };
+
+  //
+  // TODO fix category
+  //
+  template <class AdaptableUnaryFunction, class Iterator>
+  class transform_iterator :
+    public iterator_adaptor< transform_iterator<AdaptableUnaryFunction, Iterator>,
+                             Iterator,
+                             typename AdaptableUnaryFunction::result_type,
+                             typename AdaptableUnaryFunction::result_type, 
+                             typename AdaptableUnaryFunction::result_type*
+                             >
+  {
+    typedef iterator_adaptor< transform_iterator<AdaptableUnaryFunction, Iterator>,
+                              Iterator,
+                              typename AdaptableUnaryFunction::result_type,
+                              typename AdaptableUnaryFunction::result_type, 
+                              typename AdaptableUnaryFunction::result_type* > super_t;
+
+    friend class iterator_core_access;
+
+  public:
+    transform_iterator() { }
+
+    transform_iterator(Iterator const&        x,
+                       AdaptableUnaryFunction f)
+      : super_t(x), m_f(f) { }
+
+    template<class OtherIterator>
+    transform_iterator(transform_iterator<AdaptableUnaryFunction, OtherIterator> const& t,
+                       typename enable_if_convertible<OtherIterator, Iterator>::type* = 0)
+      : super_t(t.base()), m_f(t.functor()) {}
+
+    AdaptableUnaryFunction functor() const { return m_f; }
+
+  private:
+    typename super_t::value_type dereference() const { return m_f(super_t::dereference()); }
+
+    AdaptableUnaryFunction m_f;
+  };
+
+  // This macro definition is only temporary in this file
 # if !defined(BOOST_MSVC) || BOOST_MSVC > 1300
 #  define BOOST_ARG_DEPENDENT_TYPENAME typename
 # else
 #  define BOOST_ARG_DEPENDENT_TYPENAME
 # endif
 
-namespace detail
-{
-  //
-  // Detection for whether a type has a nested `element_type'
-  // typedef. Used to detect smart pointers. We're having trouble
-  // auto-detecting smart pointers with gcc-2.95 via the nested
-  // element_type member. However, we really ought to have a
-  // specializable is_pointer template which can be used instead with
-  // something like boost/python/pointee.hpp to find the value_type.
-  //
-  namespace aux
-  {
-    BOOST_MPL_HAS_XXX_TRAIT_DEF(element_type)
-  }
+  struct unspecified {};
 
-  template <class T>
-  struct has_element_type
+  namespace detail
+  {
+    //
+    // Detection for whether a type has a nested `element_type'
+    // typedef. Used to detect smart pointers. We're having trouble
+    // auto-detecting smart pointers with gcc-2.95 via the nested
+    // element_type member. However, we really ought to have a
+    // specializable is_pointer template which can be used instead with
+    // something like boost/python/pointee.hpp to find the value_type.
+    //
+    namespace aux
+    {
+      BOOST_MPL_HAS_XXX_TRAIT_DEF(element_type)
+        }
+
+    template <class T>
+    struct has_element_type
       : mpl::if_<
-          is_class<T>
+      is_class<T>
 # if __GNUC__ == 2 // gcc 2.95 doesn't seem to be able to detect element_type without barfing
-          , mpl::bool_c<false>
+      , mpl::bool_c<false>
 # else 
-          , aux::has_element_type<T>
+      , aux::has_element_type<T>
 # endif 
-          , mpl::bool_c<false>
-        >::type
-  {
-  };
+      , mpl::bool_c<false>
+    >::type
+    {
+    };
   
-  // Metafunction returning the nested element_type typedef
-  template <class T>
-  struct smart_pointer_traits
-  {
+    // Metafunction returning the nested element_type typedef
+    template <class T>
+    struct smart_pointer_traits
+    {
       typedef typename remove_const<
-          typename T::element_type
+        typename T::element_type
       >::type value_type;
 
       typedef typename T::element_type& reference;
       typedef typename T::element_type* pointer;
-  };
+    };
 
-  // If the Value parameter is unspecified, we use this metafunction
-  // to deduce the default types
-  template <class Iter>
-  struct indirect_defaults
+    // If the Value parameter is unspecified, we use this metafunction
+    // to deduce the default types
+    template <class Iter>
+    struct indirect_defaults
       : mpl::if_c<
-          has_element_type<typename iterator_traits<Iter>::value_type>::value
-          , smart_pointer_traits<typename iterator_traits<Iter>::value_type>
-          , iterator_traits<typename iterator_traits<Iter>::value_type>
-      >::type
-  {
+      has_element_type<typename iterator_traits<Iter>::value_type>::value
+      , smart_pointer_traits<typename iterator_traits<Iter>::value_type>
+      , iterator_traits<typename iterator_traits<Iter>::value_type>
+    >::type
+    {
       typedef typename iterator_traits<Iter>::iterator_category iterator_category;
       typedef typename iterator_traits<Iter>::difference_type difference_type;
-  };
+    };
 
-  template <class Base, class Traits>
-  struct indirect_traits
+    template <class Base, class Traits>
+    struct indirect_traits
       : mpl::if_<is_same<Traits,unspecified>, indirect_defaults<Base>, Traits>::type
+    {
+    };
+  } // namespace detail
+
+  template <class Iterator, class Traits = unspecified>
+  class indirect_iterator :
+    public iterator_adaptor< indirect_iterator<Iterator, Traits>,
+                             Iterator,
+                             typename detail::indirect_traits<Iterator, Traits>::value_type,
+                             typename detail::indirect_traits<Iterator, Traits>::reference,
+                             typename detail::indirect_traits<Iterator, Traits>::pointer,
+                             typename detail::indirect_traits<Iterator, Traits>::iterator_category,
+                             typename detail::indirect_traits<Iterator, Traits>::difference_type >
   {
-  };
-} // namespace detail
+    typedef iterator_adaptor< indirect_iterator<Iterator, Traits>,
+                              Iterator,
+                              typename detail::indirect_traits<Iterator, Traits>::value_type,
+                              typename detail::indirect_traits<Iterator, Traits>::reference,
+                              typename detail::indirect_traits<Iterator, Traits>::pointer,
+                              typename detail::indirect_traits<Iterator, Traits>::iterator_category,
+                              typename detail::indirect_traits<Iterator, Traits>::difference_type > super_t;
 
-template <class Base, class Traits = unspecified>
-struct indirect_iterator
-    : iterator_adaptor<
-       indirect_iterator<Base,Traits>
-        , typename detail::indirect_traits<Base,Traits>::value_type
-        , typename detail::indirect_traits<Base,Traits>::reference
-        , typename detail::indirect_traits<Base,Traits>::pointer
-        , typename detail::indirect_traits<Base,Traits>::iterator_category
-        , typename detail::indirect_traits<Base,Traits>::difference_type
-      >
-{
+    friend class iterator_core_access;
+
+  public:
     indirect_iterator() {}
-    
-    typename detail::indirect_traits<Base,Traits>::reference
-    dereference() const { return **this->m_base; }
 
-    indirect_iterator(Base iter)
-        : m_base(iter) {}
+    indirect_iterator(Iterator iter)
+      : super_t(iter) {}
 
-    template <class Base2, class Traits2>
-    indirect_iterator(const indirect_iterator<Base2,Traits2>& y)
-        : m_base(y.base())
-    {}
-    
-    Base& base() { return m_base; }
-    Base const& base() const { return m_base; }
- private:
-    Base m_base;
-};
+    template <class OtherIterator,
+              class OtherTraits>
+    indirect_iterator(indirect_iterator<OtherIterator, OtherTraits> const& y,
+                      typename enable_if_convertible<OtherIterator, Iterator>::type* = 0)
+      : super_t(y.base())  {}
 
-template <class Iter>
-indirect_iterator<Iter> make_indirect_iterator(Iter x)
-{
+  private:    
+    typename super_t::reference dereference() const { return **this->base(); }
+
+  };
+
+  template <class Iter>
+  inline
+  indirect_iterator<Iter> make_indirect_iterator(Iter x)
+  {
     return indirect_iterator<Iter>(x);
-}
+  }
 
-template <class Traits, class Iter>
-indirect_iterator<Iter,Traits> make_indirect_iterator(Iter x, Traits* = 0)
-{
-    return indirect_iterator<Iter,Traits>(x);
-}
+  template <class Traits, class Iter>
+  inline
+  indirect_iterator<Iter,Traits> make_indirect_iterator(Iter x, Traits* = 0)
+  {
+    return indirect_iterator<Iter, Traits>(x);
+  }
 
 } // namespace boost
 
