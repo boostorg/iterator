@@ -441,19 +441,21 @@ Header ``<iterator_helper>`` synopsis    [lib.iterator.helper.synopsis]
   template <class Iterator>
   class reverse_iterator;
 
-  template <class UnaryFunction, 
-            class Iterator, 
-            class Reference = use_default, 
-            class Value = use_default>
+  template <
+      class UnaryFunction
+    , class Iterator
+    , class Reference = use_default
+    , class Value = use_default
+  >
   class transform_iterator;
 
   template <class Predicate, class Iterator>
   class filter_iterator;
 
   template <
-      class Incrementable, 
-      class Category = use_default, 
-      class Difference = use_default
+      class Incrementable
+    , class Category = use_default
+    , class Difference = use_default
   >
   class counting_iterator
 
@@ -492,7 +494,7 @@ Class template ``iterator_facade``
 
       reference operator*() const;
       /* see below */ operator->() const;
-      /* unspecified */ operator[](difference_type n) const;
+      /* impl defined */ operator[](difference_type n) const;
       Derived& operator++();
       Derived operator++(int);
       Derived& operator--();
@@ -558,12 +560,12 @@ Class template ``iterator_facade``
                      typename Derived::difference_type n)
 
 
-The ``enable_if_interoperable`` template used above is for exposition
+[*Note:* The ``enable_if_interoperable`` template used above is for exposition
 purposes. The member operators should be only be in an overload set
 provided the derived types ``Dr1`` and ``Dr2`` are interoperable, by
 which we mean they are convertible to each other.  The
 ``enable_if_interoperable`` approach uses SFINAE to take the operators
-out of the overload set when the types are not interoperable.
+out of the overload set when the types are not interoperable.]
 
 
 .. we need a new label here because the presence of markup in the
@@ -639,10 +641,6 @@ through member functions of class ``iterator_core_access``.
 
 *see below* ``operator->() const;``
 
-:Requires: 
-:Effects: 
-:Postconditions: 
-
 :Returns: If ``X::reference`` is a reference type, returns an object
   of type ``X::pointer`` equal to::
 
@@ -650,35 +648,24 @@ through member functions of class ``iterator_core_access``.
 
   Otherwise returns an object of unspecified type such that, given an
   object ``a`` of type ``X``, ``a->m`` is equivalent to ``(w = *a,
-  *w*.m)`` for some temporary object ``w`` of type ``X::value_type``.
+  w.m)`` for some temporary object ``w`` of type ``X::value_type``.
 
   The type ``X::pointer`` is a non-const pointer to ``Value``
   if the access category for ``X`` derives from ``writable_iterator_tag``,
   and a const pointer to ``Value`` otherwise.
 
 
-:Throws: 
-:Complexity: 
-
-
 *unspecified* ``operator[](difference_type n) const;``
-
-:Requires: 
-:Effects: 
-:Postconditions: 
 
 :Returns: an object convertible to ``X::reference`` and holding a copy
      *p* of ``a+n`` such that, for a constant object ``v`` of type
      ``X::value_type``, ``X::reference(a[n] = v)`` is equivalent
      to ``p = v``.
 
-:Throws: 
-:Complexity: 
 
 
 ``Derived& operator++();``
 
-:Requires: 
 :Effects: 
 
   ::
@@ -692,14 +679,9 @@ through member functions of class ``iterator_core_access``.
    the downcast.  An alternative to what I did would be to mention it
    above where we talk about accessibility.
 
-:Postconditions: 
-:Returns:
-:Throws: 
-:Complexity: 
 
 ``Derived operator++(int);``
 
-:Requires: 
 :Effects:
 
   ::
@@ -708,14 +690,9 @@ through member functions of class ``iterator_core_access``.
     ++*this;
     return tmp;
 
-:Postconditions: 
-:Returns:
-:Throws: 
-:Complexity: 
 
 ``Derived& operator--();``
 
-:Requires: 
 :Effects:
 
    ::
@@ -723,14 +700,9 @@ through member functions of class ``iterator_core_access``.
       static_cast<Derived*>(this)->decrement();
       return *this;
 
-:Postconditions: 
-:Returns: 
-:Throws: 
-:Complexity: 
 
 ``Derived operator--(int);``
 
-:Requires: 
 :Effects:
 
   ::
@@ -739,14 +711,9 @@ through member functions of class ``iterator_core_access``.
     --*this;
     return tmp;
 
-:Postconditions: 
-:Returns:
-:Throws: 
-:Complexity: 
 
 ``Derived& operator+=(difference_type n);``
 
-:Requires: 
 :Effects:
 
   ::
@@ -754,14 +721,9 @@ through member functions of class ``iterator_core_access``.
       static_cast<Derived*>(this)->advance(n);
       return *this;
 
-:Postconditions: 
-:Returns:
-:Throws: 
-:Complexity: 
 
 ``Derived& operator-=(difference_type n);``
 
-:Requires: 
 :Effects:
 
    ::
@@ -769,23 +731,15 @@ through member functions of class ``iterator_core_access``.
       static_cast<Derived*>(this)->advance(-n);
       return *this;
 
-:Postconditions: 
-:Returns:
-:Throws: 
-:Complexity:
 
 ``Derived operator-(difference_type n) const;``
 
-:Requires: 
 :Effects: 
 
    Derived tmp(static_cast<Derived const*>(this));
    return tmp -= n;
 
-:Postconditions: 
 :Returns: ``static_cast<Derived const*>(this)->advance(-n);``
-:Throws: 
-:Complexity: 
 
 
 Iterator adaptor [lib.iterator.adaptor]
@@ -828,21 +782,21 @@ Class template ``iterator_adaptor``
       Base const& base_reference() const;
       Base& base_reference();
    private: // Core iterator interface for iterator_facade.  
-      typename super_t::reference dereference() const;
+      typename iterator_adaptor::reference dereference() const;
 
       template <
       class OtherDerived, class OtherIterator, class V, class C, class R, class D
       >   
       bool equal(iterator_adaptor<OtherDerived, OtherIterator, V, C, R, D> const& x) const;
   
-      void advance(typename super_t::difference_type n);
+      void advance(typename iterator_adaptor::difference_type n);
       void increment();
       void decrement();
 
       template <
           class OtherDerived, class OtherIterator, class V, class C, class R, class D
       >   
-      typename super_t::difference_type distance_to(
+      typename iterator_adaptor::difference_type distance_to(
           iterator_adaptor<OtherDerived, OtherIterator, V, C, R, D> const& y) const;
 
    private:
@@ -947,7 +901,7 @@ following pseudo-code specifies the traits types for
 ``iterator_adaptor`` private member functions
 ---------------------------------------------
 
-``typename super_t::reference dereference() const;``
+``typename iterator_adaptor::reference dereference() const;``
 
 :Returns: ``*m_iterator``
 
@@ -961,7 +915,7 @@ following pseudo-code specifies the traits types for
 :Returns: ``m_iterator == x.base()``
 
 
-``void advance(typename super_t::difference_type n);``
+``void advance(typename iterator_adaptor::difference_type n);``
 
 :Effects: ``m_iterator += n;``
 
@@ -978,7 +932,7 @@ following pseudo-code specifies the traits types for
   template <
       class OtherDerived, class OtherIterator, class V, class C, class R, class D
   >   
-  typename super_t::difference_type distance_to(
+  typename iterator_adaptor::difference_type distance_to(
       iterator_adaptor<OtherDerived, OtherIterator, V, C, R, D> const& y) const;
 
 :Returns: ``y.base() - m_iterator``
@@ -1018,7 +972,6 @@ Class template ``indirect_iterator``
   class indirect_iterator
     : public iterator_adaptor</* see discussion */>
   {
-      typedef iterator_adaptor</* see discussion */> super_t;
       friend class iterator_core_access;
    public:
       indirect_iterator();
@@ -1034,7 +987,7 @@ Class template ``indirect_iterator``
         , typename enable_if_convertible<Iterator2, Iterator>::type* = 0
       );
   private: // as-if specification
-      typename super_t::reference dereference() const
+      typename indirect_iterator::reference dereference() const
       {
           return **this->base();
       }
@@ -1123,39 +1076,35 @@ Class template ``reverse_iterator``
   class reverse_iterator :
     public iterator_adaptor< reverse_iterator<Iterator>, Iterator >
   {
-    typedef iterator_adaptor< reverse_iterator<Iterator>, Iterator > super_t;
     friend class iterator_core_access;
   public:
     reverse_iterator() {}
-
-    explicit reverse_iterator(Iterator x) 
-      : super_t(x) {}
+    explicit reverse_iterator(Iterator x) ;
 
     template<class OtherIterator>
     reverse_iterator(
         reverse_iterator<OtherIterator> const& r
       , typename enable_if_convertible<OtherIterator, Iterator>::type* = 0
-    )
-      : super_t(r.base())
-    {}
+    );
 
   private: // as-if specification
-    typename super_t::reference dereference() const { return *prior(this->base()); }
-    
-    void increment() { super_t::decrement(); }
-    void decrement() { super_t::increment(); }
+    typename reverse_iterator::reference dereference() const { return *prior(this->base()); }
 
-    void advance(typename super_t::difference_type n)
+    void increment() { --this->base_reference(); }
+    void decrement() { ++this->base_reference(); }
+
+    void advance(typename reverse_iterator::difference_type n)
     {
-      super_t::advance(-n);
+	this->base_reference() += -n;
     }
 
     template <class OtherIterator>
-    typename super_t::difference_type
+    typename reverse_iterator::difference_type
     distance_to(reverse_iterator<OtherIterator> const& y) const
     {
-      return -super_t::distance_to(y);
+	return this->base_reference() - y.base();
     }
+
   };
 
 
@@ -1434,8 +1383,9 @@ Counting iterator
 -----------------
 
 The counting iterator adaptor implements dereference by returning a
-reference to the base object. The other operations are implemented
-by the base object, as per the inheritance from ``iterator_adaptor``.
+reference to the base object. The other operations are implemented by
+the base ``m_iterator``, as per the inheritance from
+``iterator_adaptor``.
 
 
 Class template ``counting_iterator``
@@ -1443,7 +1393,7 @@ Class template ``counting_iterator``
 
 ::
 
-  template <class Incrementable, class Category = not_specified, class Difference = not_specified>
+  template <class Incrementable, class Category = use_default, class Difference = use_default>
   class counting_iterator
     : public iterator_adaptor<
           counting_iterator<Incrementable, Category, Difference>
@@ -1452,43 +1402,32 @@ Class template ``counting_iterator``
         , /* see details for category */
         , Incrementable const&
         , Incrementable const*
-        , /* see details for difference */>
+        , /* distance = Difference or a signed integral type */>
   {
-      typedef iterator_adaptor</* see details */> super_t;
       friend class iterator_core_access;
    public:
       counting_iterator();
       counting_iterator(counting_iterator const& rhs);
       counting_iterator(Incrementable x);
    private:
-
-      typename super_t::reference dereference() const
+      typename counting_iterator::reference dereference() const
       {
       	  return this->base_reference();
       }
-
-      // Why is this complicated? Why not let the default impl handle this? -JGS
-      template <class OtherIncrementable>
-      difference_type
-      distance_to(counting_iterator<OtherIncrementable> const& y) const
-      {
-	typedef typename mpl::if_<
-	    detail::is_numeric<Incrementable>
-	  , detail::number_distance<difference_type, Incrementable, OtherIncrementable>
-	  , detail::iterator_distance<difference_type, Incrementable, OtherIncrementable>
-	>::type d;
-
-	return d::distance(this->base(), y.base());
-      }
     };
+
+
+[*Note:* implementers are encouraged to provide a 
+  override of ``distance_to`` that avoids overflows
+  in the cases when the ``Incrementable`` type
+  is a numeric type.]
 
 ``counting_iterator`` requirements
 ----------------------------------
 
 The ``Incrementable`` type must be Default Constructible, Copy
-Constructible, and Assignable.  Also, the ``Incrementable`` type must
-provide access to an associated ``difference_type`` and
-``iterator_category`` through the ``counting_iterator_traits`` class.
+Constructible, and Assignable.  The default distance is
+an implementation defined signed integegral type.
 
 The resulting ``counting_iterator`` models Readable Lvalue Iterator.
 
@@ -1511,7 +1450,7 @@ Traversal Iterator, then these additional expressions are also
 required:
 ::
 
-    counting_iterator_traits<Incrementable>::difference_type n;
+    counting_iterator::difference_type n;
     i += n
     n = i - j
     i < j
@@ -1531,9 +1470,6 @@ required:
 
 :Returns: An instance of ``counting_iterator`` that is a copy of ``rhs``.
 
-.. Why isn't this constructor templated and use
-   enable_if_interoperable like the rest? That version
-   was ifdef'd out in the impl. Why? -JGS 
 
 
 ``counting_iterator(Incrementable x);``
