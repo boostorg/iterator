@@ -1246,8 +1246,12 @@ model of Forward Traversal Iterator if ``Iterator`` is, otherwise the
 access category of the ``filter_iterator`` will be the most refined
 standard access category that is modeled by ``Iterator``.
 
-The ``Predicate`` must be an Assignable, Copy Constructible type also
-with the valid expression ``p(x)`` where ``p`` is an object of type
+.. Thomas is going to try implementing filter_iterator so that
+   it will be bidirectional if the underlying iterator is. -JGS
+
+
+The ``Predicate`` must be Assignable, Copy Constructible, and the
+expression ``p(x)`` must be valid where ``p`` is an object of type
 ``Predicate``, ``x`` is an object of type
 ``iterator_traits<Iterator>::value_type``, and where the type of
 ``p(x)`` must be convertible to ``bool``.
@@ -1304,6 +1308,10 @@ with the valid expression ``p(x)`` where ``p`` is an object of type
 Counting iterator
 -----------------
 
+The counting iterator adaptor implements dereference by returning the
+current value of the base object. The other operations are implemented
+by the base object, as per the inheritance from ``iterator_adaptor``.
+
 
 Class template ``counting_iterator``
 ....................................
@@ -1312,7 +1320,14 @@ Class template ``counting_iterator``
 
   template <class Incrementable, class Category = not_specified, class Difference = not_specified>
   class counting_iterator
-    : public iterator_adaptor</* see details */>
+    : public iterator_adaptor<
+          counting_iterator<Incrementable, Category, Difference>
+        , Incrementable
+        , Incrementable
+        , /* see details for category */
+        , Incrementable const&
+        , Incrementable const*
+        , /* see details for difference */>
   {
       typedef iterator_adaptor</* see details */> super_t;
       friend class iterator_core_access;
@@ -1320,7 +1335,86 @@ Class template ``counting_iterator``
       counting_iterator();
       counting_iterator(counting_iterator const& rhs);
       counting_iterator(Incrementable x);
-  };
+   private:
+
+      typename super_t::reference dereference() const
+      {
+	  return this->base_reference();
+      }
+
+      // Why is this complicated? Why not let the default impl handle this? -JGS
+      template <class OtherIncrementable>
+      difference_type
+      distance_to(counting_iterator<OtherIncrementable> const& y) const
+      {
+	typedef typename mpl::if_<
+	    detail::is_numeric<Incrementable>
+	  , detail::number_distance<difference_type, Incrementable, OtherIncrementable>
+	  , detail::iterator_distance<difference_type, Incrementable, OtherIncrementable>
+	>::type d;
+
+	return d::distance(this->base(), y.base());
+      }
+    };
+
+``counting_iterator`` requirements
+----------------------------------
+
+The ``Incrementable`` type must be Default Constructible, Copy
+Constructible, and Assignable.  Also, the ``Incrementable`` type must
+provide access to an associated ``difference_type`` and
+``iterator_category`` through the ``counting_iterator_traits`` class.
+
+The resulting ``counting_iterator`` models Readable Lvalue Iterator.
+
+Furthermore, if you wish to create a counting iterator that is a Forward
+Traversal Iterator, then the following expressions must be valid:
+::
+
+    Incrementable i, j;
+    ++i         // pre-increment
+    i == j      // operator equal
+
+If you wish to create a counting iterator that is a 
+Bidirectional Traversal Iterator, then pre-decrement is also required:
+::
+
+    --i
+
+If you wish to create a counting iterator that is a Random Access
+Traversal Iterator, then these additional expressions are also
+required:
+::
+
+    counting_iterator_traits<Incrementable>::difference_type n;
+    i += n
+    n = i - j
+    i < j
+
+
+
+
+``counting_iterator`` operations
+--------------------------------
+
+``counting_iterator();``
+
+:Returns: A default constructed instance of ``counting_iterator``.
+
+
+``counting_iterator(counting_iterator const& rhs);``
+
+:Returns: An instance of ``counting_iterator`` that is a copy of ``rhs``.
+
+.. Why isn't this constructor templated and use
+   enable_if_interoperable like the rest? That version
+   was ifdef'd out in the impl. Why? -JGS 
+
+
+``counting_iterator(Incrementable x);``
+
+:Returns: An instance of ``counting_iterator`` with its base
+    object copy constructed from ``x``.
 
 
 Function output iterator
@@ -1343,14 +1437,16 @@ Class template ``function_output_iterator``
   template <class UnaryFunction>
   class function_output_iterator {
   public:
-    typedef std::output_iterator_tag iterator_category;
+    typedef iterator_tag<
+          writable_iterator_tag
+        , incrementable_iterator_tag
+    > iterator_category;
     typedef void                value_type;
     typedef void                difference_type;
     typedef void                pointer;
     typedef void                reference;
 
-    explicit function_output_iterator(const UnaryFunction& f = UnaryFunction())
-      : m_f(f) {}
+    explicit function_output_iterator(const UnaryFunction& f = UnaryFunction());
 
     struct output_proxy {
       output_proxy(UnaryFunction& f);
@@ -1360,6 +1456,60 @@ Class template ``function_output_iterator``
     function_output_iterator& operator++();
     function_output_iterator& operator++(int);
   };
+
+
+``function_output_iterator`` requirements
+-----------------------------------------
+
+The ``UnaryFunction`` must be Assignable, Copy Constructible, and the
+expression ``f(x)`` must be valid, where ``f`` is an object of type
+``UnaryFunction`` and ``x`` is an object of a type accepted by ``f``.
+The resulting ``function_output_iterator`` is a model of the Writable
+and Incrementable Iterator concepts.
+
+
+``function_output_iterator`` operations
+---------------------------------------
+
+``explicit function_output_iterator(const UnaryFunction& f = UnaryFunction());``
+
+:Returns: An instance of ``function_output_iterator`` with
+  ``f`` stored as a data member.
+
+
+``output_proxy operator*();``
+
+:Returns: An instance of ``output_proxy`` constructed with
+  a copy of the unary function ``f``.
+  
+
+``function_output_iterator& operator++();``
+
+:Returns: ``*this``
+
+
+``function_output_iterator& operator++(int);``
+
+:Returns: ``*this``
+
+
+``function_output_iterator::output_proxy`` operations
+-----------------------------------------------------
+
+``output_proxy(UnaryFunction& f);``
+
+:Returns: An instance of ``output_proxy`` with ``f`` stored as
+    a data member.
+
+
+``template <class T> output_proxy& operator=(const T& value);``
+
+:Effects: 
+  ::
+
+      m_f(value); 
+      return *this; 
+
 
 
 .. [Cop95] [Coplien, 1995] Coplien, J., Curiously Recurring Template
