@@ -17,9 +17,12 @@
            access and positioning independently. This allows the
            concepts to more closely match the requirements
            of algorithms and provides better categorizations
-           of iterators that are used in practice.
+           of iterators that are used in practice. This proposal
+           is a revised version of paper n1297_.
           
 .. contents:: Table of Contents
+
+.. _n1297: http://anubis.dkuug.dk/jtc1/sc22/wg21/docs/papers/2001/n1297.html
 
 ============
  Motivation
