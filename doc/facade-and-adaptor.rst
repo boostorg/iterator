@@ -14,8 +14,8 @@
 .. _`Institute for Transport Railway Operation and Construction`: http://www.ive.uni-hannover.de
 
 :abstract: We propose a set of class templates that help programmers
-           build standard-conforming iterators and iterators
-           that adapt other iterators.
+           build standard-conforming iterators, both from scratch and
+           by adapting other iterators.
 
 .. contents:: Table of Contents
 
@@ -190,38 +190,24 @@ The user of ``iterator_facade`` derives his iterator class from an
 instantiation of ``iterator_facade`` and defines member functions
 implementing the core behaviors.  The following table describes
 expressions which are required to be valid depending on the category
-of the derived iterator type.
+of the derived iterator type.  These member functions are described
+briefly below and in more detail in the `iterator facade requirements`_.
 
-In the table below, ``X`` is the derived iterator type, ``a`` is an
-object of type ``X``, ``b`` and ``c`` are objects of type ``const X``,
-``n`` is an object of ``X::difference_type``, ``y`` is a constant
-object of a single pass iterator type interoperable with X, and ``z``
-is a constant object of a random access traversal iterator type
-interoperable with X.
-
-+----------------------------------------+----------------------------------------+-------------------------------------------------+-------------------------------------------+
-| Expression                             | Return Type                            |    Assertion/Note/Precondition/Postcondition    | Required to implement Iterator Concept(s) |
-|                                        |                                        |                                                 |                                           |
-+========================================+========================================+=================================================+===========================================+
-| ``c.dereference()``                    | ``X::reference``                       |                                                 | Readable Iterator, Writable Iterator      |
-+----------------------------------------+----------------------------------------+-------------------------------------------------+-------------------------------------------+
-| ``c.equal(b)``                         | convertible to bool                    |true iff ``b`` and ``c`` are equivalent.         | Single Pass Iterator                      |
-+----------------------------------------+----------------------------------------+-------------------------------------------------+-------------------------------------------+
-| ``c.equal(y)``                         | convertible to bool                    |true iff ``c`` and ``y`` refer to the same       | Single Pass Iterator                      |
-|                                        |                                        |position.  Implements ``c == y`` and ``c != y``. |                                           |
-+----------------------------------------+----------------------------------------+-------------------------------------------------+-------------------------------------------+
-| ``a.advance(n)``                       | unused                                 |                                                 | Random Access Traversal Iterator          |
-+----------------------------------------+----------------------------------------+-------------------------------------------------+-------------------------------------------+
-| ``a.increment()``                      | unused                                 |                                                 | Incrementable Iterator                    |
-+----------------------------------------+----------------------------------------+-------------------------------------------------+-------------------------------------------+
-| ``a.decrement()``                      | unused                                 |                                                 | Bidirectional Traversal Iterator          |
-+----------------------------------------+----------------------------------------+-------------------------------------------------+-------------------------------------------+
-| ``c.distance_to(b)``                   | convertible to X::difference_type      | equivalent to ``distance(c, b)``                | Random Access Traversal Iterator          |
-+----------------------------------------+----------------------------------------+-------------------------------------------------+-------------------------------------------+
-| ``c.distance_to(z)``                   | convertible to X::difference_type      |equivalent to ``distance(c, z)``.  Implements ``c| Random Access Traversal Iterator          |
-|                                        |                                        |- z``, ``c < z``, ``c <= z``, ``c > z``, and ``c |                                           |
-|                                        |                                        |>= c``.                                          |                                           |
-+----------------------------------------+----------------------------------------+-------------------------------------------------+-------------------------------------------+
+   +----------------------------------------+-------------------------------------------+
+   | Expression                             | Effects                                   |
+   +========================================+===========================================+
+   | ``i.dereference()``                    | Access the value referred to              |
+   +----------------------------------------+-------------------------------------------+
+   | ``i.equal(j)``                         | Compare for equality with ``j``           |
+   +----------------------------------------+-------------------------------------------+
+   | ``i.increment()``                      | Advance by one position                   |
+   +----------------------------------------+-------------------------------------------+
+   | ``i.decrement()``                      | Retreat by one position                   |
+   +----------------------------------------+-------------------------------------------+
+   | ``i.advance(n)``                       | Advance by ``n`` positions                |
+   +----------------------------------------+-------------------------------------------+
+   | ``i.distance_to(j)``                   | Measure the distance to ``j``             |
+   +----------------------------------------+-------------------------------------------+
 
 .. Should we add a comment that a zero overhead implementation of iterator_facade
    is possible with proper inlining?
@@ -330,8 +316,8 @@ which were easily implemented using ``iterator_adaptor``:
 
 Based on examples in the Boost library, users have generated many new
 adaptors, among them a permutation adaptor which applies some
-permutation to a Random Access Iterator, and a strided adaptor, which
-adapts a Random Access Iterator by multiplying its unit of motion by a
+permutation to a random access iterator, and a strided adaptor, which
+adapts a random access iterator by multiplying its unit of motion by a
 constant factor.  In addition, the Boost Graph Library (BGL) uses
 iterator adaptors to adapt other graph libraries, such as LEDA [10]
 and Stanford GraphBase [8], to the BGL interface (which requires C++
@@ -349,7 +335,7 @@ Header ``<iterator_helper>`` synopsis    [lib.iterator.helper.synopsis]
 
 ::
 
-  struct use_default { };
+  struct use_default;
 
   struct iterator_core_access { /* implementation detail */ };
   
@@ -408,6 +394,7 @@ Header ``<iterator_helper>`` synopsis    [lib.iterator.helper.synopsis]
 Iterator facade [lib.iterator.facade]
 =====================================
 
+
 The iterator requirements define a rich interface, containing many
 redundant operators, so that using iterators is convenient.  The
 ``iterator_facade`` class template makes it easier to create iterators
@@ -416,7 +403,30 @@ few core functions.  The user of ``iterator_facade`` derives his
 iterator class from an instantiation of ``iterator_facade`` and
 defines member functions implementing the core behaviors.
 
+.. Jeremy, I think this text is rather inappropriate for the
+   standard.  This is not the place to discuss motivation, for
+   example.  Compare with the standard text for vector:
 
+     1 A vector is a kind of sequence that supports random access
+     iterators. In addition, it supports (amortized) constant time
+     insert and erase operations at the end; insert and erase in the
+     middle take linear time. Storage management is handled
+     automatically, though hints can be given to improve efficiency.
+
+     2 A vector satisfies all of the requirements of a container and
+     of a reversible container (given in two tables in 23.1) and of a
+     sequence, including most of the optional sequence requirements
+     (23.1.1). The exceptions are the push_front and pop_front member
+     functions, which are not provided. Descriptions are pro- vided
+     here only for operations on vector that are not described in one
+     of these tables or for operations where there is additional
+     semantic information.
+
+   I suggest, instead:
+
+     ``iterator_facade`` is a base class template which implements the
+     interface of standard iterators in terms of a few core functions
+     and associated types, to be supplied by a derived iterator class.
 
 Template class ``iterator_facade``
 ----------------------------------
@@ -507,8 +517,11 @@ Template class ``iterator_facade``
                      typename Derived::difference_type n)
 
 
-.. nothing
 
+.. we need a new label here because the presence of markup in the
+   title prevents an automatic link from being generated
+
+.. _iterator facade requirements:
 
 ``iterator_facade`` requirements
 --------------------------------
@@ -657,24 +670,25 @@ interoperable with X.
 Iterator adaptor [lib.iterator.adaptor]
 =======================================
 
+.. Jeremy, the same argument about appropriateness applies here as well.
+
 A common pattern of iterator construction is the adaptation of one
 iterator to form a new one.  The functionality of an iterator is
 composed of four orthogonal aspects: traversal, indirection, equality
-comparison and distance measurement.  Adapting an old iterator to
-create a new one often saves work because one can reuse one aspect of
-functionality while redefining the other.  For example, the Standard
-provides ``reverse_iterator``, which adapts any Bidirectional Iterator
-by inverting its direction of traversal.  
+comparison, and distance measurement.  Adapting an old iterator to
+create a new one often saves work because one can change a few aspects
+of the functionality while retaining the rest.  For example, the
+Standard provides ``reverse_iterator``, which adapts any Bidirectional
+Iterator by inverting its direction of traversal.
 
 The ``iterator_adaptor`` class template fulfills the need for
 constructing adaptors.  Instantiations of ``iterator_adaptor`` serve
 as a base classes for new iterators, providing the default behaviour
-of forwarding all operations to the underlying iterator.  The deriving
-class can selectively replace these features in the derived iterator
-class.
+of forwarding all operations to the underlying iterator.  The user can
+selectively replace these features in the derived iterator class.
 
 The ``iterator_adaptor`` class template adapts a ``Base`` type to
-create a new iterator ("base" here means the type being adapted) .
+create a new iterator ("base" here means the type being adapted).
 The ``iterator_adaptor`` forwards all operations to an instance of the
 ``Base`` type, which it stores as a member.  The user of
 ``iterator_adaptor`` creates a class derived from an instantiation of
@@ -683,7 +697,6 @@ operations by implementing the (non-virtual) member functions
 described in [lib.iterator.facade]. The ``Base`` type need not meet
 the full requirements for an iterator. It need only support the
 operations that are not overriden by the users derived class.
-
 
 Template class ``iterator_adaptor``
 -----------------------------------
@@ -713,11 +726,17 @@ Template class ``iterator_adaptor``
 Write me.
 
 .. Make sure to mention that this words for both old and new
-  style iterators. -JGS
+   style iterators. -JGS
 
+.. I'm not sure we should say that in the standard text; let other
+   people add non-normative  in editing if they feel the need
+   ;-) -DWA
 
 Specialized adaptors [lib.iterator.special.adaptors]
 ====================================================
+
+.. The requirements for all of these need to be written *much* more
+   formally -DWA
 
 
 Indirect iterator
@@ -731,7 +750,7 @@ adaptor makes it possible to view a container of pointers
 
 
 Template class ``indirect_iterator``
-++++++++++++++++++++++++++++++++++++
+....................................
 
 ::
 
@@ -776,7 +795,7 @@ Template class ``indirect_iterator``
 
 
 ``indirect_iterator`` requirements
-++++++++++++++++++++++++++++++++++
+..................................
 
 The ``value_type`` of the ``Iterator`` template parameter should
 itself be dereferenceable. The return type of the ``operator*`` for
@@ -808,7 +827,10 @@ The indirect iterator will model whichever standard iterator concepts
 are modeled by the base iterator. For example, if the base iterator is
 a model of Random Access Traversal Iterator then so is the resulting
 indirect iterator.
-  
+
+.. I don't believe the above statement is true anymore in light of the
+   new categories.  I think it only applies to the traversal part of
+   the concept.
 
 Reverse iterator
 ----------------
@@ -823,7 +845,7 @@ comparisons and conversions between the mutable and const versions are
 implemented correctly.
 
 Template class ``reverse_iterator``
-+++++++++++++++++++++++++++++++++++
+...................................
 
 ::
 
@@ -868,7 +890,7 @@ Template class ``reverse_iterator``
 
 
 ``reverse_iterator`` requirements
-+++++++++++++++++++++++++++++++++
+.................................
 
 The base iterator must be a model of Bidirectional Traversal
 Iterator. The reverse iterator will model whichever standard iterator
@@ -888,7 +910,7 @@ then returns the result.
 
 
 Template class ``transform_iterator``
-+++++++++++++++++++++++++++++++++++++
+.....................................
 
 ::
 
@@ -923,7 +945,7 @@ Template class ``transform_iterator``
 
 
 ``transform_iterator`` requirements
-+++++++++++++++++++++++++++++++++++
+...................................
 
 Write me. Use ``result_of``?
 
@@ -940,7 +962,7 @@ skipped over.
 
 
 Template class ``filter_iterator``
-++++++++++++++++++++++++++++++++++
+..................................
 
 ::
 
@@ -972,7 +994,7 @@ Counting iterator
 
 
 Template class ``counting_iterator``
-++++++++++++++++++++++++++++++++++++
+....................................
 
 ::
 
@@ -1002,7 +1024,7 @@ proxy object.
 
 
 Template class ``function_output_iterator``
-+++++++++++++++++++++++++++++++++++++++++++
+...........................................
 
 ::
 
