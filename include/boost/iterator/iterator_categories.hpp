@@ -31,6 +31,8 @@
 
 #include <iterator>
 
+#include <boost/iterator/detail/config_def.hpp> // must be last #include
+
 #if BOOST_WORKAROUND(__MWERKS__, <=0x2407)
 #  define BOOST_NO_IS_CONVERTIBLE // "Convertible does not provide enough/is not working"
 #endif
@@ -336,6 +338,6 @@ namespace boost {
 
 } // namespace boost
 
-#undef BOOST_NO_IS_CONVERTIBLE
+#include <boost/iterator/detail/config_undef.hpp>
 
 #endif // BOOST_ITERATOR_CATEGORIES_HPP
