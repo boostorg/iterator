@@ -11,40 +11,25 @@
 #define BOOST_ITERATOR_CATEGORIES_HPP
 
 #include <boost/config.hpp>
+#include <boost/iterator/detail/categories.hpp>
 #include <boost/type_traits/conversion_traits.hpp>
 #include <boost/type_traits/cv_traits.hpp>
 #include <boost/detail/iterator.hpp>
+#include <boost/detail/workaround.hpp>
 #include <boost/mpl/apply_if.hpp>
 #include <boost/mpl/if.hpp>
 #include <boost/mpl/bool_c.hpp>
 #include <boost/mpl/aux_/has_xxx.hpp>
+#include <boost/mpl/logical/not.hpp>
 #include <boost/mpl/logical/or.hpp>
 #include <boost/mpl/logical/and.hpp>
 #include <iterator>
 
+#if BOOST_WORKAROUND(__MWERKS__, <=0x2407)
+#  define BOOST_NO_IS_CONVERTIBLE // "Convertible does not provide enough/is not working"
+#endif
+
 namespace boost {
-
-  // Return Type Categories
-  struct readable_iterator_tag { };
-  struct writable_iterator_tag { };
-  struct swappable_iterator_tag : 
-    virtual public readable_iterator_tag, // Not sure about this change -JGS
-    virtual public writable_iterator_tag { };
-  struct constant_lvalue_iterator_tag : 
-    virtual public readable_iterator_tag { };
-  struct mutable_lvalue_iterator_tag : 
-    virtual public swappable_iterator_tag,
-    virtual public constant_lvalue_iterator_tag { };
-
-  // Traversal Categories
-  struct input_traversal_tag { };
-  struct output_traversal_tag { };
-  struct forward_traversal_tag : virtual public input_traversal_tag, 
-    virtual public output_traversal_tag { };
-  struct bidirectional_traversal_tag : virtual public forward_traversal_tag { };
-  struct random_access_traversal_tag : virtual public bidirectional_traversal_tag { };
-
-  struct error_iterator_tag { };
 
   // When creating new iterators, you have three options. 
 
@@ -85,13 +70,13 @@ namespace boost {
     template <typename Category, typename ValueType>
     struct iter_category_to_return
         : mpl::if_<
-           is_convertible<Category*, std::forward_iterator_tag*>
+           is_forward_iterator<Category>
            , typename choose_lvalue_return<ValueType>::type
            , typename mpl::if_<
-                is_convertible<Category*, std::input_iterator_tag*>
+                is_input_iterator<Category>
                 , boost::readable_iterator_tag
                 , typename mpl::if_<
-                    is_convertible<Category*, std::output_iterator_tag*>
+                    is_output_iterator<Category>
                     , boost::writable_iterator_tag
                     , boost::error_iterator_tag
                   >::type
@@ -103,16 +88,16 @@ namespace boost {
     template <typename Category>
     struct iter_category_to_traversal
       : mpl::if_<
-          is_convertible<Category*, std::random_access_iterator_tag*>
+          is_random_access_iterator<Category>
           , random_access_traversal_tag
           , typename mpl::if_<
-              is_convertible<Category*, std::bidirectional_iterator_tag*>
+              is_bidirectional_iterator<Category>
               , bidirectional_traversal_tag
               , typename mpl::if_<
-                  is_convertible<Category*, std::forward_iterator_tag*>
+                  is_forward_iterator<Category>
                   , forward_traversal_tag
                   , typename mpl::if_<
-                      is_convertible<Category*, std::input_iterator_tag*>
+                      is_input_iterator<Category>
                       , input_traversal_tag
                       , output_traversal_tag
                     >::type
@@ -122,6 +107,23 @@ namespace boost {
     {
     };
 
+#if BOOST_WORKAROUND(__MWERKS__, <=0x2407) 
+    //
+    // has_traversal fails for cwpro7, so we have to use 
+    // something less sophisticated.
+    // 
+    // The solution depends on the fact that only
+    // std iterator categories work with is_xxx_iterator
+    // meta functions, as BOOST_NO_IS_CONVERTIBLE is
+    // defined for cwpro7.
+    //
+    template <class Tag>
+    struct is_new_iterator_tag :
+      mpl::logical_and< mpl::logical_not< is_input_iterator<Tag> >,
+                        mpl::logical_not< is_output_iterator<Tag> > >
+    {};
+
+#else
   BOOST_MPL_HAS_XXX_TRAIT_DEF(traversal)
 
     template <class Tag>
@@ -133,6 +135,9 @@ namespace boost {
           , mpl::bool_c<false> >::type
     {
     };
+
+#endif
+
   } // namespace detail
   
   namespace detail {
@@ -202,21 +207,23 @@ namespace boost {
 
 #endif
 
+  // TODO Fix this for BOOST_NO_IS_CONVERTIBLE
+
   template <class RC, class TC>
   struct cvt_iterator_category
       : mpl::if_<
           mpl::logical_or<
-             is_convertible<RC*, mutable_lvalue_iterator_tag*>
-             , is_convertible<RC*, constant_lvalue_iterator_tag*>
+             detail::is_mutable_lvalue_iterator<RC>
+             , detail::is_constant_lvalue_iterator<RC>
           >
           , typename mpl::if_<
-              is_convertible<TC*, random_access_traversal_tag*>
+              detail::is_random_access_traversal_iterator<TC>
               , std::random_access_iterator_tag
               , typename mpl::if_<
-                  is_convertible<TC*, bidirectional_traversal_tag*>
+                  detail::is_bidirectional_traversal_iterator<TC>
                   , std::bidirectional_iterator_tag
                   , typename mpl::if_<
-                      is_convertible<TC*, forward_traversal_tag*>
+                      detail::is_forward_traversal_iterator<TC>
                       , std::forward_iterator_tag
                       , error_iterator_tag
                     >::type
@@ -225,14 +232,14 @@ namespace boost {
 
           , typename mpl::if_<
             mpl::logical_and<
-               is_convertible<RC*, readable_iterator_tag*>
-               , is_convertible<TC*, input_traversal_tag*>
+               detail::is_readable_iterator<RC>
+               , detail::is_input_traversal_iterator<TC>
             >
             , std::input_iterator_tag
             , typename mpl::if_<
                 mpl::logical_and<
-                  is_convertible<RC*, writable_iterator_tag*>
-                  , is_convertible<TC*, output_traversal_tag*>
+                  detail::is_writable_iterator<RC>
+                  , detail::is_output_traversal_iterator<TC>
                 >
                 , std::output_iterator_tag
                 , error_iterator_tag
@@ -249,7 +256,10 @@ namespace boost {
     typedef TraversalTag traversal;
   };
 
-
 } // namespace boost
+
+#ifdef BOOST_NO_IS_CONVERTIBLE
+#  undef BOOST_NO_IS_CONVERTIBLE
+#endif
 
 #endif // BOOST_ITERATOR_CATEGORIES_HPP
