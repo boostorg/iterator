@@ -25,8 +25,10 @@
 // Use boost::detail::iterator_traits to work around some MSVC/Dinkumware problems.
 #include <boost/detail/iterator.hpp>
 
+// Use boost/limits to work around missing limits headers on some compilers
+#include <boost/limits.hpp>
+
 #include <algorithm>
-#include <limits>
 
 namespace boost_concepts {
   // Used a different namespace here (instead of "boost") so that the

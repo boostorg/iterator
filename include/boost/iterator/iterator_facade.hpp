@@ -151,13 +151,13 @@ namespace boost
     // to access the traits
     //
     template <class Iterator>
-    class index_operator_proxy
+    class operator_brackets_proxy
     {
         typedef typename Iterator::reference  reference;
         typedef typename Iterator::value_type value_type;
 
      public:
-        index_operator_proxy(Iterator const& iter)
+        operator_brackets_proxy(Iterator const& iter)
             : m_iter(iter)
         {}
 
@@ -166,7 +166,7 @@ namespace boost
             return *m_iter;
         }
 
-        index_operator_proxy& operator=(value_type const& val)
+        operator_brackets_proxy& operator=(value_type const& val)
         {
             *m_iter = val;
             return *this;
@@ -177,7 +177,7 @@ namespace boost
     };
 
     template <class Iterator, class ValueType, class Category, class Reference>
-    struct index_operator_result
+    struct operator_brackets_result
     {
         typedef typename access_category_tag<Category,Reference>::type access_category;
         
@@ -185,25 +185,42 @@ namespace boost
 
         typedef typename mpl::if_< 
             use_proxy
-          , index_operator_proxy<Iterator>
+          , operator_brackets_proxy<Iterator>
           , ValueType 
         >::type type;
     };
 
     template <class Iterator>
-    index_operator_proxy<Iterator> make_index_operator_result(Iterator const& iter, mpl::true_)
+    operator_brackets_proxy<Iterator> make_operator_brackets_result(Iterator const& iter, mpl::true_)
     {
-        return index_operator_proxy<Iterator>(iter);
+        return operator_brackets_proxy<Iterator>(iter);
     }
 
     template <class Iterator>
-    typename Iterator::value_type make_index_operator_result(Iterator const& iter, mpl::false_)
+    typename Iterator::value_type make_operator_brackets_result(Iterator const& iter, mpl::false_)
     {
       return *iter;
     }
 
   } // namespace detail
 
+
+  // Macros which describe the declarations of binary operators
+#  define BOOST_ITERATOR_FACADE_INTEROP_HEAD(prefix, op, result_type)       \
+    template <                                                              \
+        class Derived1, class V1, class C1, class R1, class P1, class D1    \
+      , class Derived2, class V2, class C2, class R2, class P2, class D2    \
+    >                                                                       \
+    prefix typename detail::enable_if_interoperable<                        \
+        Derived1, Derived2, result_type                                     \
+    >::type                                                                 \
+    operator op(                                                            \
+        iterator_facade<Derived1, V1, C1, R1, P1, D1> const& lhs            \
+      , iterator_facade<Derived2, V2, C2, R2, P2, D2> const& rhs)
+
+#  define BOOST_ITERATOR_FACADE_PLUS_HEAD(prefix,args)                      \
+    template <class Derived, class V, class C, class R, class P, class D>   \
+    prefix Derived operator+ args
 
   //
   // Helper class for granting access to the iterator core interface.
@@ -214,48 +231,89 @@ namespace boost
   // should be made friend so that iterator_facade can access the core
   // interface through iterator_core_access.
   //
-  struct iterator_core_access
+  class iterator_core_access
   {
-    template <class Facade>
-    static typename Facade::reference dereference(Facade const& f)
-    {
-      return f.dereference();
-    }
+# if defined(BOOST_NO_MEMBER_TEMPLATE_FRIENDS)                  \
+    || BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x551))
+      // Tasteless as this may seem, making all members public allows member templates
+      // to work in the absence of member template friends.
+   public:
+# else
+      
+      template <class I, class V, class C, class R, class P, class D> friend class iterator_facade;
 
-    template <class Facade>
-    static void increment(Facade& f)
-    {
-      f.increment();
-    }
+#  define BOOST_ITERATOR_FACADE_RELATION(op)     \
+      BOOST_ITERATOR_FACADE_INTEROP_HEAD(friend,op, bool);
 
-    template <class Facade>
-    static void decrement(Facade& f)
-    {
-      f.decrement();
-    }
+      BOOST_ITERATOR_FACADE_RELATION(==)
+      BOOST_ITERATOR_FACADE_RELATION(!=)
 
-    template <class Facade1, class Facade2>
-    static bool equal(Facade1 const& f1, Facade2 const& f2)
-    {
-      return f1.equal(f2);
-    }
+      BOOST_ITERATOR_FACADE_RELATION(<)
+      BOOST_ITERATOR_FACADE_RELATION(>)
+      BOOST_ITERATOR_FACADE_RELATION(<=)
+      BOOST_ITERATOR_FACADE_RELATION(>=)
+# undef BOOST_ITERATOR_FACADE_RELATION
 
-    template <class Facade>
-    static void advance(Facade& f, typename Facade::difference_type n)
-    {
-      f.advance(n);
-    }
+      BOOST_ITERATOR_FACADE_INTEROP_HEAD(
+          friend, -, typename Derived1::difference_type)
+      ;
 
-    template <class Facade1, class Facade2>
-    static typename Facade1::difference_type distance_to(
-        Facade1 const& f1, Facade2 const& f2)
-    {
-      return f1.distance_to(f2);
-    }
+      BOOST_ITERATOR_FACADE_PLUS_HEAD(
+          friend                                
+        , (iterator_facade<Derived, V, C, R, P, D> const&
+           , typename Derived::difference_type)
+      )
+      ;
 
-  private:
-    // objects of this class are useless
-    iterator_core_access(); //undefined
+      BOOST_ITERATOR_FACADE_PLUS_HEAD(
+          friend                           
+        , (typename Derived::difference_type
+           , iterator_facade<Derived, V, C, R, P, D> const&)
+      )
+      ;
+      
+#endif
+      
+      template <class Facade>
+      static typename Facade::reference dereference(Facade const& f)
+      {
+          return f.dereference();
+      }
+
+      template <class Facade>
+      static void increment(Facade& f)
+      {
+          f.increment();
+      }
+
+      template <class Facade>
+      static void decrement(Facade& f)
+      {
+          f.decrement();
+      }
+
+      template <class Facade1, class Facade2>
+      static bool equal(Facade1 const& f1, Facade2 const& f2)
+      {
+          return f1.equal(f2);
+      }
+
+      template <class Facade>
+      static void advance(Facade& f, typename Facade::difference_type n)
+      {
+          f.advance(n);
+      }
+
+      template <class Facade1, class Facade2>
+      static typename Facade1::difference_type distance_to(
+                                                           Facade1 const& f1, Facade2 const& f2)
+      {
+          return f1.distance_to(f2);
+      }
+
+   private:
+      // objects of this class are useless
+      iterator_core_access(); //undefined
   };
 
   //
@@ -269,9 +327,9 @@ namespace boost
       class Derived
     , class Value
     , class Category
-    , class Reference        = Value&
-    , class Pointer          = Value*
-    , class Difference       = std::ptrdiff_t
+      , class Reference        = Value&
+      , class Pointer    = Value*
+      , class Difference      = std::ptrdiff_t
   >
   class iterator_facade
       : public detail::iterator_facade_base<Value, Category, Reference, Pointer, Difference>::type
@@ -330,14 +388,14 @@ namespace boost
           return result_t(*this->derived());
       }
         
-      typename detail::index_operator_result<Derived,value_type,iterator_category,reference>::type
+      typename detail::operator_brackets_result<Derived,value_type,iterator_category,reference>::type
       operator[](difference_type n) const
       {
           typedef typename
-              detail::index_operator_result<Derived,value_type,iterator_category,reference>::use_proxy
+              detail::operator_brackets_result<Derived,value_type,iterator_category,reference>::use_proxy
           use_proxy;
           
-          return detail::make_index_operator_result<Derived>(this->derived() + n, use_proxy());
+          return detail::make_operator_brackets_result<Derived>(this->derived() + n, use_proxy());
       }
 
       Derived& operator++()
@@ -453,16 +511,7 @@ namespace boost
   //
 
 # define BOOST_ITERATOR_FACADE_INTEROP(op, result_type, condition, return_prefix, base_op)  \
-  template <                                                                                \
-      class Derived1, class V1, class C1, class R1, class P1, class D1                      \
-    , class Derived2, class V2, class C2, class R2, class P2, class D2                      \
-  >                                                                                         \
-  inline typename detail::enable_if_interoperable<                                          \
-      Derived1, Derived2, result_type                                                       \
-  >::type                                                                                   \
-  operator op(                                                                              \
-      iterator_facade<Derived1, V1, C1, R1, P1, D1> const& lhs                              \
-    , iterator_facade<Derived2, V2, C2, R2, P2, D2> const& rhs)                             \
+  BOOST_ITERATOR_FACADE_INTEROP_HEAD(inline, op, result_type)                               \
   {                                                                                         \
       /* For those compilers that do not support enable_if */                               \
       BOOST_STATIC_ASSERT((                                                                 \
@@ -502,13 +551,13 @@ namespace boost
     , return
     , distance_to )
 # undef BOOST_ITERATOR_FACADE_INTEROP
-
-# define BOOST_ITERATOR_FACADE_PLUS(args)                               \
-  template <class Derived, class V, class C, class R, class P, class D> \
-  inline Derived operator+ args                                         \
-  {                                                                     \
-      Derived tmp(static_cast<Derived const&>(i));                      \
-      return tmp += n;                                                  \
+# undef BOOST_ITERATOR_FACADE_INTEROP_HEAD
+      
+# define BOOST_ITERATOR_FACADE_PLUS(args)           \
+  BOOST_ITERATOR_FACADE_PLUS_HEAD(inline, args)     \
+  {                                                 \
+      Derived tmp(static_cast<Derived const&>(i));  \
+      return tmp += n;                              \
   }
 
 BOOST_ITERATOR_FACADE_PLUS((
@@ -521,6 +570,7 @@ BOOST_ITERATOR_FACADE_PLUS((
   , iterator_facade<Derived, V, C, R, P, D> const& i
 ))
 # undef BOOST_ITERATOR_FACADE_PLUS
+# undef BOOST_ITERATOR_FACADE_PLUS_HEAD
     
 } // namespace boost
 
