@@ -219,16 +219,10 @@ struct transform_iterator
          typename detail::iterator_traits<Base>::difference_type
       >
 {
+ public: // types
   typedef typename AdaptableUnaryFunction::result_type value_type;
-private:
-  typedef iterator_adaptor<
-  transform_iterator<AdaptableUnaryFunction, Base>, value_type, value_type, value_type*, 
-    iterator_tag<readable_iterator_tag,
-				 typename traversal_category<Base>::type>, 
-    typename detail::iterator_traits<Base>::difference_type
-  > super;
-  
-public:
+
+ public: // member functions
   transform_iterator() { }
 
   transform_iterator(const Base& x, AdaptableUnaryFunction f)
