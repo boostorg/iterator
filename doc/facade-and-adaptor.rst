@@ -277,14 +277,15 @@ I.e. operator[]() is not required to return an lvalue.
 operator->()
 ============
 
-For ``readable iterators`` the reference type is only required to 
-be convertible to the value type. Though accessing members through
-operator->() must still be possible. As a result a conformant
-``readable iterator`` needs to return a proxy from operator->().
+For ``readable iterators`` the reference type is only required to be
+convertible to the value type. Though accessing members through
+``operator->()`` must still be possible. As a result a conformant
+``readable iterator`` needs to return a proxy from ``operator->()``.
 
-This proposal does not explicitly specify the return type for 
-operator->() and operator[](). Instead it requires each ``iterator_facade``
-instantiation to meet the requirements according to its ``iterator_category``.
+This proposal does not explicitly specify the return type for
+``operator->()`` and ``operator[]()``. Instead it requires each
+``iterator_facade`` instantiation to meet the requirements according
+to its ``iterator_category``.
 
 Iterator Adaptor
 ================
@@ -315,6 +316,9 @@ users derived class.
 
 .. Jeremy, that last sentence is also true of iterator_facade.
    Perhaps we ought to cover the issue of constructors separately.
+
+.. Talk about why we use use_default. -JGS
+
 
 Specialized Adaptors
 ====================
@@ -362,15 +366,6 @@ Standard compliant iterators).
 ===============
 
 
-Two forward traversal iterator types ``X`` and ``Y`` are
-*interoperable* if one and only one is convertible to the other and
-for any object ``x`` of type ``X`` and ``y`` of type ``Y``, if ``x ==
-y``, ``y == x``, ``x != y``, ``y != x`` are well-defined.  Two random
-access traversal iterators are *interoperable* if, in addition,
-``<``,``<=``,``>=``,``>``, and - are well-defined.
-
-
-
 Header ``<iterator_helper>`` synopsis    [lib.iterator.helper.synopsis]
 =======================================================================
 
@@ -378,6 +373,9 @@ Header ``<iterator_helper>`` synopsis    [lib.iterator.helper.synopsis]
 .. Also, below I changed "not_specified" to the user-centric "use_default" -JGS
 
 .. Isn't use_default an implementation detail ? -thw
+
+.. Not if we want to allow the user to write stuff like
+   iterator_facade<Iter, use_default, some_category>. -JGS
 
 ::
 
@@ -444,26 +442,26 @@ Iterator facade [lib.iterator.facade]
 interface of standard iterators in terms of a few core functions
 and associated types, to be supplied by a derived iterator class.
 
-Template class ``iterator_facade``
+Class template ``iterator_facade``
 ----------------------------------
 
 ::
 
   template <
       class Derived
-    , class Value      = use_default
-    , class Category   = use_default
-    , class Reference  = use_default
-    , class Pointer    = use_default
-    , class Difference = use_default
+    , class Value
+    , class Category
+    , class Reference  = Value&
+    , class Pointer    = Value*
+    , class Difference = ptrdiff_t
   >
   class iterator_facade {
   public:
-      typedef ... value_type;
-      typedef ... reference;
-      typedef ... difference_type;
-      typedef ... pointer;
-      typedef ... iterator_category;
+      typedef remove_cv<Value>::type value_type;
+      typedef Reference reference;
+      typedef Pointer pointer;
+      typedef Difference difference_type;
+      typedef Category iterator_category;
 
       reference operator*() const;
       /* see details */ operator->() const;
@@ -543,11 +541,8 @@ Template class ``iterator_facade``
 --------------------------------
 
 The ``Derived`` template parameter must be the class deriving from
-``iterator_facade``.
-
-.. We need to describe how the defaults work and what
-   the typedefs come out to.  -JGS
-
+``iterator_facade``. The rest of the template parameters specify the
+types for the member typedefs in ``iterator_facade``.
 
 The following table describes the requirements on the type deriving
 from the ``iterator_facade``. The expressions listed in the table are
@@ -597,14 +592,24 @@ interoperable with ``X``.
 
 ``reference operator*() const;``
 
-:Returns: ``static_cast<Derived const*>(this)->dereference();``
+:Returns: ``static_cast<Derived const*>(this)->dereference()``
 
 *see details* ``operator->() const;``
 
 :Requires: 
 :Effects: 
 :Postconditions: 
-:Returns: ``static_cast<Derived const*>(this)->dereference();``
+
+:Returns: If ``iterator_category`` is a derived class of
+``readable_lvalue_iterator_tag`` then the return type is ``pointer``
+and the value returned is ``&static_cast<Derived
+const*>(this)->dereference()``. Otherwise a proxy object of
+implementation defined type is returned.  The proxy type must have a
+``operator->`` member function with the following signature.
+::
+
+    const value_type* operator->() const;
+
 :Throws: 
 :Complexity: 
 
@@ -614,7 +619,7 @@ interoperable with ``X``.
 :Requires: 
 :Effects: 
 :Postconditions: 
-:Returns: ``static_cast<Derived const*>(this)->dereference();``
+:Returns: ``static_cast<Derived const*>(this)->dereference()``
 :Throws: 
 :Complexity: 
 
@@ -696,7 +701,7 @@ full requirements for an iterator. It need only support the operations
 that are not overriden by the users derived class.
 
 
-Template class ``iterator_adaptor``
+Class template ``iterator_adaptor``
 -----------------------------------
 
 ::
@@ -790,7 +795,7 @@ adaptor makes it possible to view a container of pointers
 (e.g. ``list<foo>``) .
 
 
-Template class ``indirect_iterator``
+Class template ``indirect_iterator``
 ....................................
 
 ::
@@ -882,7 +887,7 @@ The reverse iterator adaptor flips the direction of a base iterator's
 motion. Invoking ``operator++()`` moves the base iterator backward and
 invoking ``operator--()`` moves the base iterator forward.
 
-Template class ``reverse_iterator``
+Class template ``reverse_iterator``
 ...................................
 
 ::
@@ -947,7 +952,7 @@ base iterator, passes the result of this to the function object, and
 then returns the result.
 
 
-Template class ``transform_iterator``
+Class template ``transform_iterator``
 .....................................
 
 ::
@@ -999,7 +1004,7 @@ element is retained and if it returns ``false`` then the element is
 skipped over.
 
 
-Template class ``filter_iterator``
+Class template ``filter_iterator``
 ..................................
 
 ::
@@ -1031,7 +1036,7 @@ Counting iterator
 -----------------
 
 
-Template class ``counting_iterator``
+Class template ``counting_iterator``
 ....................................
 
 ::
@@ -1061,7 +1066,7 @@ particularly because the proper implementation usually requires a
 proxy object.
 
 
-Template class ``function_output_iterator``
+Class template ``function_output_iterator``
 ...........................................
 
 ::
