@@ -9,10 +9,16 @@
 #ifndef BOOST_TRANSFORM_ITERATOR_23022003THW_HPP
 #define BOOST_TRANSFORM_ITERATOR_23022003THW_HPP
 
+#include <boost/function.hpp>
 #include <boost/iterator.hpp>
+#include <boost/iterator/detail/enable_if.hpp>
 #include <boost/iterator/iterator_adaptor.hpp>
 #include <boost/iterator/iterator_categories.hpp>
+#include <boost/mpl/and.hpp>
+#include <boost/mpl/bool.hpp>
+#include <boost/type_traits/function_traits.hpp>
 #include <boost/type_traits/is_const.hpp>
+#include <boost/type_traits/is_function.hpp>
 #include <boost/type_traits/is_reference.hpp>
 #include <boost/type_traits/remove_const.hpp>
 #include <boost/type_traits/remove_reference.hpp>
@@ -106,10 +112,43 @@ namespace boost
     UnaryFunction m_f;
   };
 
-  template <class UnaryFunction, class Iterator>
-  transform_iterator<UnaryFunction, Iterator> make_transform_iterator(Iterator it, UnaryFunction fun)
+  template <class UnaryFunctionObject, class Iterator>
+  transform_iterator<UnaryFunctionObject, Iterator> make_transform_iterator(Iterator it, UnaryFunctionObject fun)
   {
-    return transform_iterator<UnaryFunction, Iterator>(it, fun);
+    return transform_iterator<UnaryFunctionObject, Iterator>(it, fun);
+  }
+
+  namespace detail {
+
+    template <class Function>
+    struct is_unary :
+      mpl::bool_<(function_traits<Function>::arity == 1)>
+    {};
+
+    template <class T>
+    struct is_unary_function :
+      mpl::apply_if< is_function<T>
+                     , is_unary<T>
+                     , mpl::bool_<false>
+      >::type
+    {};
+
+  }
+
+  //
+  // ToDo: Think twice wether enable_if is better than an
+  // static assert. Currently we get convoluted error messages
+  // from the above overload for any pointer that is not a
+  // pointer to a unary function.
+  //
+  template <class UnaryFunction, class Iterator>
+  typename detail::enable_if<
+    detail::is_unary_function<UnaryFunction>
+    , transform_iterator< function<UnaryFunction>, Iterator>
+  >::type
+  make_transform_iterator(Iterator it, UnaryFunction* fun)
+  {
+    return make_transform_iterator(it, function<UnaryFunction>(fun));
   }
 
 } // namespace boost

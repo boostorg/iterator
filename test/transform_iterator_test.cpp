@@ -96,6 +96,10 @@ struct value_select_first
   }
 };
 
+int mult_2(int arg)
+{
+  return arg*2;
+}
 
 int
 main()
@@ -126,6 +130,30 @@ main()
     boost::input_iterator_test(iter_t(&y[0], mult_functor(2)), x[0], x[1]);
     
     boost::random_access_readable_iterator_test(i, N, x);
+  }
+
+  // Test transform_iterator with function pointers
+  {
+    int x[N], y[N];
+    for (int k = 0; k < N; ++k)
+      x[k] = k;
+    std::copy(x, x + N, y);
+    
+    for (int k2 = 0; k2 < N; ++k2)
+      x[k2] = x[k2] * 2;
+    
+    boost::input_iterator_test(boost::make_transform_iterator(y, mult_2)
+                               , x[0]
+                               , x[1]);
+
+    boost::input_iterator_test(boost::make_transform_iterator(&y[0], mult_2)
+                               , x[0]
+                               , x[1]);
+ 
+    boost::random_access_readable_iterator_test(boost::make_transform_iterator(y, mult_2)
+                                                , N
+                                                , x);
+
   }
 
   // Test transform_iterator as projection iterator
