@@ -81,34 +81,55 @@ namespace boost
     {};
 
     //
-    // Type generator.
-    // Generates the corresponding std::iterator specialization
-    // from the given iterator traits type
+    // Generates the associated types for an iterator_facade with the
+    // given parameters.  Additionally generates a 'base' type for
+    // compiler/library combinations which require user-defined
+    // iterators to inherit from std::iterator.
     //
-    template <class Value, class AccessCategory, class TraversalCategory, class Reference, class Difference>
-    struct iterator_facade_base
+    template <
+        class Value
+      , class AccessCategory
+      , class TraversalCategory
+      , class Reference
+      , class Difference
+    >
+    struct iterator_facade_types
     {
-        typedef iterator<
-            iterator_tag<AccessCategory, TraversalCategory>
+        typedef iterator_tag<AccessCategory, TraversalCategory> iterator_category;
+        
+        typedef typename remove_cv<Value>::type value_type;
+        
+        typedef Difference difference_type;
+        
+        typedef typename const_qualified_ptr<Value, AccessCategory>::type pointer;
+        
+        // The use_default support is needed for iterator_adaptor.
+        // For practical reasons iterator_adaptor needs to specify
+        // a fixed number of template arguments of iterator_facade.
+        // So use_default is its way to say: "What I really mean
+        // is your default parameter".
+        typedef typename mpl::if_<
+              is_same<Reference, use_default>
+            , typename const_qualified_ref<Value, AccessCategory>::type
+            , Reference
+        >::type reference;
 
-          , typename remove_cv<Value>::type
-
-          , Difference
-
-          , typename const_qualified_ptr<Value, AccessCategory>::type
-
-          // The use_default support is needed for iterator_adaptor.
-          // For practical reasons iterator_adaptor needs to specify
-          // a fixed number of template arguments of iterator_facade.
-          // So use_default is its way to say: "What I really mean
-          // is your default parameter".
-          , typename mpl::if_<
-                is_same<Reference, use_default>
-              , typename const_qualified_ref<Value, AccessCategory>::type
-              , Reference
-            >::type
-        >
-        type;
+# if defined(BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION)                          \
+    && (BOOST_WORKAROUND(_STLPORT_VERSION, BOOST_TESTED_AT(0x452))              \
+        || BOOST_WORKAROUND(BOOST_DINKUMWARE_STDLIB, BOOST_TESTED_AT(310)))     \
+    || BOOST_WORKAROUND(BOOST_RWSTD_VER, BOOST_TESTED_AT(0x20101))              \
+    || BOOST_WORKAROUND(BOOST_DINKUMWARE_STDLIB, <= 310)
+        
+        // To interoperate with some broken library/compiler
+        // combinations, user-defined iterators must be derived from
+        // std::iterator.  It is possible to implement a standard
+        // library for broken compilers without this limitation.
+#  define BOOST_ITERATOR_FACADE_NEEDS_ITERATOR_BASE 1
+        
+        typedef
+           iterator<iterator_category, value_type, difference_type, pointer, reference>
+        base;
+# endif 
     };
 
     
@@ -268,7 +289,7 @@ namespace boost
       BOOST_ITERATOR_FACADE_RELATION(>)
       BOOST_ITERATOR_FACADE_RELATION(<=)
       BOOST_ITERATOR_FACADE_RELATION(>=)
-# undef BOOST_ITERATOR_FACADE_RELATION
+#  undef BOOST_ITERATOR_FACADE_RELATION
 
       BOOST_ITERATOR_FACADE_INTEROP_HEAD(
           friend, -, typename Derived1::difference_type)
@@ -288,7 +309,7 @@ namespace boost
       )
       ;
       
-#endif
+# endif
       
       template <class Facade>
       static typename Facade::reference dereference(Facade const& f)
@@ -333,14 +354,11 @@ namespace boost
   };
 
   //
-  //
-  // iterator_facade applies iterator_traits_adaptor to its traits argument.
-  // The net effect is that iterator_facade is derived from std::iterator. This
-  // is important for standard library interoperability of iterator types on some
-  // (broken) implementations. 
+  // iterator_facade - use as a public base class for defining new
+  // standard-conforming iterators.
   //
   template <
-      class Derived
+      class Derived             // The derived iterator type being constructed
     , class Value
     , class AccessCategory
     , class TraversalCategory
@@ -348,12 +366,17 @@ namespace boost
     , class Difference  = std::ptrdiff_t
   >
   class iterator_facade
-    : public detail::iterator_facade_base<Value, AccessCategory, TraversalCategory, Reference, Difference>::type
+# ifdef BOOST_ITERATOR_FACADE_NEEDS_ITERATOR_BASE
+    : public detail::iterator_facade_types<
+         Value, AccessCategory, TraversalCategory, Reference, Difference
+      >::base
+#  undef BOOST_ITERATOR_FACADE_NEEDS_ITERATOR_BASE
+# endif 
   {
    private:
       typedef typename
-      detail::iterator_facade_base<Value, AccessCategory, TraversalCategory, Reference, Difference>::type
-      super_t;
+        detail::iterator_facade_types<Value, AccessCategory, TraversalCategory, Reference, Difference>
+      types;
 
       //
       // Curiously Recursive Template interface.
@@ -372,11 +395,11 @@ namespace boost
 
    public:
 
-      typedef typename super_t::value_type value_type;
-      typedef typename super_t::reference reference;
-      typedef typename super_t::difference_type difference_type;
-      typedef typename super_t::pointer pointer;
-      typedef typename super_t::iterator_category iterator_category;
+      typedef typename types::value_type value_type;
+      typedef typename types::reference reference;
+      typedef typename types::difference_type difference_type;
+      typedef typename types::pointer pointer;
+      typedef typename types::iterator_category iterator_category;
 
       reference operator*() const
       {
@@ -452,6 +475,18 @@ namespace boost
           Derived result(this->derived());
           return result -= x;
       }
+
+# if BOOST_WORKAROUND(BOOST_MSVC, <= 1200)
+      // There appears to be a bug which trashes the data of classes
+      // derived from iterator_facade when they are assigned unless we
+      // define this assignment operator.  This bug is only revealed
+      // (so far) in STLPort debug mode, but it's clearly a codegen
+      // problem so we apply the workaround for all MSVC6.
+      iterator_facade& operator=(iterator_facade const&)
+      {
+          return *this;
+      }
+# endif 
   };
 
   //
