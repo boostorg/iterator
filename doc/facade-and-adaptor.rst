@@ -121,17 +121,16 @@ Iterator Concepts.
 Iterator Concepts
 =================
 
-This proposal is formulated in terms of the new ``iterator concepts`` 
-as proposed in `n1477`_. This is due to the fact that especially 
-adapted and user defined iterators suffer from the well known 
-categorisation problems that are inherent to the current iterator
-categories.
+This proposal is formulated in terms of the new ``iterator concepts``
+as proposed in `n1477`_, since user-defined and especially adapted
+iterators suffer from the well known categorisation problems that are
+inherent to the current iterator categories.
 
 .. _`n1477`: http://anubis.dkuug.dk/JTC1/SC22/WG21/docs/papers/2003/n1477.html
 
-Though this proposal does not strictly depend on proposal `n1477`_,
-as there is a direct mapping between new and old categories. The proposal
-could be reformulated using this mapping.
+This proposal does not strictly depend on proposal `n1477`_, as there
+is a direct mapping between new and old categories. This proposal
+could be reformulated using this mapping if `n1477`_ was not accepted.
 
 Interoperability
 ================
@@ -280,14 +279,14 @@ operator->()
 ============
 
 For ``readable iterators`` the reference type is only required to be
-convertible to the value type. Though accessing members through
+convertible to the value type, but accessing members through
 ``operator->()`` must still be possible. As a result a conformant
-``readable iterator`` needs to return a proxy from ``operator->()``.
+``readable iterator`` must return a proxy from ``operator->()``.
 
 This proposal does not explicitly specify the return type for
 ``operator->()`` and ``operator[]()``. Instead it requires each
-``iterator_facade`` instantiation to meet the requirements according
-to its ``iterator_category``.
+``iterator_facade`` instantiation to meet the requirements of its
+``iterator_category``.
 
 Iterator Adaptor
 ================
@@ -542,14 +541,13 @@ Class template ``iterator_facade``
 ``iterator_facade`` requirements
 --------------------------------
 
-The ``Derived`` template parameter must be a derived class of
-``iterator_facade``. The rest of the template parameters specify the
-types for the member typedefs in ``iterator_facade``.
+The ``Derived`` template parameter must be a class derived from
+``iterator_facade``. 
 
-The following table describes the requirements on the type deriving
-from the ``iterator_facade``. The expressions listed in the table are
-required to be valid depending on the category of the derived iterator
-type.
+The following table describes the requirements on the ``Derived``
+parameter.  Depending on the resulting iterator's
+``iterator_category``, a subset of the expressions listed in the table
+are required to be valid .
 
 In the table below, ``X`` is the derived iterator type, ``a`` is an
 object of type ``X``, ``b`` and ``c`` are objects of type ``const X``,
@@ -717,14 +715,15 @@ interoperable with ``X``.
 Iterator adaptor [lib.iterator.adaptor]
 =======================================
 
-The ``iterator_adaptor`` is a base class template which is a derived
-class of ``iterator_facade``. The core interface functions expected by
-``iterator_facade`` are implemented in terms of the ``Base`` template
-parameter. A class derived from ``iterator_adaptor`` typically
-overrides some of the (non-vertual) core interface functions to adapt
-the behaviour of the iterator.  The ``Base`` type need not meet the
-full requirements for an iterator. It need only support the operations
-that are not overriden by the users derived class.
+The ``iterator_adaptor`` is a base class template derived from an
+instantiation of ``iterator_facade``. The core interface functions
+expected by ``iterator_facade`` are implemented in terms of the
+``iterator_adaptor``\ 's ``Base`` template parameter. A class derived
+from ``iterator_adaptor`` typically implements some of
+the (non-virtual) core interface functions to adapt the behaviour of
+the ``Base`` type.  The ``Base`` type need not meet the full
+requirements of an iterator; it need only support the default
+operations that are not implemented by the users derived class.
 
 
 Class template ``iterator_adaptor``
@@ -936,6 +935,8 @@ indirect iterator.
 
 Reverse iterator
 ----------------
+
+.. I think we'd better strike the old reverse_iterator text from the standard, eh?
 
 The reverse iterator adaptor flips the direction of a base iterator's
 motion. Invoking ``operator++()`` moves the base iterator backward and
