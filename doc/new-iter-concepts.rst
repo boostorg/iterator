@@ -66,40 +66,7 @@ random access iterator, but the return type is not ``bool&`` (see
 N1185). Therefore, the iterators of ``vector<bool>`` only meet the
 requirements of input iterator and output iterator. This is so
 nonintuitive that at least one implementation erroneously assigns
-``random_access_iterator_tag`` as its ``iterator_category``. Also,
-``vector<bool>`` is not the only example of useful iterators that do
-not return true references: there is the often cited example of
-disk-based collections.
-
-.. I wonder if the disk-based collection argument is valid?  I would
-   tend to do that with an internally stored lvalue. -DWA
-
-.. _issue 96: http://anubis.dkuug.dk/JTC1/SC22/WG21/docs/lwg-active.html#96
-
-.. Another example of a hard-to-categorize iterator is a counting
-   iterator: an iterator the returns a sequence of integers when
-   incremented and dereferenced (see counting_iterator_).  This iterator are two
-   ways to implement this iterator, 1) return a true reference from
-   ``operator[]`` (a reference to an integer data member of the counting
-   iterator) or 2) return the ``value_type`` or a proxy from
-   ``operator[]``. Option 1) runs into the problems discussed in `issue
-   198`_: the reference will not be valid after the iterator is
-   destroyed. Option 2) is therefore a better choice, but then we have a
-   counting iterator that cannot be a random access iterator.
-
-.. Jeremy, option 1 is NOT an option, since there's no way to return a
-   live reference from operator[].  I think you need to clarify/rework
-   what you're saying here.  I'd fix it myself, but I'm not sure what
-   you're getting at. -DWA
-
-.. On second thought, I think the whole paragraph is bogus (sorry).
-   The conclusion for option 2, "but then we have a counting iterator
-   that cannot be a random access iterator" is wrong, too: returning a
-   value from operator[] is compatible with the random access iterator
-   requirements.  I commented it out. -DWA
-
-.. _counting_iterator: http://www.boost.org/libs/utility/counting_iterator.htm
-.. _issue 198: http://anubis.dkuug.dk/JTC1/SC22/WG21/docs/lwg-active.html#198
+``random_access_iterator_tag`` as its ``iterator_category``. 
 
 Another difficult-to-categorize iterator is the transform iterator, an
 adaptor which applies a unary function object to the dereferenced
@@ -152,6 +119,11 @@ appropriate old requirements.
 .. I think we need to say something about the resolution to allow
    convertibility to any of the old-style tags as a TR issue (hope it
    made it). -DWA
+
+.. Hmm, not sure I understand. Are you talking about whether a
+   standards conforming input iterator is allowed to have
+   a tag that is not input_iterator_tag but that
+   is convertible to input_iterator_tag? -JGS
 
 The algorithms in the standard library benefit from the new iterator
 concepts because the new concepts provide a more accurate way to
