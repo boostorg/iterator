@@ -232,8 +232,10 @@ In addition to implementing the core interface functions, an iterator
 derived from ``iterator_facade`` typically defines several
 constructors. To model any of the standard iterator concepts, the
 iterator must at least have a copy constructor. Also, if the iterator
-is meant to be interoperable (between for example, constant and
-mutable versions of the iterator) then there must be a conversion
+type ``X`` is meant to be automatically interoperate with another
+iterator type ``Y`` (as with constant and mutable iterators) then
+there must be an implicit conversion from ``X`` to ``Y`` or from ``Y``
+to ``X`` (but not both), typically implemented as a conversion
 constructor. Also, if the iterator is to model Forward Traversal
 Iterator, a default constructor is required.
 
@@ -268,14 +270,16 @@ derived class only needs to grant friendship to
 ``iterator_core_access`` to make his core member functions available
 to the library.
 
- .. This is no long uptodate -thw 
-    ``iterator_core_access`` will be typically implemented as an empty
-   class containing only private static member functions which invoke the
-   iterator core member functions. There is, however, no need to
-   standardize the gateway protocol.  Note that even if
-   ``iterator_core_access`` used public member functions it would not
-   open a safety loophole, as every core member function preserves the
-   invariants of the iterator.
+.. This is no long uptodate -thw 
+.. Yes it is; I made sure of it! -DWA
+
+``iterator_core_access`` will be typically implemented as an empty
+class containing only private static member functions which invoke the
+iterator core member functions. There is, however, no need to
+standardize the gateway protocol.  Note that even if
+``iterator_core_access`` used public member functions it would not
+open a safety loophole, as every core member function preserves the
+invariants of the iterator.
 
 ``operator[]``
 ================
@@ -334,22 +338,24 @@ instance of the ``Base`` type, which it stores as a member.
    the underlying iterator object of a ``reverse_iterator`` adaptor.
 
 The user of ``iterator_adaptor`` creates a class derived from an
-instantiation of ``iterator_adaptor`` and then selectively overrides
-some of the core operations by implementing the (non-virtual) member
-functions described in the table above. The ``Base`` type
-need not meet the full requirements for an iterator. It need
-only support the operations that are not overridden by the
-users derived class.
+instantiation of ``iterator_adaptor`` and then selectively
+redefines some of the core member functions described in the table
+above. The ``Base`` type need not meet the full requirements for an
+iterator. It need only support the operations used by the core
+interface functions of ``iterator_adaptor`` that have not been
+redefined in the user's derived class.
 
-Several of the template parameters of ``iterator_adaptor`` have
-``use_default`` as their default. The reason for this is twofold.
-First, it allows the user to make use of a default parameter even when
-the user wants to specify a parameter later in the parameter list.
-Second, the defaults are fairly complicated, so metafunctions are
-required, and ``use_default`` is a way to hide the metafunctions.
-
-.. Dave, is the above accurate? -JGS
-
+Several of the template parameters of ``iterator_adaptor`` default to
+``use_default``. This allows the user to make use of a default
+parameter even when the user wants to specify a parameter later in the
+parameter list.  Also, the defaults for the corresponding associated
+types are fairly complicated, so metaprogramming is required to
+compute them, and ``use_default`` can help to simplify the
+implementation.  Finally, ``use_default`` is not left unspecified
+because specification helps to highlight that the ``Reference``
+template parameter may not always be identical to the iterator's
+``reference`` type, and will keep users making mistakes based on that
+assumtion.
 
 Specialized Adaptors
 ====================
@@ -579,10 +585,9 @@ out of the overload set when the types are not interoperable.]
 The ``Derived`` template parameter must be a class derived from
 ``iterator_facade``.
 
-The default for the ``Reference`` parameter is a non-const reference
-to ``Value`` if the access category for ``iterator_facade`` derives
-from ``writable_iterator_tag``, and a const reference to ``Value``
-otherwise.
+The default for the ``Reference`` parameter is `Value&`` if the access
+category for ``iterator_facade`` is implicitly convertible to
+``writable_iterator_tag``, and ``const Value&`` otherwise.
 
 The following table describes the other requirements on the
 ``Derived`` parameter.  Depending on the resulting iterator's
@@ -650,9 +655,9 @@ through member functions of class ``iterator_core_access``.
   object ``a`` of type ``X``, ``a->m`` is equivalent to ``(w = *a,
   w.m)`` for some temporary object ``w`` of type ``X::value_type``.
 
-  The type ``X::pointer`` is a non-const pointer to ``Value``
-  if the access category for ``X`` derives from ``writable_iterator_tag``,
-  and a const pointer to ``Value`` otherwise.
+  The type ``X::pointer`` is ``Value*`` if the access category for
+  ``X`` is implicitly convertible to ``writable_iterator_tag``, and
+  ``Value const*`` otherwise.
 
 
 *unspecified* ``operator[](difference_type n) const;``
@@ -749,12 +754,12 @@ The ``iterator_adaptor`` is a base class template derived from an
 instantiation of ``iterator_facade``. The core interface functions
 expected by ``iterator_facade`` are implemented in terms of the
 ``iterator_adaptor``\ 's ``Base`` template parameter. A class derived
-from ``iterator_adaptor`` typically implements some of the
-(non-virtual) core interface functions to adapt the behavior of the
-``Base`` type.  Whether the derived class models any of the standard
-iterator concepts depends on what operations are supported by the
-``Base`` type and which core interface functions of
-``iterator_facade`` are overridden in the ``Derived`` class.
+from ``iterator_adaptor`` typically redefines some of the core
+interface functions to adapt the behavior of the ``Base`` type.
+Whether the derived class models any of the standard iterator concepts
+depends on the operations supported by the ``Base`` type and which
+core interface functions of ``iterator_facade`` are redefined in the
+``Derived`` class.
 
 
 Class template ``iterator_adaptor``
@@ -811,7 +816,7 @@ Class template ``iterator_adaptor``
 The ``Derived`` template parameter must be a derived class of
 ``iterator_adaptor``. The ``Base`` type must implement the expressions
 involving ``m_iterator`` in the specifications of those private member
-functions of ``iterator_adaptor`` that are not overridden by the
+functions of ``iterator_adaptor`` that are not redefined by the
 ``Derived`` class and that are needed to model the concept
 corresponding to the chosen ``Category`` according to the requirements
 of ``iterator_facade``.  The rest of the template parameters specify
@@ -822,46 +827,46 @@ following pseudo-code specifies the traits types for
 ::
 
     if (Value == use_default)
-	value_type = iterator_traits<Base>::value_type;
+        value_type = iterator_traits<Base>::value_type;
     else 
-	value_type = remove_cv<Value>::type;
+        value_type = remove_cv<Value>::type;
 
     if (Reference == use_default) {
-	if (Value == use_default)
-	    reference = iterator_traits<Base>::reference;
-	else 
-	    reference = Value&;
+        if (Value == use_default)
+            reference = iterator_traits<Base>::reference;
+        else 
+            reference = Value&;
     } else
-	reference = Reference;
+        reference = Reference;
 
     if (Distance == use_default)
-	difference_type = iterator_traits<Base>::difference_type;
+        difference_type = iterator_traits<Base>::difference_type;
     else
-	difference_type = Distance;
+        difference_type = Distance;
 
     if (Category == use_default)
-	iterator_category = iterator_tag< 
-                                access_category< 
-                                    iterator< iterator_traits<Base>::iterator_category,
-                                              Value,
-                                              Distance,
-                                              Value*,
-                                              Reference > >,
-                                traversal_category<
-                                    iterator< iterator_traits<Base>::iterator_category,
-                                              Value,
-                                              Distance,
-                                              Value*,
-                                              Reference > >
+        iterator_category = iterator_tag< 
+            access_category< 
+                iterator< iterator_traits<Base>::iterator_category,
+                          Value,
+                          Distance,
+                          Value*,
+                          Reference > >,
+            traversal_category<
+                iterator< iterator_traits<Base>::iterator_category,
+                          Value,
+                          Distance,
+                          Value*,
+                          Reference > >
     else
-	iterator_category = Category;
+        iterator_category = Category;
 
 
 ..  Replaced with new semantics --thw
     if (Category == use_default)
-	iterator_category = iterator_traits<Base>::iterator_category;
+        iterator_category = iterator_traits<Base>::iterator_category;
     else
-	iterator_category = Category;
+        iterator_category = Category;
 
 
 
@@ -946,6 +951,14 @@ Specialized adaptors [lib.iterator.special.adaptors]
    formally -DWA
 
 
+[*Note:* The ``enable_if_convertible<X,Y>::type`` expression used in
+this section is for exposition purposes. The converting constructors
+for specialized adaptors should be only be in an overload set provided
+that an object of type ``X`` is implicitly convertible to an object of
+type ``Y``.  The ``enable_if_convertible`` approach uses SFINAE to
+take the constructor out of the overload set when the types are not
+implicitly convertible.]
+
 
 Indirect iterator
 -----------------
@@ -984,7 +997,7 @@ Class template ``indirect_iterator``
           indirect_iterator<
                Iterator2, Value2, Category2, Reference2, Difference2
           > const& y
-        , typename enable_if_convertible<Iterator2, Iterator>::type* = 0
+        , typename enable_if_convertible<Iterator2, Iterator>::type* = 0 // exposition
       );
   private: // as-if specification
       typename indirect_iterator::reference dereference() const
@@ -992,7 +1005,6 @@ Class template ``indirect_iterator``
           return **this->base();
       }
   };
-
 
 ``indirect_iterator`` requirements
 ..................................
@@ -1049,14 +1061,13 @@ modeled by the value type of ``Iterator``.
   >
   indirect_iterator(
       indirect_iterator<
-	   Iterator2, Value2, Category2, Reference2, Difference2
+           Iterator2, Value2, Category2, Reference2, Difference2
       > const& y
-    , typename enable_if_convertible<Iterator2, Iterator>::type* = 0
+    , typename enable_if_convertible<Iterator2, Iterator>::type* = 0 // exposition
   );
 
-:Requires: ``this->base()`` and ``y.base()`` must be mutually convertible.
+:Requires: ``Iterator2`` is implicitly convertible to ``Iterator``.
 :Returns: An instance of ``indirect_iterator`` that is a copy of ``y``.
-
 
 Reverse iterator
 ----------------
@@ -1084,7 +1095,7 @@ Class template ``reverse_iterator``
     template<class OtherIterator>
     reverse_iterator(
         reverse_iterator<OtherIterator> const& r
-      , typename enable_if_convertible<OtherIterator, Iterator>::type* = 0
+      , typename enable_if_convertible<OtherIterator, Iterator>::type* = 0 // exposition
     );
 
   private: // as-if specification
@@ -1095,14 +1106,14 @@ Class template ``reverse_iterator``
 
     void advance(typename reverse_iterator::difference_type n)
     {
-	this->base_reference() += -n;
+        this->base_reference() += -n;
     }
 
     template <class OtherIterator>
     typename reverse_iterator::difference_type
     distance_to(reverse_iterator<OtherIterator> const& y) const
     {
-	return this->base_reference() - y.base();
+        return this->base_reference() - y.base();
     }
 
   };
@@ -1134,10 +1145,10 @@ by ``Iterator``.
     template<class OtherIterator>
     reverse_iterator(
         reverse_iterator<OtherIterator> const& r
-      , typename enable_if_convertible<OtherIterator, Iterator>::type* = 0
+      , typename enable_if_convertible<OtherIterator, Iterator>::type* = 0 // exposition
     );
 
-:Requires: ``this->base()`` and ``r.base()`` must be mutually convertible.
+:Requires: ``OtherIterator`` is implicitly convertible to ``Iterator``.
 :Returns: An instance of ``reverse_iterator`` that is a copy of ``r``.
 
 
@@ -1171,7 +1182,7 @@ Class template ``transform_iterator``
     template<class OtherIterator, class R2, class V2>
     transform_iterator(
           transform_iterator<AdaptableUnaryFunction, OtherIterator, R2, V2> const& t
-        , typename enable_if_convertible<OtherIterator, Iterator>::type* = 0
+        , typename enable_if_convertible<OtherIterator, Iterator>::type* = 0 // exposition
     );
 
     AdaptableUnaryFunction functor() const;
@@ -1232,11 +1243,11 @@ The ``value_type`` of ``transform_iterator`` is
     template<class OtherIterator, class R2, class V2>
     transform_iterator(
           transform_iterator<AdaptableUnaryFunction, OtherIterator, R2, V2> const& t
-        , typename enable_if_convertible<OtherIterator, Iterator>::type* = 0
+        , typename enable_if_convertible<OtherIterator, Iterator>::type* = 0 // exposition
     );
 
 :Returns: An instance of ``transform_iterator`` that is a copy of ``t``.
-
+:Requires: ``OtherIterator`` is implicitly convertible to ``Iterator``.
 
 ``AdaptableUnaryFunction functor() const;``
 
@@ -1361,11 +1372,11 @@ expression ``p(x)`` must be valid where ``p`` is an object of type
 
     template <class OtherIterator>
     filter_iterator(
-	filter_iterator<Predicate, OtherIterator> const& t
-	, typename enable_if_convertible<OtherIterator, Iterator>::type* = 0 // exposition
-	);``
+        filter_iterator<Predicate, OtherIterator> const& t
+        , typename enable_if_convertible<OtherIterator, Iterator>::type* = 0 // exposition
+        );``
 
-:Requires: ``*this`` and ``t`` must be mutually convertible.
+:Requires: ``OtherIterator`` is implicitly convertible to ``Iterator``.
 :Returns: A copy of iterator ``t``. 
 
 
@@ -1412,15 +1423,14 @@ Class template ``counting_iterator``
    private:
       typename counting_iterator::reference dereference() const
       {
-      	  return this->base_reference();
+          return this->base_reference();
       }
     };
 
 
-[*Note:* implementers are encouraged to provide a 
-  override of ``distance_to`` that avoids overflows
-  in the cases when the ``Incrementable`` type
-  is a numeric type.]
+[*Note:* implementers are encouraged to provide an implementation of
+  ``distance_to`` and a ``difference_type`` that avoids overflows in
+  the cases when the ``Incrementable`` type is a numeric type.]
 
 ``counting_iterator`` requirements
 ----------------------------------

@@ -92,11 +92,7 @@ namespace boost
 
           , typename const_qualified<Value, AccessCategory>::type*
 
-          , typename mpl::if_<
-                is_same<Reference, use_default>
-              , typename const_qualified<Value, AccessCategory>::type&
-              , Reference
-            >::type
+          , Reference
         >
         type;
     };
