@@ -3,25 +3,24 @@
 
 #include <boost/utility.hpp> // for prior
 #include <boost/iterator.hpp>
+#include <boost/iterator/iterator_categories.hpp>
 
 namespace boost {
 
-template <class Final, class V, class R, class P, class C, class D>
+template <class Final, class V, class R, class P, class RC, class TC, class D>
 struct repository
-    : iterator<C, V, D, P, R>
+    : iterator<typename cvt_iterator_category<RC, TC>::type, V, D, P, R>
 
 {
-    typedef Final type;
-    typedef V value_type;
-    typedef R reference;
-    typedef C iterator_category;
-    typedef D difference_type;
+    typedef Final final;
+    typedef RC return_category;
+    typedef TC traversal_category;
 };
 
 template <class Base>
 struct downcastable : Base
 {
-    typedef typename Base::type final_t;
+    typedef typename Base::final final_t;
  public:
     final_t& downcast() { return static_cast<final_t&>(*this); }
     const final_t& downcast() const { return static_cast<const final_t&>(*this); }
@@ -80,16 +79,20 @@ struct iterator_arith :  B { };
 
 template <class Base>
 typename Base::final operator+(
-    iterator_arith<Base> i, typename Base::distance n)
+    const iterator_arith<Base>& i, // pass by ref, not value to avoid slicing -JGS
+    typename Base::difference_type n)
 {
-    return i.downcast() += n;
+    typename Base::final tmp(i.downcast());
+    return tmp += n;
 }
 
 template <class Base>
 typename Base::final operator+(
-    typename Base::distance n, iterator_arith<Base> i)
+    typename Base::difference_type n,  
+    const iterator_arith<Base>& i) // pass by ref, not value to avoid slicing -JGS
 {
-    return i.downcast() += n;
+    typename Base::final tmp(i.downcast());
+    return tmp += n;
 }
 
 template <class Base1, class Base2>
@@ -102,17 +105,17 @@ typename Base1::difference_type operator-(
 
 
 template <class Final
-          , class V, class R, class P, class C, class D
+          , class V, class R, class P, class RC, class TC, class D
           , class B = iterator_arith<
-                iterator_comparisons<
-                     downcastable<repository<Final, V, R, P, C, D> > > >
+             iterator_comparisons<
+        downcastable<repository<Final, V, R, P, RC, TC, D> > > >
          >
-struct iterator_adaptor : B
+struct iterator_adaptor : B, new_iterator_base
 {
     typedef V value_type;
     typedef R reference;
     typedef P pointer;
-    typedef C iterator_category;
+    typedef typename B::iterator_category iterator_category;
     typedef D difference_type;
 
     reference operator*() const
@@ -135,14 +138,25 @@ struct iterator_adaptor : B
     Final operator-(difference_type x) const
     { Final result(downcast()); return result -= x; }
 
-    template <class Final2, class V2, class R2, class P2>
-    bool equal(iterator_adaptor<Final2,V2,R2,P2,C,D> const& x) const
+    template <class Final2, class V2, class R2, class P2, class B2>
+    bool equal(iterator_adaptor<Final2,V2,R2,P2,RC,TC,D,B2> const& x) const
     {
         return this->downcast().base() == x.downcast().base();
+    }
+    void advance(difference_type n)
+    {
+        this->downcast().base() += n;
     }
     
     void increment() { ++this->downcast().base(); }
     void decrement() { --this->downcast().base(); }
+
+    template <class Final2, class B2, class V2, class R2, class P2>
+    difference_type
+    distance_from(const iterator_adaptor<Final2,V2,R2,P2,RC,TC,D,B2>& y) const
+    {
+        return y.downcast().base() - this->downcast().base();//?
+    }
     
  private:
     using B::downcast;
@@ -150,13 +164,13 @@ struct iterator_adaptor : B
 
 
 template <class Base, 
-          class V, class R, class P, class C, class D>
+          class V, class R, class P, class RC, class TC, class D>
 struct reverse_iterator
     : iterator_adaptor<
-         reverse_iterator<Base, V, R, P, C, D>, V, R, P, C, D
+         reverse_iterator<Base, V, R, P, RC, TC, D>, V, R, P, RC, TC, D
       >
 {
-    typedef iterator_adaptor<reverse_iterator<Base, V, R, P, C, D>, V, R, P, C, D> super;
+    typedef iterator_adaptor<reverse_iterator<Base, V, R, P, RC, TC, D>, V, R, P, RC, TC, D> super;
     
 //  friend class super;
     // hmm, I don't like the next two lines
@@ -171,7 +185,7 @@ struct reverse_iterator
     Base const& base() const { return m_base; }
     
     template <class B2, class V2, class R2, class P2>
-    reverse_iterator(const reverse_iterator<B2,V2,R2,P2,C,D>& y)
+    reverse_iterator(const reverse_iterator<B2,V2,R2,P2,RC,TC,D>& y)
         : m_base(y.m_base) { }
 
 
@@ -186,15 +200,13 @@ struct reverse_iterator
 
     template <class B2, class V2, class R2, class P2>
     typename super::difference_type
-    distance_from(const reverse_iterator<B2,V2,R2,P2,C,D>& y) const
+    distance_from(const reverse_iterator<B2,V2,R2,P2,RC,TC,D>& y) const
     {
         return m_base - y.m_base;
     }
  private:
     Base m_base;
 };
-
-
 
 
 } // namespace boost
