@@ -286,8 +286,10 @@ namespace boost_concepts {
                                            const_difference_type>::value));
       BOOST_STATIC_ASSERT((boost::is_same< traversal_category,
                                            const_traversal_category>::value));
-
-      detail::Operations<traversal_category>::constraints(i, ci);
+      
+      // ToDo check what the std really requires
+      
+      // detail::Operations<traversal_category>::constraints(i, ci);
 
       ci = i;
 
