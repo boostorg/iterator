@@ -3,3 +3,5 @@ include testing.jam ;
 run iterator_adaptor_cc.cpp ;
 run transform_iterator_test.cpp ;
 run indirect_iterator_test.cpp ;
+compile-fail interoperable_fail.cpp ;
+compile-fail is_convertible_fail.cpp ;
