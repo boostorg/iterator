@@ -107,9 +107,12 @@ namespace boost {
     {
     };
 
-#if BOOST_WORKAROUND(__MWERKS__, <=0x2407) 
+    template <class T>
+    struct is_boost_iterator_tag;
+
+#if BOOST_WORKAROUND(__MWERKS__, <= 0x2407)
     //
-    // has_traversal fails for cwpro7, so we have to use 
+    // has_xxx fails, so we have to use 
     // something less sophisticated.
     // 
     // The solution depends on the fact that only
@@ -123,7 +126,16 @@ namespace boost {
                         mpl::logical_not< is_output_iterator<Tag> > >
     {};
 
+#elif BOOST_WORKAROUND(__GNUC__, == 2 && __GNUC_MINOR__ == 95)
+    
+    template <class Tag>
+    struct is_new_iterator_tag
+        : is_boost_iterator_tag<Tag>
+    {
+    };
+    
 #else
+    
   BOOST_MPL_HAS_XXX_TRAIT_DEF(traversal)
 
     template <class Tag>
@@ -255,6 +267,34 @@ namespace boost {
     typedef ReturnTag returns;
     typedef TraversalTag traversal;
   };
+
+  namespace detail
+  {
+# ifndef BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
+    template <class T>
+    struct is_boost_iterator_tag
+        : mpl::false_c {};
+
+    template <class R, class T>
+    struct is_boost_iterator_tag<iterator_tag<R,T> >
+        : mpl::true_c {};
+# else
+    template <class T>
+    struct is_boost_iterator_tag_impl
+    {
+        template <class R, class T>
+        static char (& test(iterator_tag<R,T> const&) )[1];
+        static char (& test(...) )[2];
+        static T inst;
+        BOOST_STATIC_CONSTANT(bool, value = sizeof(test(inst)) == 1);
+    };
+
+    template <class T>
+    struct is_boost_iterator_tag
+        : mpl::bool_c<is_boost_iterator_tag_impl<T>::value>
+    {};
+# endif
+  }
 
 } // namespace boost
 
