@@ -76,7 +76,7 @@ value of the some underlying iterator (see `transform_iterator`_).
 For unary functions such as ``times``, the return type of
 ``operator*`` clearly needs to be the ``result_type`` of the function
 object, which is typically not a reference.  Because random access
-iterators are prequired to return lvalues from ``operator*``, if you
+iterators are required to return lvalues from ``operator*``, if you
 wrap ``int*`` with a transform iterator, you do not get a random
 access iterator as might be expected, but an input iterator.
 
@@ -100,7 +100,7 @@ In short, there are many useful iterators that do not fit into the
 current standard iterator categories. As a result, the following bad
 things happen:
 
-- Iterators are often mis-categorized. 
+- Iterators are often miss-categorized. 
 
 - Algorithm requirements are more strict than necessary, because they
   cannot separate the need for random access or bidirectional
@@ -698,8 +698,8 @@ category tags for pointer types.
 ..
  LocalWords:  Abrahams Siek Witt const bool Sutter's WG int UL LI href Lvalue
  LocalWords:  ReadableIterator WritableIterator SwappableIterator cv pre iter
- LocalWords:  ConstantLvalueIterator MutableLvalueIterator CopyConstructible
+ LocalWords:  ConstantLvalueIterator MutableLvalueIterator CopyConstructible TR
  LocalWords:  ForwardTraversalIterator BidirectionalTraversalIterator lvalue
  LocalWords:  RandomAccessTraversalIterator dereferenceable Incrementable tmp
  LocalWords:  incrementable xxx min prev inplace png oldeqnew AccessTag struct
- LocalWords:  TraversalTag typename
+ LocalWords:  TraversalTag typename lvalues DWA Hmm JGS
