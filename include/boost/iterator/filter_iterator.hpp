@@ -23,7 +23,7 @@ namespace boost
        typedef iterator_tag<
            typename access_category<Iterator>::type
          , typename minimum_category<
-               forward_traversal_tag
+               bidirectional_traversal_tag
              , typename traversal_category<Iterator>::type
            >::type 
        > type;
@@ -78,6 +78,11 @@ namespace boost
       {
           ++(this->base_reference());
           satisfy_predicate();
+      }
+
+      void decrement()
+      {
+        while(!this->m_predicate(*--(this->base_reference()))){};
       }
 
       void satisfy_predicate()

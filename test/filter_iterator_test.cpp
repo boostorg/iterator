@@ -40,15 +40,13 @@ int main()
 
     typedef boost::filter_iterator<one_or_four, dummyT*> filter_iter;
 
-    boost::forward_iterator_test(
+    boost::bidirectional_readable_iterator_test(
         filter_iter(one_or_four(), array, array+N)
         , dummyT(1), dummyT(4));
 
-    // Filter iterators can't be bidirectional, since we didn't choose
-    // to store the beginning of the range.
     BOOST_STATIC_ASSERT((
         !boost::detail::is_tag<
-         boost::bidirectional_traversal_tag
+         boost::random_access_traversal_tag
        , boost::traversal_category<filter_iter>::type
       >::value
     ));
@@ -60,15 +58,15 @@ int main()
     // is broken ;-(
     std::deque<dummyT> array2;
     std::copy(array+0, array+N, std::back_inserter(array2));
-    boost::forward_iterator_test(
+    boost::bidirectional_readable_iterator_test(
         boost::make_filter_iterator(one_or_four(), array2.begin(), array2.end()),
         dummyT(1), dummyT(4));
 
-    boost::forward_iterator_test(
+    boost::bidirectional_readable_iterator_test(
         boost::make_filter_iterator(one_or_four(), array2.begin(), array2.end()),
         dummyT(1), dummyT(4));
 
-    boost::forward_iterator_test(
+    boost::bidirectional_readable_iterator_test(
         boost::make_filter_iterator(
               one_or_four()
             , boost::make_reverse_iterator(array2.end())
@@ -76,11 +74,11 @@ int main()
             ),
         dummyT(4), dummyT(1));
     
-    boost::forward_iterator_test(
+    boost::bidirectional_readable_iterator_test(
         filter_iter(array+0, array+N),
         dummyT(1), dummyT(4));
 
-    boost::forward_iterator_test(
+    boost::bidirectional_readable_iterator_test(
         filter_iter(one_or_four(), array, array + N),
         dummyT(1), dummyT(4));
 
