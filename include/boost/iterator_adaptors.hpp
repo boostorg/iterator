@@ -146,7 +146,7 @@ struct TrivialIteratorPoliciesConcept
     const_constraints();
   }
   void const_constraints() const {
-    Reference r = p.dereference(type<Reference>(), x);
+    Reference r = p.dereference(x);
     b = p.equal(x, x);
     ignore_unused_variable_warning(r);
   }
@@ -208,8 +208,7 @@ struct RandomAccessIteratorPoliciesConcept
     ignore_unused_variable_warning(t);
   }
   void const_constraints() const {
-    n = p.distance(type<DifferenceType>(), x, x);
-    b = p.less(x, x);
+    n = p.distance(x, x);
   }
   Policies p;
   Adapted x;
@@ -231,37 +230,30 @@ struct default_iterator_policies
     void initialize(Base&)
         { }
 
-    // The "type<Reference>" parameter is a portable mechanism for
-    // the iterator_adaptor class to tell this member function what
-    // the Reference type is, which is needed for the return type.
-    template <class Reference, class Base>
-    Reference dereference(type<Reference>, const Base& x) const
-        { return *x; }
+    template <class IteratorAdaptor>
+    typename IteratorAdaptor::reference dereference(const IteratorAdaptor& x) const
+        { return *x.base(); }
 
-    template <class Base>
-    void increment(Base& x)
-        { ++x; }
+    template <class IteratorAdaptor>
+    void increment(IteratorAdaptor& x)
+        { ++x.base(); }
 
-    template <class Base>
-    void decrement(Base& x)
-        { --x; }
+    template <class IteratorAdaptor>
+    void decrement(IteratorAdaptor& x)
+        { --x.base(); }
 
-    template <class Base, class DifferenceType>
-    void advance(Base& x, DifferenceType n)
-        { x += n; }
+    template <class IteratorAdaptor, class DifferenceType>
+    void advance(IteratorAdaptor& x, DifferenceType n)
+        { x.base() += n; }
 
-    template <class Difference, class Iterator1, class Iterator2>
-    Difference distance(type<Difference>, const Iterator1& x,
-                        const Iterator2& y) const
-        { return y - x; }
+    template <class IteratorAdaptor1, class IteratorAdaptor2>
+    typename IteratorAdaptor1::difference_type
+    distance(const IteratorAdaptor1& x, const IteratorAdaptor2& y) const
+        { return y.base() - x.base(); }
 
-    template <class Iterator1, class Iterator2>
-    bool equal(const Iterator1& x, const Iterator2& y) const
-        { return x == y; }
-
-    template <class Iterator1, class Iterator2>
-    bool less(const Iterator1& x, const Iterator2& y) const
-        { return x < y; }
+    template <class IteratorAdaptor1, class IteratorAdaptor2>
+    bool equal(const IteratorAdaptor1& x, const IteratorAdaptor2& y) const
+        { return x.base() == y.base(); }
 };
 
 // putting the comparisons in a base class avoids the g++ 
@@ -277,7 +269,7 @@ inline bool operator==(const iterator_comparisons<D1,Base1>& xb,
 {
         const D1& x = static_cast<const D1&>(xb);
     const D2& y = static_cast<const D2&>(yb);
-    return x.policies().equal(x.iter(), y.iter());
+    return x.policies().equal(x, y);
 }
 
 template <class D1, class D2, class Base1, class Base2>
@@ -286,7 +278,7 @@ inline bool operator!=(const iterator_comparisons<D1,Base1>& xb,
 {
     const D1& x = static_cast<const D1&>(xb);
     const D2& y = static_cast<const D2&>(yb);
-    return !x.policies().equal(x.iter(), y.iter());
+    return !x.policies().equal(x, y);
 }
 
 template <class D1, class D2, class Base1, class Base2>
@@ -295,7 +287,7 @@ inline bool operator<(const iterator_comparisons<D1,Base1>& xb,
 {
     const D1& x = static_cast<const D1&>(xb);
     const D2& y = static_cast<const D2&>(yb);
-    return x.policies().less(x.iter(), y.iter());
+    return x.policies().distance(x, y) > 0;
 }
 
 template <class D1, class D2, class Base1, class Base2>
@@ -304,7 +296,7 @@ inline bool operator>(const iterator_comparisons<D1,Base1>& xb,
 { 
     const D1& x = static_cast<const D1&>(xb);
     const D2& y = static_cast<const D2&>(yb);
-    return x.policies().less(y.iter(), x.iter());
+    return x.policies().distance(y, x) > 0;
 }
 
 template <class D1, class D2, class Base1, class Base2>
@@ -313,7 +305,7 @@ inline bool operator>=(const iterator_comparisons<D1,Base1>& xb,
 {
     const D1& x = static_cast<const D1&>(xb);
     const D2& y = static_cast<const D2&>(yb);
-    return !x.policies().less(x.iter(), y.iter());
+    return !(x.policies().distance(x, y) > 0);
 }
 
 template <class D1, class D2, class Base1, class Base2>
@@ -322,7 +314,7 @@ inline bool operator<=(const iterator_comparisons<D1,Base1>& xb,
 {
     const D1& x = static_cast<const D1&>(xb);
     const D2& y = static_cast<const D2&>(yb);
-    return !x.policies().less(y.iter(), x.iter());
+    return !(x.policies().distance(y, x) > 0);
 }
 #endif
 
@@ -641,15 +633,15 @@ struct iterator_adaptor :
     explicit
     iterator_adaptor(const Base& it, const Policies& p = Policies())
         : m_iter_p(it, p) {
-      policies().initialize(iter());
+      policies().initialize(base());
     }
 
     template <class Iter2, class Value2, class Pointer2, class Reference2>
     iterator_adaptor (
         const iterator_adaptor<Iter2,Policies,Value2,Reference2,Pointer2,Category,Distance>& src)
-            : m_iter_p(src.iter(), src.policies())
+            : m_iter_p(src.base(), src.policies())
     {
-        policies().initialize(iter());
+        policies().initialize(base());
     }
 
 #if defined(BOOST_MSVC) || defined(__BORLANDC__)
@@ -661,7 +653,7 @@ struct iterator_adaptor :
     }
 #endif
     reference operator*() const {
-        return policies().dereference(type<reference>(), iter());
+         return policies().dereference(*this);
     }
 
 #ifdef BOOST_MSVC
@@ -684,9 +676,9 @@ struct iterator_adaptor :
 #ifdef __MWERKS__
         // Odd bug, MWERKS couldn't  deduce the type for the member template
         // Workaround by explicitly specifying the type.
-        policies().increment<Base>(iter());
+        policies().increment<self>(*this);
 #else
-        policies().increment(iter());
+        policies().increment(*this);
 #endif
         return *this;
     }
@@ -695,9 +687,9 @@ struct iterator_adaptor :
     
     self& operator--() {
 #ifdef __MWERKS__
-        policies().decrement<Base>(iter());
+        policies().decrement<self>(*this);
 #else
-        policies().decrement(iter());
+        policies().decrement(*this);
 #endif
         return *this;
     }
@@ -705,16 +697,16 @@ struct iterator_adaptor :
     self operator--(int) { self tmp(*this); --*this; return tmp; }
 
     self& operator+=(difference_type n) {
-        policies().advance(iter(), n);
+        policies().advance(*this, n);
         return *this;
     }
   
     self& operator-=(difference_type n) {
-        policies().advance(iter(), -n);
+        policies().advance(*this, -n);
         return *this;
     }
 
-    base_type base() const { return m_iter_p.first(); }
+    base_type const& base() const { return m_iter_p.first(); }
 
     // Moved from global scope to avoid ambiguity with the operator-() which
     // subtracts iterators from one another.
@@ -724,11 +716,9 @@ private:
     compressed_pair<Base,Policies> m_iter_p;
 
 public: // implementation details (too many compilers have trouble when these are private).
+    base_type& base() { return m_iter_p.first(); }
     Policies& policies() { return m_iter_p.second(); }
     const Policies& policies() const { return m_iter_p.second(); }
-    
-    Base& iter() { return m_iter_p.first(); }
-    const Base& iter() const { return m_iter_p.first(); }
 };
 
 template <class Base, class Policies, class Value, class Reference, class Pointer,
@@ -761,7 +751,7 @@ operator-(
 {
   typedef typename iterator_adaptor<Iterator1,Policies,Value1,Reference1,
     Pointer1,Category,Distance>::difference_type difference_type;
-  return x.policies().distance(type<difference_type>(), y.iter(), x.iter());
+  return x.policies().distance(y, x);
 }
 
 #ifndef BOOST_RELOPS_AMBIGUITY_BUG
@@ -773,7 +763,7 @@ operator==(
     const iterator_adaptor<Iterator1,Policies,Value1,Reference1,Pointer1,Category,Distance>& x,
     const iterator_adaptor<Iterator2,Policies,Value2,Reference2,Pointer2,Category,Distance>& y)
 {
-    return x.policies().equal(x.iter(), y.iter());
+    return x.policies().equal(x, y);
 }
 
 template <class Iterator1, class Iterator2, class Policies, class Value1, class Value2,
@@ -784,7 +774,7 @@ operator<(
     const iterator_adaptor<Iterator1,Policies,Value1,Reference1,Pointer1,Category,Distance>& x,
     const iterator_adaptor<Iterator2,Policies,Value2,Reference2,Pointer2,Category,Distance>& y)
 {
-    return x.policies().less(x.iter(), y.iter());
+    return x.policies().distance(x, y) > 0;
 }
 
 template <class Iterator1, class Iterator2, class Policies, class Value1, class Value2,
@@ -795,7 +785,7 @@ operator>(
     const iterator_adaptor<Iterator1,Policies,Value1,Reference1,Pointer1,Category,Distance>& x,
     const iterator_adaptor<Iterator2,Policies,Value2,Reference2,Pointer2,Category,Distance>& y)
 { 
-    return x.policies().less(y.iter(), x.iter());
+    return x.policies().distance(y, x) > 0;
 }
 
 template <class Iterator1, class Iterator2, class Policies, class Value1, class Value2,
@@ -806,7 +796,7 @@ operator>=(
     const iterator_adaptor<Iterator1,Policies,Value1,Reference1,Pointer1,Category,Distance>& x,
     const iterator_adaptor<Iterator2,Policies,Value2,Reference2,Pointer2,Category,Distance>& y)
 {
-    return !x.policies().less(x.iter(), y.iter());
+    return !(x.policies().distance(x, y) > 0);
 }
 
 template <class Iterator1, class Iterator2, class Policies, class Value1, class Value2,
@@ -817,7 +807,7 @@ operator<=(
     const iterator_adaptor<Iterator1,Policies,Value1,Reference1,Pointer1,Category,Distance>& x,
     const iterator_adaptor<Iterator2,Policies,Value2,Reference2,Pointer2,Category,Distance>& y)
 {
-    return !x.policies().less(y.iter(), x.iter());
+    return !(x.policies().distance(y, x) > 0);
 }
 
 template <class Iterator1, class Iterator2, class Policies, class Value1, class Value2,
@@ -828,7 +818,7 @@ operator!=(
     const iterator_adaptor<Iterator1,Policies,Value1,Reference1,Pointer1,Category,Distance>& x, 
     const iterator_adaptor<Iterator2,Policies,Value2,Reference2,Pointer2,Category,Distance>& y)
 {
-    return !x.policies().equal(x.iter(), y.iter());
+    return !x.policies().equal(x, y);
 }
 #endif
 
@@ -844,9 +834,10 @@ struct transform_iterator_policies : public default_iterator_policies
     transform_iterator_policies() { }
     transform_iterator_policies(const AdaptableUnaryFunction& f) : m_f(f) { }
     
-    template <class Reference, class Iterator>
-    Reference dereference(type<Reference>, const Iterator& iter) const
-        { return m_f(*iter); }
+    template <class IteratorAdaptor>
+    typename IteratorAdaptor::reference
+    dereference(const IteratorAdaptor& iter) const
+        { return m_f(*iter.base()); }
 
     AdaptableUnaryFunction m_f;
 };
@@ -889,9 +880,9 @@ make_transform_iterator(
 
 struct indirect_iterator_policies : public default_iterator_policies
 {
-    template <class Reference, class Iterator>
-    Reference dereference(type<Reference>, const Iterator& x) const
-        { return **x; }
+    template <class IteratorAdaptor>
+    typename IteratorAdaptor::reference dereference(const IteratorAdaptor& x) const
+        { return **x.base(); }
 };
 
 namespace detail {
@@ -984,34 +975,30 @@ make_indirect_iterator(OuterIterator base)
 
 struct reverse_iterator_policies : public default_iterator_policies
 {
-    template <class Reference, class BidirectionalIterator>
-    Reference dereference(type<Reference>, const BidirectionalIterator& x) const
-        { return *boost::prior(x); }
+    template <class IteratorAdaptor>
+    typename IteratorAdaptor::reference dereference(const IteratorAdaptor& x) const
+        { return *boost::prior(x.base()); }
     
     template <class BidirectionalIterator>
     void increment(BidirectionalIterator& x) const
-        { --x; }
+        { --x.base(); }
     
     template <class BidirectionalIterator>
     void decrement(BidirectionalIterator& x) const
-        { ++x; }
+        { ++x.base(); }
     
     template <class BidirectionalIterator, class DifferenceType>
     void advance(BidirectionalIterator& x, DifferenceType n) const
-        { x -= n; }
+        { x.base() -= n; }
     
-    template <class Difference, class Iterator1, class Iterator2>
-    Difference distance(type<Difference>, const Iterator1& x, 
-                        const Iterator2& y) const
-        { return x - y; }
+    template <class Iterator1, class Iterator2>
+    typename Iterator1::difference_type distance(
+        const Iterator1& x, const Iterator2& y) const
+        { return x.base() - y.base(); }
     
     template <class Iterator1, class Iterator2>
     bool equal(const Iterator1& x, const Iterator2& y) const
-        { return x == y; }
-    
-    template <class Iterator1, class Iterator2>
-    bool less(const Iterator1& x, const Iterator2& y) const
-        { return y < x; }
+        { return x.base() == y.base(); }
 };
   
 template <class BidirectionalIterator,
@@ -1044,9 +1031,9 @@ struct projection_iterator_policies : public default_iterator_policies
     projection_iterator_policies() { }
     projection_iterator_policies(const AdaptableUnaryFunction& f) : m_f(f) { }
 
-    template <class Reference, class Iterator>
-    Reference dereference (type<Reference>, Iterator const& iter) const {
-        return m_f(*iter);
+    template <class IteratorAdaptor>
+    typename IteratorAdaptor::reference dereference(IteratorAdaptor const& iter) const {
+        return m_f(*iter.base());
     }
 
     AdaptableUnaryFunction m_f;    
@@ -1113,28 +1100,29 @@ public:
 
     // The Iter template argument is neccessary for compatibility with a MWCW
     // bug workaround
-    template <class Iter>
-    void increment(Iter& x) {
-        ++x;
-        satisfy_predicate(x);
+    template <class IteratorAdaptor>
+    void increment(IteratorAdaptor& x) {
+        ++x.base();
+        satisfy_predicate(x.base());
     }
 
-    template <class Reference, class Iter>
-    Reference dereference(type<Reference>, const Iter& x) const
-        { return *x; }
+    template <class IteratorAdaptor>
+    typename IteratorAdaptor::reference dereference(const IteratorAdaptor& x) const
+        { return *x.base(); }
 
-    template <class Iterator1, class Iterator2>
-    bool equal(const Iterator1& x, const Iterator2& y) const
-        { return x == y; }
+    template <class IteratorAdaptor1, class IteratorAdaptor2>
+    bool equal(const IteratorAdaptor1& x, const IteratorAdaptor2& y) const
+        { return x.base() == y.base(); }
 
  private:
     void satisfy_predicate(Iterator& iter);
     Predicate m_predicate;
     Iterator m_end;
 };
+
 template <class Predicate, class Iterator>
-void filter_iterator_policies<Predicate,Iterator>
-::satisfy_predicate(Iterator& iter)
+void filter_iterator_policies<Predicate,Iterator>::satisfy_predicate(
+    Iterator& iter)
 {
     while (m_end != iter && !m_predicate(*iter))
         ++iter;
