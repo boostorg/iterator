@@ -409,7 +409,7 @@ namespace detail {
    {
        BOOST_STATIC_CONSTANT(bool, is_ptr = boost::is_pointer<Iterator>::value);
 
-       typedef iterator_defaults_select<is_ptr>::template traits<Iterator,Value> traits;
+       typedef typename iterator_defaults_select<is_ptr>::template traits<Iterator,Value> traits;
        typedef typename traits::pointer pointer;
        typedef typename traits::reference reference;
    };
@@ -438,25 +438,45 @@ namespace detail {
 
   //===========================================================================
   // Specify the defaults for iterator_adaptor's template parameters
-  
+
+  struct default_argument { };
+  // This class template is a workaround for MSVC.
+  struct dummy_default_gen {
+    template <class Base, class Traits>
+    struct select { typedef default_argument type; };
+  };
+  // This class template is a workaround for MSVC.
+  template <class Gen> struct default_generator {
+    typedef dummy_default_gen type;
+  };
+
   struct default_value_type {
     template <class Base, class Traits>
     struct select {
       typedef typename boost::detail::iterator_traits<Base>::value_type type;
     };
   };
+  template <> struct default_generator<default_value_type>
+  { typedef default_value_type type; }; // VC++ workaround
+
   struct default_difference_type {
     template <class Base, class Traits>
     struct select {
       typedef typename boost::detail::iterator_traits<Base>::difference_type type;
     };
   };
+  template <> struct default_generator<default_difference_type>
+  { typedef default_difference_type type; }; // VC++ workaround
+
   struct default_iterator_category {
     template <class Base, class Traits>
     struct select {
       typedef typename boost::detail::iterator_traits<Base>::iterator_category type;
     };
   };
+  template <> struct default_generator<default_iterator_category>
+  { typedef default_iterator_category type; }; // VC++ workaround
+
   struct default_pointer {
     template <class Base, class Traits>
     struct select {
@@ -465,6 +485,9 @@ namespace detail {
 	type;
     };
   };
+  template <> struct default_generator<default_pointer>
+  { typedef default_pointer type; }; // VC++ workaround
+
   struct default_reference {
     template <class Base, class Traits>
     struct select {
@@ -473,6 +496,8 @@ namespace detail {
 	type;
     };
   };
+  template <> struct default_generator<default_reference>
+  { typedef default_reference type; }; // VC++ workaround
 
 } // namespace detail
 
@@ -488,55 +513,66 @@ namespace detail {
   struct pointer_tag { };
   struct difference_type_tag { };
   struct iterator_category_tag { };
-}
+
+  // avoid using std::pair because A or B might be a reference type, and g++
+  // complains about forming references to references inside std::pair
+  template <class A, class B>
+  struct cons_type {
+    typedef A first_type;
+    typedef B second_type;
+  };
+
+} // namespace detail
+
 template <class Value> struct value_type_is : public named_template_param_base
 {
-  typedef std::pair<detail::value_type_tag, Value> type;
+  typedef detail::cons_type<detail::value_type_tag, Value> type;
 };
 template <class Reference> struct reference_is : public named_template_param_base
 {
-  typedef std::pair<detail::reference_tag, Reference> type;
+  typedef detail::cons_type<detail::reference_tag, Reference> type;
 };
 template <class Pointer> struct pointer_is : public named_template_param_base
 {
-  typedef std::pair<detail::pointer_tag, Pointer> type;
+  typedef detail::cons_type<detail::pointer_tag, Pointer> type;
 };
 template <class Difference> struct difference_type_is
   : public named_template_param_base
 {
-  typedef std::pair<detail::difference_type_tag, Difference> type;
+  typedef detail::cons_type<detail::difference_type_tag, Difference> type;
 };
 template <class IteratorCategory> struct iterator_category_is 
   : public named_template_param_base
 {
-  typedef std::pair<detail::iterator_category_tag, IteratorCategory> type;
+  typedef detail::cons_type<detail::iterator_category_tag, IteratorCategory> type;
 };
 
 namespace detail {
-
-  struct default_argument { };
 
   struct end_of_list { };
 
   // Given an associative list, find the value with the matching key.
   // An associative list is a list of key-value pairs. The list is
-  // built out of std::pair's and is terminated by end_of_list.
+  // built out of cons_type's and is terminated by end_of_list.
 
 #ifdef BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
+  template <class AssocList, class Key>
+  struct find_param;
+
   struct find_param_continue {
     template <class AssocList, class Key2> struct bind {
-      typedef typename AssocList::first_argument Head;
-      typedef typename Head::first_argument Key1;
-      typedef typename Head::second_argument Value;
+      typedef typename AssocList::first_type Head;
+      typedef typename Head::first_type Key1;
+      typedef typename Head::second_type Value;
       typedef typename ct_if<is_same<Key1, Key2>::value,
         Value, 
-        typename find_param<typename AssocList::second_argument>::type
+        typename find_param<typename AssocList::second_type, Key2>::type
       >::type type;
     };
   };
   struct find_param_end {
     template <class AssocList, class Key>
-    struct bind { typedef default_argument type; };
+    struct bind { typedef detail::default_argument type; };
   };
   template <class AssocList> struct find_param_helper1
   { typedef find_param_continue type; };
@@ -556,13 +592,13 @@ namespace detail {
 
   // Found a matching Key, return the associated Value
   template <class Key, class Value, class Rest>
-  struct find_param<std::pair< std::pair<Key, Value>, Rest>, Key> {
+  struct find_param<detail::cons_type< detail::cons_type<Key, Value>, Rest>, Key> {
     typedef Value type;
   };
 
   // Non-matching keys, continue the search
   template <class Key1, class Value, class Rest, class Key2>
-  struct find_param<std::pair< std::pair<Key1, Value>, Rest>, Key2> {
+  struct find_param<detail::cons_type< detail::cons_type<Key1, Value>, Rest>, Key2> {
     typedef typename find_param<Rest, Key2>::type type;
   };
 #endif
@@ -573,7 +609,7 @@ namespace detail {
   };
   struct make_key_value {
     template <class Key, class Value>
-    struct bind { typedef std::pair<Key, Value> type; };
+    struct bind { typedef detail::cons_type<Key, Value> type; };
   };
 
   template <class Key, class Value>
@@ -591,13 +627,16 @@ namespace detail {
 
   struct choose_default {
     template <class Arg, class DefaultGen, class Base, class Traits>
-    struct select {
-      typedef typename DefaultGen::template select<Base,Traits>::type type;
+    struct bind {
+#if 1
+      typedef typename default_generator<DefaultGen>::type Gen;
+      typedef typename Gen::template select<Base,Traits>::type type;
+#endif
     };
   };
   struct choose_arg {
     template <class Arg, class DefaultGen, class Base, class Traits>
-    struct select {
+    struct bind {
       typedef Arg type;
     };
   };
@@ -614,7 +653,7 @@ namespace detail {
       Selector;
   public:
     typedef typename Selector
-      ::template select<Arg, DefaultGen, Base, Traits>::type type;
+      ::template bind<Arg, DefaultGen, Base, Traits>::type type;
   };
 
   template <class Base, class Value, class Reference, class Pointer,
@@ -626,11 +665,11 @@ namespace detail {
     // creates a key-value pair. If the argument is a named parameter,
     // then make_arg extracts the key-value pair defined inside the
     // named parameter.
-    typedef std::pair< typename make_arg<value_type_tag, Value>::type,
-      std::pair<typename make_arg<reference_tag, Reference>::type,
-      std::pair<typename make_arg<pointer_tag, Pointer>::type,
-      std::pair<typename make_arg<iterator_category_tag, Category>::type,
-      std::pair<typename make_arg<difference_type_tag, Distance>::type,
+    typedef detail::cons_type< typename make_arg<value_type_tag, Value>::type,
+      detail::cons_type<typename make_arg<reference_tag, Reference>::type,
+      detail::cons_type<typename make_arg<pointer_tag, Pointer>::type,
+      detail::cons_type<typename make_arg<iterator_category_tag, Category>::type,
+      detail::cons_type<typename make_arg<difference_type_tag, Distance>::type,
                 end_of_list> > > > > ArgList;
 
     // Search the list for particular parameters
@@ -646,6 +685,7 @@ namespace detail {
     // Compute the defaults if necessary
     typedef typename resolve_default<Val, default_value_type, Base, Traits0>::type
       value_type;
+    // if getting default value type from iterator_traits, then it won't be const
     typedef typename resolve_default<Diff, default_difference_type, Base, 
       Traits0>::type difference_type;
     typedef typename resolve_default<Cat, default_iterator_category, Base, 
@@ -661,6 +701,7 @@ namespace detail {
       pointer;
     typedef typename resolve_default<Ref, default_reference, Base, Traits1>::type
       reference;
+    
   public:
     typedef boost::iterator<iterator_category,
       typename remove_const<value_type>::type, 
