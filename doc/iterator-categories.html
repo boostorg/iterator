@@ -114,19 +114,28 @@ traversal:
   Traversal Iterator</A> 
   <LI><A 
   href="file:///C:/WINDOWS/TEMP/iterator-categories.html#concept:RandomAccessTraversalIterator">Random 
-  Access Traversal Iterator</A> </LI></UL>The current Input Iterator and Output 
-Iterator requirements will continue to be used as is. Note that Input Iterator 
-implies Readable Iterator and Output Iterator implies Writable Iterator. 
-<P>Note: we considered defining a Single-Pass Iterator, which could be combined 
-with Readable or Writable Iterator to replace the Input and Output Iterator 
-requirements. We rejected this idea because there are several differences 
-between Input and Output Iterators that make it hard to merge them: Input 
-Iterator requires Equality Comparable while Output Iterator does not and Input 
-Iterator requires Assignable while Output Iterator does not. 
-<H3>New categories and traits classes</H3>Each of the new iterator requirements 
-will need a category tag. <PRE>namespace std {
+  Access Traversal Iterator</A> </LI>
+</UL>
 
-  // Return Type Categories
+<P>The current Input Iterator and Output Iterator requirements will
+continue to be used as is. Note that Input Iterator implies Readable
+Iterator and Output Iterator implies Writable Iterator.</P>
+
+<P>Note: we considered defining a Single-Pass Iterator, which could be
+combined with Readable or Writable Iterator to replace the Input and
+Output Iterator requirements. We rejected this idea because there are
+several differences between Input and Output Iterators that make it
+hard to merge them: Input Iterator requires Equality Comparable while
+Output Iterator does not and Input Iterator requires Assignable while
+Output Iterator does not.</P>
+
+<H3>New category tags and traits classes</H3>
+
+<P>The new iterator categories will require new tag classes.</P>
+
+<PRE>namespace std {
+
+  // Returns Category Tags
   struct readable_iterator_tag { };
   struct writable_iterator_tag { };
   struct swappable_iterator_tag { };
@@ -134,7 +143,7 @@ will need a category tag. <PRE>namespace std {
     virtual public readable_iterator_tag { };
   struct constant_lvalue_iterator_tag : public readable_iterator_tag { };
 
-  // Traversal Categories
+  // Traversal Category Tags
   struct input_traversal_tag { };
   struct output_traversal_tag { };
   struct forward_traversal_tag { };
@@ -142,41 +151,107 @@ will need a category tag. <PRE>namespace std {
   struct random_access_traversal_tag : public bidirectional_traversal_tag { };
 
 }
-</PRE>And there will need to be a way to access these category tags using a 
-traits mechanism. Adding new typedefs to <TT>std::iterator_traits</TT> is not an 
-acceptable solution because that would break every existing iterator. Instead, 
-we propose two new traits classes. It is important that these traits classes are 
-<B>backward compatible</B>, that is, they should work with any iterator for 
-which there is a valid definition of <TT>std::iterator_traits</TT>. This can be 
-accomplished by making the default behavior of the traits classes map the 
-<TT>iterator_category</TT> of the iterator to the appropriate return or 
-traversal category. For new iterators, either specializations of these traits 
-classes can be defined, or the iterator can provide nested typedefs, and inherit 
-from <TT>new_iterator_base</TT> (which is just a signal to the traits class that 
-it is a new iterator). As with <TT>std::iterator_traits</TT>, specializations 
-for <TT>T*</TT> are provided. <PRE>namespace std {
+</PRE>
 
-  struct new_iterator_base { };
+<P>Access to the return and traversal tags will be through the
+following two traits classes, which have a member typedef named
+<TT>type</TT> that provides the tag type. We explain the
+definitions of these classes later.</P>
+
+<PRE>
+  template &lt;typename Iterator&gt;
+  struct return_category; // contains: typedef ... type;
 
   template &lt;typename Iterator&gt;
-  struct return_category
+  struct traversal_category; // contains: typedef ... type;
+</PRE>
+
+<P>We want it to be convenient for programmers to create iterators
+that satisfy both the old and new iterator requirements.  Therefore
+the following class is provided as a way to create tags for use as the
+old <TT>iterator_category</TT> typedef within
+<TT>iterator_traits</TT>.
+
+<PRE>namespace std {
+  template &lt;class ReturnTag, class TraversalTag&gt;
+  struct iterator_tag : cvt_iterator_category&lt;ReturnTag, TraversalTag&gt;::type
+  {
+    typedef ReturnTag returns;
+    typedef TraversalTag traversal;
+  };
+</PRE>
+
+<P>The <TT>cvt_iterator_category</TT> template computes the
+appropriate old iterator category based on the return and traversal
+category.</P>
+
+<PRE>namespace std {
+  template &lt;class RC, class TC&gt;
+  struct cvt_iterator_category
+  {
+    <B><I>// Pseudo-code, &lt;= means inherits or same type</I></B>
+    if (RC &lt;= constant_lvalue_iterator_tag || RC &lt;= mutable_lvalue_iterator_tag) {
+      if (TC &lt;= random_access_traversal_tag)
+        typedef random_access_iterator_tag type;
+      else if (TC &lt;= bidirectional_traversal_tag)
+        typedef bidirectional_iterator_tag type;
+      else if (TC &lt;= forward_traversal_tag)
+        typedef forward_iterator_tag type;
+      else
+        error;
+   } else if (RC &lt;= readable_iterator_tag && RC &lt;= input_traversal_tag)
+     typedef input_iterator_tag type;
+   else if (RC &lt;= writable_iterator_tag && output_traversal_tag)
+     typedef output_iterator_tag type;
+   else
+     error;
+  };
+}
+</PRE>
+
+<P>The following is an example of a new iterator class using the
+<TT>iterator_tag</TT> class to create its <TT>iterator_category</TT>
+member typedef.</P>
+
+<PRE>
+struct my_iterator {
+  typedef std::iterator_tag&lt;std::readable_iterator_tag, 
+    std::random_access_traversal_tag&gt; iterator_category;
+  ...
+};
+</PRE>
+
+We also want old iterators to work with new algorithms, that is,
+algorithms that use the new iterator categories. We facilitate this by
+defining the <TT>return_category</TT> and <TT>traversal_category</TT>
+in such a way as they can be used with both old and new iterators.
+For old iterators, the appropriate return and traversal categories are
+computed based on the old iterator category. For new iterators, the
+return and traversal tags are extracted from within the
+<TT>iterator_category</TT> tag.
+
+
+<PRE>
+  template &lt;typename Iterator&gt;
+  class return_category
   {
     <B><I>// Pseudo-code</I></B>
-    if (Iterator inherits from new_iterator_base) {
-      typedef typename Iterator::return_category type;
-    } else {
-      typedef std::iterator_traits&lt;Iterator&gt; OldTraits;
-      typedef typename OldTraits::iterator_category Cat;
-      if (Cat inherits from std::forward_iterator_tag)
-	if (is-const(T))
-	  typedef boost::constant_lvalue_iterator_tag type;
-	else
-	  typedef boost::mutable_lvalue_iterator_tag type;
-      else if (Cat inherits from std::input_iterator_tag)
-	typedef boost::readable_iterator_tag type;
-      else if (Cat inherits from std::output_iterator_tag)
-	typedef boost::writable_iterator_tag type;
-    }
+    typedef iterator_traits&lt;Iterator&gt;::iterator_category tag;
+    typedef iterator_traits&lt;Iterator&gt;::value_type T;
+  public:
+    if (exists(tag::returns)) // must be a new iterator
+      typedef tag::returns type;
+    else if (tag &lt;= forward_iterator_tag) {
+      if (is-const(T))
+        typedef constant_lvalue_iterator_tag type;
+      else
+        typedef mutable_lvalue_iterator_tag type;
+    } else if (tag &lt;= input_iterator_tag)
+      typedef readable_iterator_tag type;
+    else if (tag &lt;= output_iterator_tag)
+      typedef writable_iterator_tag type;
+    else
+      error;
   };
 
   template &lt;typename T&gt;
@@ -190,46 +265,47 @@ for <TT>T*</TT> are provided. <PRE>namespace std {
   };
 
   template &lt;typename Iterator&gt;
-  struct traversal_category
+  class traversal_category
   {
+    typedef iterator_traits&lt;Iterator&gt;::iterator_category tag;
+  public:
     <B><I>// Pseudo-code</I></B>
-    if (Iterator inherits from new_iterator_base) {
-      typedef typename Iterator::traversal_category type;
-    } else {
-      typedef std::iterator_traits&lt;Iterator&gt; OldTraits;
-      typedef typename OldTraits::iterator_category Cat;
-
-      if (Cat inherits from std::random_access_iterator_tag)
-	typedef boost::random_access_traversal_tag type;
-      else if (Cat inherits from std::bidirectional_iterator_tag)
-	typedef boost::bidirectional_traversal_tag type;
-      else if (Cat inherits from std::forward_iterator_tag)
-	typedef boost::forward_traversal_tag type;
-      else if (Cat inherits from std::input_iterator_tag)
-	typedef boost::input_traversal_tag type;
-      else if (Cat inherits from std::output_iterator_tag)
-	typedef boost::output_traversal_tag type;
-    }
+    if (exists(tag::traversal)) // must be a new iterator
+      typedef tag::traversal type;
+    else if (tag &lt;= random_access_iterator_tag)
+      typedef random_access_traversal_tag type;
+    else if (tag &lt;= bidirectional_iterator_tag)
+      typedef bidirectional_traversal_tag type;
+    else if (tag &lt;= is_forward_iterator_tag)
+      typedef forward_traversal_tag type;
+    else if (tag &lt;= input_iterator_tag)
+      typedef input_traversal_tag type;
+    else if (tag &lt;= out_iterator_tag)
+      typedef output_traversal_tag type;
+    else
+      error;
   };
 
   template &lt;typename T&gt;
   struct traversal_category&lt;T*&gt;
   {
-    typedef boost::random_access_traversal_tag type;
+    typedef random_access_traversal_tag type;
   };
-
-}
 </PRE>
-<H2>Impact on the Standard Algorithms</H2>Many of the standard algorithms place 
-more requirements than necessary on their iterator parameters due to the 
-coarseness of the current iterator categories. By using the new iterator 
-categories a better fit can be achieved, thereby increasing the reusability of 
-the algorithms. These changes will not affect user-code, though they will 
-require changes by standard implementers: dispatching should be based on the new 
-categories, and in places return values may need to be handled more carefully. 
-In particular, uses of <TT>std::swap()</TT> will need to be replaced with 
-<TT>std::iter_swap()</TT>, and <TT>std::iter_swap()</TT> will need to call 
-<TT>std::swap()</TT>. 
+
+<H2>Impact on the Standard Algorithms</H2>
+
+<P>Many of the standard algorithms place more requirements than
+necessary on their iterator parameters due to the coarseness of the
+current iterator categories. By using the new iterator categories a
+better fit can be achieved, thereby increasing the reusability of the
+algorithms. These changes will not affect user-code, though they will
+require changes by standard implementers: dispatching should be based
+on the new categories, and in places return values may need to be
+handled more carefully.  In particular, uses of <TT>std::swap()</TT>
+will need to be replaced with <TT>std::iter_swap()</TT>, and
+<TT>std::iter_swap()</TT> will need to call <TT>std::swap()</TT>. </P>
+
 <P>
 <CENTER>
 <TABLE border=1>
