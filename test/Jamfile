@@ -1,2 +1,4 @@
-# unit-test ia1 : concept_tests.cpp : <sysinclude>../../.. <sysinclude>$(BOOST) ;
-unit-test ia2 : iterator_adaptor_cc.cpp : <sysinclude>../../.. <sysinclude>$(BOOST) ;
+SEARCH on testing.jam = $(BOOST_BUILD_PATH) ;
+include testing.jam ;
+run iterator_adaptor_cc.cpp ;
+run transform_iterator_test.cpp ;
