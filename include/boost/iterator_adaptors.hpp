@@ -1,9 +1,9 @@
-//  (C) Copyright David Abrahams 2000. Permission to copy, use,
-//  modify, sell and distribute this software is granted provided this
-//  copyright notice appears in all copies. This software is provided
-//  "as is" without express or implied warranty, and with no claim as
-//  to its suitability for any purpose.
-
+// (C) Copyright David Abrahams 2000. Permission to copy, use,
+// modify, sell and distribute this software is granted provided this
+// copyright notice appears in all copies. This software is provided
+// "as is" without express or implied warranty, and with no claim as
+// to its suitability for any purpose.
+//
 // (C) Copyright Jeremy Siek 2000. Permission to copy, use, modify,
 // sell and distribute this software is granted provided this
 // copyright notice appears in all copies. This software is provided
@@ -59,30 +59,32 @@ struct default_iterator_policies
         { return x < y; }
 };
 
-//=============================================================================// iterator_adaptor - A generalized adaptor around an existing iterator, which is itself an iterator
+//=============================================================================
+// iterator_adaptor - A generalized adaptor around an existing
+//   iterator, which is itself an iterator
 //
-//      Iterator - the iterator type being wrapped.
+//   Iterator - the iterator type being wrapped.
 //
-//      Policies - a set of policies determining how the resulting iterator
+//   Policies - a set of policies determining how the resulting iterator
 //      works.
 //
-//      NonconstIterator - the corresponding non-const iterator type for
+//   Traits - a class satisfying the same requirements as a specialization of
+//      std::iterator_traits for the resulting iterator.
+//
+//   NonconstIterator - the corresponding non-const iterator type for
 //      Iterator, if any. You don't need to supply this if you are not make a
 //      const/non-const iterator pair.
 //
-//      Traits - a class satisfying the same requirements as a specialization of
-//      std::iterator_traits for the resulting iterator.
-//
 template <class Iterator, class Policies, 
-#ifndef BOOST_NO_STD_ITERATOR_TRAITS
-          class Traits = std::iterator_traits<Iterator>,
-#else
+#ifdef BOOST_NO_STD_ITERATOR_TRAITS
           class Traits,
+#else
+          class Traits = std::iterator_traits<Iterator>,
 #endif
           class NonconstIterator = Iterator
          >
 struct iterator_adaptor
-    : std::iterator<typename Traits::iterator_category, typename Traits::value_type, typename Traits::difference_type, typename Traits::pointer, typename Traits::reference>
+    : boost::iterator<typename Traits::iterator_category, typename Traits::value_type, typename Traits::difference_type, typename Traits::pointer, typename Traits::reference>
 {
     typedef iterator_adaptor<Iterator, Policies, Traits, NonconstIterator> Self;
 public:
@@ -237,12 +239,214 @@ template <class Iterator, class ConstIterator,
 class iterator_adaptors
 {
 public:
-    typedef iterator_adaptor<Iterator, Policies, Iterator, Traits> iterator;
-    typedef iterator_adaptor<ConstIterator, Policies, Iterator, ConstTraits> 
+    typedef iterator_adaptor<Iterator, Policies, Traits, Iterator> iterator;
+    typedef iterator_adaptor<ConstIterator, Policies, ConstTraits, Iterator> 
       const_iterator;
+};
+
+
+//=============================================================================
+// Transform Iterator Adaptor
+
+template <class AdaptableUnaryFunction>
+struct transform_iterator_policies : public default_iterator_policies
+{
+    transform_iterator_policies() { }
+    transform_iterator_policies(const AdaptableUnaryFunction& f) : m_f(f) { }
+    
+    template <class Reference, class Iterator>
+    Reference dereference(type<Reference>, const Iterator& x) const
+        { return m_f(*x); }
+
+    AdaptableUnaryFunction m_f;
+};
+
+template <class AdaptableUnaryFunction, class IteratorTraits>
+struct transform_iterator_traits {
+    typedef typename AdaptableUnaryFunction::result_type value_type;
+    typedef value_type reference;
+    typedef value_type* pointer;
+    typedef typename IteratorTraits::difference_type difference_type;
+    typedef typename IteratorTraits::iterator_category iterator_category;
+};
+  
+template <class AdaptableUnaryFunction,
+          class Iterator,
+#ifndef BOOST_NO_ITERATOR_TRAITS
+          class Traits = std::iterator_traits<Iterator>
+#else
+          class Traits
+#endif
+         >
+struct transform_iterator
+{
+    typedef transform_iterator_traits<AdaptableUnaryFunction,Traits>
+      TransTraits;
+    typedef iterator_adaptor<Iterator, 
+      transform_iterator_policies<AdaptableUnaryFunction>, TransTraits, 
+      Iterator> type;
+};
+
+
+//=============================================================================
+// Indirect Iterators Adaptor
+
+// Tried implementing this with transform_iterator, but that required
+// using boost::remove_ref, which is not compiler portable.
+
+struct indirect_iterator_policies : public default_iterator_policies
+{
+    template <class Reference, class Iterator>
+    Reference dereference(type<Reference>, const Iterator& x) const
+        { return **x; }
+};
+
+template <class IndirectIterator,
+#ifdef BOOST_NO_ITERATOR_TRAITS
+          class IndirectTraits,
+          class Traits
+#else
+          class IndirectTraits = std::iterator_traits<IndirectIterator>,
+          class Traits = 
+            std::iterator_traits<typename IndirectTraits::value_type>
+#endif
+       >
+struct indirect_traits
+{
+    typedef typename IndirectTraits::difference_type difference_type;
+    typedef typename Traits::value_type value_type;
+    typedef typename Traits::pointer pointer;
+    typedef typename Traits::reference reference;
+    typedef typename IndirectTraits::iterator_category iterator_category;
+};
+
+template <class IndirectIterator, class ConstIndirectIterator,
+#ifdef BOOST_NO_ITERATOR_TRAITS
+          class IndirectTraits,
+          class ConstIndirectTraits,
+          class Traits
+#else
+          class IndirectTraits = 
+              std::iterator_traits<IndirectIterator>,
+          class ConstIndirectTraits = 
+              std::iterator_traits<ConstIndirectIterator>,
+          class Traits =
+              std::iterator_traits<typename IndirectTraits::value_type>
+#endif
+           >
+struct indirect_iterators
+{
+    typedef typename IndirectTraits::value_type Iterator;
+    typedef typename Traits::value_type ValueType;
+    typedef iterator_adaptors<IndirectIterator, ConstIndirectIterator,
+        indirect_traits<IndirectIterator, IndirectTraits, Traits>,
+        indirect_traits<ConstIndirectIterator, ConstIndirectTraits, Traits>,
+        indirect_iterator_policies
+        > Adaptors;
+    typedef typename Adaptors::iterator iterator;
+    typedef typename Adaptors::const_iterator const_iterator;
+};
+
+
+//=============================================================================
+// Reverse Iterators Adaptor
+
+struct reverse_iterator_policies
+{
+    template <class Reference, class Iterator>
+    Reference dereference(type<Reference>, const Iterator& x) const
+        { return *boost::prior(x); }
+    
+    template <class Iterator>
+    void increment(Iterator& x) const
+        { --x; }
+    
+    template <class Iterator>
+    void decrement(Iterator& x) const
+        { ++x; }
+    
+    template <class Iterator, class DifferenceType>
+    void advance(Iterator& x, DifferenceType n) const
+        { x -= n; }
+    
+    template <class Difference, class Iterator1, class Iterator2>
+    Difference distance(type<Difference>, Iterator1& x, Iterator2& y) const
+        { return x - y; }
+    
+    template <class Iterator1, class Iterator2>
+    bool equal(Iterator1& x, Iterator2& y) const
+        { return x == y; }
+    
+    template <class Iterator1, class Iterator2>
+    bool less(Iterator1& x, Iterator2& y) const
+        { return y < x; }
+};
+  
+template <class Iterator, class ConstIterator,
+#ifndef BOOST_NO_ITERATOR_TRAITS
+          class Traits = std::iterator_traits<Iterator>, 
+          class ConstTraits = std::iterator_traits<ConstIterator>
+#else
+          class Traits,
+          class ConstTraits
+#endif
+         >
+struct reverse_iterators
+{
+    typedef iterator_adaptors<Iterator,ConstIterator,Traits,ConstTraits,
+        reverse_iterator_policies> Adaptor;
+    typedef typename Adaptor::iterator iterator;
+    typedef typename Adaptor::const_iterator const_iterator;
+};
+
+//=============================================================================
+// Counting Iterator and Integer Range Class
+
+struct counting_iterator_policies : public default_iterator_policies
+{
+    template <class IntegerType>
+    IntegerType dereference(type<IntegerType>, const IntegerType& i) const
+        { return i; }
+};
+template <class IntegerType>
+struct counting_iterator_traits {
+    typedef IntegerType value_type;
+    typedef IntegerType reference;
+    typedef value_type* pointer;
+    typedef std::ptrdiff_t difference_type;
+    typedef std::random_access_iterator_tag iterator_category;
+};
+
+template <class IntegerType>
+struct integer_range {
+    typedef iterator_adaptor<IntegerType, counting_iterator_policies,
+      counting_iterator_traits<IntegerType>, IntegerType> iterator;
+    typedef iterator const_iterator;
+    typedef IntegerType value_type;
+    typedef std::ptrdiff_t difference_type;
+    typedef IntegerType reference;
+    typedef IntegerType const_reference;
+    typedef const IntegerType* pointer;
+    typedef const IntegerType* const_pointer;
+    typedef IntegerType size_type;
+
+    integer_range(IntegerType start, IntegerType finish)
+        : m_start(start), m_finish(finish) { }
+
+    iterator begin() const { return iterator(m_start); }
+    iterator end() const { return iterator(m_finish); }
+    size_type size() const { return m_finish - m_start; }
+    bool empty() const { return m_finish == m_start; }
+    void swap(integer_range& x) {
+        std::swap(m_start, x.m_start);
+        std::swap(m_finish, x.m_finish);
+    }
+protected:
+    IntegerType m_start, m_finish;
 };
 
 
 } // namespace boost
 
 #endif
+
