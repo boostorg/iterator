@@ -65,11 +65,18 @@ struct default_iterator_policies
 //      Traits - a class satisfying the same requirements as a specialization of
 //      std::iterator_traits for the resulting iterator.
 //
-template <class Iterator, class Policies, class NonconstIterator = Iterator, class Traits = std::iterator_traits<Iterator> >
+template <class Iterator, class Policies, 
+#ifndef BOOST_NO_ITERATOR_TRAITS
+          class Traits = std::iterator_traits<Iterator>,
+#else
+          class Traits,
+#endif
+          class NonconstIterator = Iterator
+         >
 struct iterator_adaptor
     : std::iterator<typename Traits::iterator_category, typename Traits::value_type, typename Traits::difference_type, typename Traits::pointer, typename Traits::reference>
 {
-    typedef iterator_adaptor<Iterator, Policies, NonconstIterator, Traits> Self;
+    typedef iterator_adaptor<Iterator, Policies, Traits, NonconstIterator> Self;
 public:
     typedef typename Traits::difference_type difference_type;
     typedef typename Traits::value_type value_type;
@@ -81,11 +88,11 @@ public:
         : m_impl(impl) {}
 
     template <class OtherTraits>
-    iterator_adaptor(const iterator_adaptor<NonconstIterator, Policies, NonconstIterator, OtherTraits>& rhs)
+    iterator_adaptor(const iterator_adaptor<NonconstIterator, Policies, OtherTraits, NonconstIterator>& rhs)
         : m_impl(rhs.m_impl) {}
 
     template <class OtherTraits>
-    Self& operator=(const iterator_adaptor<NonconstIterator, Policies, NonconstIterator, OtherTraits>& rhs)
+    Self& operator=(const iterator_adaptor<NonconstIterator, Policies, OtherTraits, NonconstIterator>& rhs)
         { m_impl = rhs.m_impl; return *this; }
     
     reference operator*() const {
@@ -137,72 +144,72 @@ public: // too many compilers have trouble when this is private.
     Iterator m_impl;
 };
 
-template <class Iterator, class Policies, class NonconstIterator, class Traits>
-iterator_adaptor<Iterator,Policies,NonconstIterator,Traits>
-operator-(iterator_adaptor<Iterator,Policies,NonconstIterator,Traits> p, const typename Traits::difference_type x)
+template <class Iterator, class Policies, class Traits, class NonconstIterator>
+iterator_adaptor<Iterator,Policies,Traits,NonconstIterator>
+operator-(iterator_adaptor<Iterator,Policies,Traits,NonconstIterator> p, const typename Traits::difference_type x)
 {
     return p -= x;
 }
 
-template <class Iterator, class Policies, class NonconstIterator, class Traits>
-iterator_adaptor<Iterator,Policies,NonconstIterator,Traits>
-operator+(iterator_adaptor<Iterator,Policies,NonconstIterator,Traits> p, const typename Traits::difference_type x)
+template <class Iterator, class Policies, class Traits, class NonconstIterator>
+iterator_adaptor<Iterator,Policies,Traits,NonconstIterator>
+operator+(iterator_adaptor<Iterator,Policies,Traits,NonconstIterator> p, const typename Traits::difference_type x)
 {
     return p += x;
 }
 
-template <class Iterator, class Policies, class NonconstIterator, class Traits>
-iterator_adaptor<Iterator,Policies,NonconstIterator,Traits>
-operator+(const typename Traits::difference_type x, iterator_adaptor<Iterator,Policies,NonconstIterator,Traits> p)
+template <class Iterator, class Policies, class Traits, class NonconstIterator>
+iterator_adaptor<Iterator,Policies,Traits,NonconstIterator>
+operator+(const typename Traits::difference_type x, iterator_adaptor<Iterator,Policies,Traits,NonconstIterator> p)
 {
     return p += x;
 }
 
-template <class Iterator1, class Iterator2, class Policies, class NonconstIterator, class Traits1, class Traits2>
+template <class Iterator1, class Iterator2, class Policies, class Traits1, class Traits2, class NonconstIterator>
 typename Traits1::difference_type operator-(
-    const iterator_adaptor<Iterator1,Policies,NonconstIterator,Traits1>& x,
-    const iterator_adaptor<Iterator2,Policies,NonconstIterator,Traits2>& y )
+    const iterator_adaptor<Iterator1,Policies,Traits1,NonconstIterator>& x,
+    const iterator_adaptor<Iterator2,Policies,Traits2,NonconstIterator>& y )
 {
     typedef typename Traits1::difference_type difference_type;
     return Policies::distance(type<difference_type>(), y.m_impl, x.m_impl);
 }
 
-template <class Iterator1, class Iterator2, class Policies, class NonconstIterator, class Traits1, class Traits2>
+template <class Iterator1, class Iterator2, class Policies, class Traits1, class Traits2, class NonconstIterator>
 inline bool 
-operator==(const iterator_adaptor<Iterator1,Policies,NonconstIterator,Traits1>& x, const iterator_adaptor<Iterator2,Policies,NonconstIterator,Traits2>& y) {
+operator==(const iterator_adaptor<Iterator1,Policies,Traits1,NonconstIterator>& x, const iterator_adaptor<Iterator2,Policies,Traits2,NonconstIterator>& y) {
     return Policies::equal(x.m_impl, y.m_impl);
 }
 
-template <class Iterator1, class Iterator2, class Policies, class NonconstIterator, class Traits1, class Traits2>
+template <class Iterator1, class Iterator2, class Policies, class Traits1, class Traits2, class NonconstIterator>
 inline bool 
-operator<(const iterator_adaptor<Iterator1,Policies,NonconstIterator,Traits1>& x, const iterator_adaptor<Iterator2,Policies,NonconstIterator,Traits2>& y) {
+operator<(const iterator_adaptor<Iterator1,Policies,Traits1,NonconstIterator>& x, const iterator_adaptor<Iterator2,Policies,Traits2,NonconstIterator>& y) {
     return Policies::less(x.m_impl, y.m_impl);
 }
 
-template <class Iterator1, class Iterator2, class Policies, class NonconstIterator, class Traits1, class Traits2>
+template <class Iterator1, class Iterator2, class Policies, class Traits1, class Traits2, class NonconstIterator>
 inline bool 
-operator>(const iterator_adaptor<Iterator1,Policies,NonconstIterator,Traits1>& x,
-          const iterator_adaptor<Iterator2,Policies,NonconstIterator,Traits2>& y) { 
+operator>(const iterator_adaptor<Iterator1,Policies,Traits1,NonconstIterator>& x,
+          const iterator_adaptor<Iterator2,Policies,Traits2,NonconstIterator>& y) { 
     return Policies::less(y.m_impl, x.m_impl);
 }
 
-template <class Iterator1, class Iterator2, class Policies, class NonconstIterator, class Traits1, class Traits2>
+template <class Iterator1, class Iterator2, class Policies, class Traits1, class Traits2, class NonconstIterator>
 inline bool 
-operator>=(const iterator_adaptor<Iterator1,Policies,NonconstIterator,Traits1>& x, const iterator_adaptor<Iterator2,Policies,NonconstIterator,Traits2>& y) {
+operator>=(const iterator_adaptor<Iterator1,Policies,Traits1,NonconstIterator>& x, const iterator_adaptor<Iterator2,Policies,Traits2,NonconstIterator>& y) {
     return !Policies::less(x.m_impl, y.m_impl);
 }
 
-template <class Iterator1, class Iterator2, class Policies, class NonconstIterator, class Traits1, class Traits2>
+template <class Iterator1, class Iterator2, class Policies, class Traits1, class Traits2, class NonconstIterator>
 inline bool 
-operator<=(const iterator_adaptor<Iterator1,Policies,NonconstIterator,Traits1>& x,
-           const iterator_adaptor<Iterator2,Policies,NonconstIterator,Traits2>& y) {
+operator<=(const iterator_adaptor<Iterator1,Policies,Traits1,NonconstIterator>& x,
+           const iterator_adaptor<Iterator2,Policies,Traits2,NonconstIterator>& y) {
     return !Policies::less(y.m_impl, x.m_impl);
 }
 
-template <class Iterator1, class Iterator2, class Policies, class NonconstIterator, class Traits1, class Traits2>
+template <class Iterator1, class Iterator2, class Policies, class Traits1, class Traits2, class NonconstIterator>
 inline bool 
-operator!=(const iterator_adaptor<Iterator1,Policies,NonconstIterator,Traits1>& x, 
-           const iterator_adaptor<Iterator2,Policies,NonconstIterator,Traits2>& y) {
+operator!=(const iterator_adaptor<Iterator1,Policies,Traits1,NonconstIterator>& x, 
+           const iterator_adaptor<Iterator2,Policies,Traits2,NonconstIterator>& y) {
     return !Policies::equal(x.m_impl, y.m_impl);
 }
 
