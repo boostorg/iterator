@@ -16,20 +16,25 @@
 
 :abstract:
 
-.. include:: iterator_facade_abstract.rst
+  .. include:: iterator_facade_abstract.rst
 
 .. contents:: Table of Contents
 
-
-Motivation
-----------
+Overview
+========
 
 .. include:: iterator_facade_body.rst
 
 
 Reference
----------
+=========
 
 .. include:: iterator_facade_ref.rst
 
 .. _counting: counting_iterator.html
+
+Tutorial Example
+================
+
+.. include:: iterator_facade_tutorial.rst
+

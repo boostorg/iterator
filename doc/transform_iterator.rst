@@ -16,8 +16,13 @@
 
 :abstract:
 
-.. include:: transform_iterator_abstract.rst
+  .. include:: transform_iterator_abstract.rst
 
 .. contents:: Table of Contents
 
+``transform_iterator`` synopsis
+...............................
+
 .. include:: transform_iterator_ref.rst
+.. include:: make_transform_iterator.rst
+.. include:: transform_iterator_eg.rst

@@ -16,8 +16,15 @@
 
 :abstract:
 
-.. include:: indirect_iterator_abstract.rst
+  .. include:: indirect_iterator_abstract.rst
 
 .. contents:: Table of Contents
 
+``indirect_iterator`` synopsis
+..............................
+
 .. include:: indirect_iterator_ref.rst
+.. include:: indirect_iterator_eg.rst
+
+.. _iterator-category: iterator_facade.html#iterator-category
+.. |iterator-category| replace:: *iterator-category*

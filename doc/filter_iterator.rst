@@ -16,8 +16,14 @@
 
 :abstract:
 
-.. include:: filter_iterator_abstract.rst
+  .. include:: filter_iterator_abstract.rst
 
 .. contents:: Table of Contents
 
+``filter_iterator`` synopsis
+............................
+
 .. include:: filter_iterator_ref.rst
+.. include:: make_filter_iterator.rst
+
+.. include:: filter_iterator_eg.rst

@@ -14,7 +14,7 @@
 
 :abstract:
 
-.. include:: permutation_iterator_abstract.rst
+  .. include:: permutation_iterator_abstract.rst
 
 .. contents:: Table of Contents
 
@@ -29,3 +29,9 @@ Reference
 =========
 
 .. include:: permutation_iterator_ref.rst
+
+
+Example
+=======
+
+.. include:: permutation_iterator_eg.rst

@@ -1,11 +1,15 @@
 ::
 
   template <class Iterator>
-  class reverse_iterator :
-    public iterator_adaptor< reverse_iterator<Iterator>, Iterator >
+  class reverse_iterator
   {
-    friend class iterator_core_access;
   public:
+    typedef iterator_traits<Iterator>::value_type value_type;
+    typedef iterator_traits<Iterator>::reference reference;
+    typedef iterator_traits<Iterator>::pointer pointer;
+    typedef iterator_traits<Iterator>::difference_type difference_type;
+    typedef /* see below */ iterator_category;
+
     reverse_iterator() {}
     explicit reverse_iterator(Iterator x) ;
 
@@ -14,47 +18,82 @@
         reverse_iterator<OtherIterator> const& r
       , typename enable_if_convertible<OtherIterator, Iterator>::type* = 0 // exposition
     );
-
-  private: // as-if specification
-    typename reverse_iterator::reference dereference() const { return *prior(this->base()); }
-
-    void increment() { --this->base_reference(); }
-    void decrement() { ++this->base_reference(); }
-
-    void advance(typename reverse_iterator::difference_type n)
-    {
-        this->base_reference() += -n;
-    }
-
-    template <class OtherIterator>
-    typename reverse_iterator::difference_type
-    distance_to(reverse_iterator<OtherIterator> const& y) const
-    {
-        return this->base_reference() - y.base();
-    }
-
+    Iterator const& base() const;
+    reference operator*() const;
+    reverse_iterator& operator++();
+    reverse_iterator& operator--();
+  private:
+    Iterator m_iterator; // exposition
   };
+
+
+If ``Iterator`` models Random Access Traversal Iterator and Readable
+Lvalue Iterator, then ``iterator_category`` is convertible to
+``random_access_iterator_tag``. Otherwise, if
+``Iterator`` models Bidirectional Traversal Iterator and Readable
+Lvalue Iterator, then ``iterator_category`` is convertible to
+``bidirectional_iterator_tag``. Otherwise, ``iterator_category`` is
+convertible to ``input_iterator_tag``.
+
 
 
 ``reverse_iterator`` requirements
 .................................
 
-The base ``Iterator`` must be a model of Bidirectional Traversal
-Iterator. The resulting ``reverse_iterator`` will be a model of the
-most refined standard traversal and access concepts that are modeled
-by ``Iterator``.
+``Iterator`` must be a model of Bidirectional Traversal Iterator.  The
+type ``iterator_traits<Iterator>::reference`` must be the type of
+``*i``, where ``i`` is an object of type ``Iterator``.
+
+
+
+``reverse_iterator`` models
+...........................
+
+A specialization of ``reverse_iterator`` models the same iterator
+traversal and iterator access concepts modeled by its ``Iterator``
+argument.  In addition, it may model old iterator concepts
+specified in the following table:
+
++---------------------------------------+-----------------------------------+
+| If ``I`` models                       |then ``reverse_iterator<I>`` models|
++=======================================+===================================+
+| Readable Lvalue Iterator,             | Bidirectional Iterator            |
+| Bidirectional Traversal Iterator      |                                   |
++---------------------------------------+-----------------------------------+
+| Writable Lvalue Iterator,             | Mutable Bidirectional Iterator    |
+| Bidirectional Traversal Iterator      |                                   |
++---------------------------------------+-----------------------------------+
+| Readable Lvalue Iterator,             | Random Access Iterator            |
+| Random Access Traversal Iterator      |                                   |
++---------------------------------------+-----------------------------------+
+| Writable Lvalue Iterator,             | Mutable Random Access Iterator    |
+| Random Access Traversal Iterator      |                                   |
++---------------------------------------+-----------------------------------+
+
+
+``reverse_iterator<X>`` is interoperable with
+``reverse_iterator<Y>`` if and only if ``X`` is interoperable with
+``Y``.
+
+``reverse_iterator`` operations
+...............................
+
+In addition to the operations required by the concepts modeled by
+``reverse_iterator``, ``reverse_iterator`` provides the following
+operations.
+
 
 
 ``reverse_iterator();``
 
 :Requires: ``Iterator`` must be Default Constructible.
-:Returns: An instance of ``reverse_iterator`` with a
-  default constructed base object.
+:Effects: Constructs an instance of ``reverse_iterator`` with ``m_iterator`` 
+  default constructed.
 
 ``explicit reverse_iterator(Iterator x);``
 
-:Returns: An instance of ``reverse_iterator`` with a
-  base object copy constructed from ``x``.
+:Effects: Constructs an instance of ``reverse_iterator`` with
+    ``m_iterator`` copy constructed from ``x``.
 
 
 ::
@@ -66,4 +105,33 @@ by ``Iterator``.
     );
 
 :Requires: ``OtherIterator`` is implicitly convertible to ``Iterator``.
-:Returns: An instance of ``reverse_iterator`` that is a copy of ``r``.
+:Effects: Constructs instance of ``reverse_iterator`` whose 
+    ``m_iterator`` subobject is constructed from ``y.base()``.
+
+
+
+``Iterator const& base() const;``
+
+:Returns: ``m_iterator``
+
+
+``reference operator*() const;``
+
+:Effects: 
+
+::
+
+    Iterator tmp = m_iterator;
+    return *--tmp;
+
+
+``reverse_iterator& operator++();``
+
+:Effects: ``--m_iterator``
+:Returns: ``*this``
+
+
+``reverse_iterator& operator--();``
+
+:Effects: ``++m_iterator``
+:Returns: ``*this``

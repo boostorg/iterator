@@ -9,10 +9,14 @@ sources = [
 'function_output_iterator.rst',
 'index.rst',
 'indirect_iterator.rst',
+'pointee.rst',
 'iterator_adaptor.rst',
 'iterator_facade.rst',
 'new-iter-concepts.rst',
 'permutation_iterator.rst',
-'reverse_iterator.rst'
+'reverse_iterator.rst',
+'transform_iterator.rst',
+'zip_iterator.rst',
+'iterator_archetypes.rst'
       ]
 

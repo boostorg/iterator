@@ -9,19 +9,19 @@
   template <
       class Derived
     , class Base
-    , class Value        = use_default
-    , class CategoryOrTraversal  = use_default
-    , class Reference  = use_default
+    , class Value               = use_default
+    , class CategoryOrTraversal = use_default
+    , class Reference           = use_default
     , class Difference = use_default
   >
   class iterator_adaptor 
-    : public iterator_facade<Derived, *V*, *C*, *R*, *D*> // see details__
+    : public iterator_facade<Derived, *V'*, *C'*, *R'*, *D'*> // see details__
   {
       friend class iterator_core_access;
    public:
       iterator_adaptor();
       explicit iterator_adaptor(Base iter);
-      Base base() const;
+      Base const& base() const;
    protected:
       Base const& base_reference() const;
       Base& base_reference();
@@ -49,28 +49,37 @@
 
 __ base_parameters_
 
+.. _requirements:
+
+``iterator_adaptor`` requirements
+---------------------------------
+
+``static_cast<Derived*>(iterator_adaptor*)`` shall be well-formed.
+The ``Base`` argument shall be Assignable and Copy Constructible.
+
+
 .. _base_parameters:
 
 ``iterator_adaptor`` base class parameters
 ------------------------------------------
 
-The *V*, *C*, *R*, and *D* parameters of the ``iterator_facade``
+The *V'*, *C'*, *R'*, and *D'* parameters of the ``iterator_facade``
 used as a base class in the summary of ``iterator_adaptor``
 above are defined as follows:
 
 .. parsed-literal::
 
-   *V* = if (Value is use_default)
+   *V'* = if (Value is use_default)
              return iterator_traits<Base>::value_type
          else
              return Value
 
-   *C* = if (CategoryOrTraversal is use_default)
+   *C'* = if (CategoryOrTraversal is use_default)
              return iterator_traversal<Base>::type
          else
              return CategoryOrTraversal
 
-   *R* = if (Reference is use_default)
+   *R'* = if (Reference is use_default)
              if (Value is use_default)
                  return iterator_traits<Base>::reference
              else
@@ -78,23 +87,23 @@ above are defined as follows:
          else
              return Reference
 
-   *D* = if (Difference is use_default)
+   *D'* = if (Difference is use_default)
              return iterator_traits<Base>::difference_type
          else
              return Difference
 
-``iterator_adaptor`` usage
---------------------------
+.. ``iterator_adaptor`` models
+   ---------------------------
 
-The ``Derived`` template parameter must be a publicly derived from
-``iterator_adaptor``.  In order for ``Derived`` to model the
-iterator concepts corresponding to
-``iterator_traits<Derived>::iterator_category``, the expressions
-involving ``m_iterator`` in the specifications of those private
-member functions of ``iterator_adaptor`` that may be called by
-``iterator_facade<Derived, ``\ *V*\``, ``\ *C*\``, ``\ *R*\``, ``\
-*D*\``>`` in evaluating any valid expression involving ``Derived``
-in those concepts' requirements.
+   In order for ``Derived`` to model the iterator concepts corresponding
+   to ``iterator_traits<Derived>::iterator_category``, the expressions
+   involving ``m_iterator`` in the specifications of those private member
+   functions of ``iterator_adaptor`` that may be called by
+   ``iterator_facade<Derived, V, C, R, D>`` in evaluating any valid
+   expression involving ``Derived`` in those concepts' requirements.
+
+.. The above is confusing and needs a rewrite. -JGS
+.. That's why it's removed.  We're embracing inheritance, remember?
 
 ``iterator_adaptor`` public operations
 --------------------------------------
@@ -111,10 +120,9 @@ in those concepts' requirements.
 :Returns: An instance of ``iterator_adaptor`` with
     ``m_iterator`` copy constructed from ``iter``.
 
-``Base base() const;``
+``Base const& base() const;``
 
 :Returns: ``m_iterator``
-
 
 ``iterator_adaptor`` protected member functions
 -----------------------------------------------

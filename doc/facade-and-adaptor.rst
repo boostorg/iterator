@@ -3,10 +3,9 @@
 +++++++++++++++++++++++++++++
 
 :Author: David Abrahams, Jeremy Siek, Thomas Witt
-:Contact: dave@boost-consulting.com, jsiek@osl.iu.edu, witt@acm.org
+:Contact: dave@boost-consulting.com, jsiek@osl.iu.edu, witt@styleadvisor.com
 :organization: `Boost Consulting`_, Indiana University `Open Systems
-               Lab`_, University of Hanover `Institute for Transport
-               Railway Operation and Construction`_
+               Lab`_, `Zephyr Associates, Inc.`_
 :date: $Date$
 
 :Number: This is a revised version of N1530_\ =03-0113, which was
@@ -22,7 +21,7 @@
 
 .. _`Boost Consulting`: http://www.boost-consulting.com
 .. _`Open Systems Lab`: http://www.osl.iu.edu
-.. _`Institute for Transport Railway Operation and Construction`: http://www.ive.uni-hannover.de
+.. _`Zephyr Associates, Inc.`: http://www.styleadvisor.com
 
 :abstract: We propose a set of class templates that help programmers
            build standard-conforming iterators, both from scratch and
@@ -197,10 +196,6 @@ which were easily implemented using ``iterator_adaptor``:
 * ``transform_iterator``, which applies a user-defined function object
   to the underlying values when dereferenced.
 
-* ``projection_iterator``, which is similar to ``transform_iterator``
-  except that when dereferenced it returns a reference instead of
-  a value.
-
 * ``filter_iterator``, which provides a view of an iterator range in
   which some elements of the underlying range are skipped.
 
@@ -266,6 +261,12 @@ Header ``<iterator_helper>`` synopsis    [lib.iterator.helper.synopsis]
   >
   class indirect_iterator;
   
+  template <class Dereferenceable>
+  struct pointee;
+
+  template <class Dereferenceable>
+  struct indirect_reference;
+
   template <class Iterator>
   class reverse_iterator;
 
@@ -285,7 +286,7 @@ Header ``<iterator_helper>`` synopsis    [lib.iterator.helper.synopsis]
     , class CategoryOrTraversal  = use_default
     , class Difference = use_default
   >
-  class counting_iterator
+  class counting_iterator;
 
   template <class UnaryFunction>
   class function_output_iterator;
@@ -351,6 +352,16 @@ Indirect iterator
 -----------------
 
 .. include:: indirect_iterator_abstract.rst
+
+Class template ``pointee``
+....................................
+
+.. include:: pointee_ref.rst
+
+Class template ``indirect_reference``
+.....................................
+
+.. include:: indirect_reference_ref.rst
 
 Class template ``indirect_iterator``
 ....................................
