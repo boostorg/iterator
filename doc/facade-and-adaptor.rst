@@ -127,6 +127,8 @@ adapted and user defined iterators suffer from the well known
 categorisation problems that are inherent to the current iterator
 categories.
 
+.. _`n1477`: http://anubis.dkuug.dk/JTC1/SC22/WG21/docs/papers/2003/n1477.html
+
 Though this proposal does not strictly depend on proposal `n1477`_,
 as there is a direct mapping between new and old categories. The proposal
 could be reformulated using this mapping.
@@ -385,11 +387,11 @@ Header ``<iterator_helper>`` synopsis    [lib.iterator.helper.synopsis]
   
   template <
       class Derived
-    , class Value      = use_default
-    , class Category   = use_default
-    , class Reference  = use_default
-    , class Pointer    = use_default
-    , class Difference = use_default
+    , class Value
+    , class Category
+    , class Reference  = Value&
+    , class Pointer    = Value*
+    , class Difference = ptrdiff_t
   >
   class iterator_facade;
 
@@ -540,7 +542,7 @@ Class template ``iterator_facade``
 ``iterator_facade`` requirements
 --------------------------------
 
-The ``Derived`` template parameter must be the class deriving from
+The ``Derived`` template parameter must be a derived class of
 ``iterator_facade``. The rest of the template parameters specify the
 types for the member typedefs in ``iterator_facade``.
 
@@ -601,12 +603,16 @@ interoperable with ``X``.
 :Postconditions: 
 
 :Returns: If ``iterator_category`` is a derived class of
-``readable_lvalue_iterator_tag`` then the return type is ``pointer``
-and the value returned is ``&static_cast<Derived
-const*>(this)->dereference()``. Otherwise a proxy object of
-implementation defined type is returned.  The proxy type must have a
-``operator->`` member function with the following signature.
-::
+  ``readable_lvalue_iterator_tag`` then the return type is ``pointer``
+  and the value returned is
+  ::
+
+    &static_cast<Derived const*>(this)->dereference()
+
+  Otherwise a proxy object is returned. The type of
+  the proxy is implementation defined. The proxy class must have
+  the following member function.
+  ::
 
     const value_type* operator->() const;
 
@@ -619,7 +625,21 @@ implementation defined type is returned.  The proxy type must have a
 :Requires: 
 :Effects: 
 :Postconditions: 
-:Returns: ``static_cast<Derived const*>(this)->dereference()``
+:Returns: If ``iterator_category`` is a derived class of
+   ``writable_iterator_tag`` then the return type is
+   a proxy object of implementation defined type ``P``
+   with the following member functions.
+   ::
+     
+     operator reference();
+     P& operator=(value_type const&);
+
+   Otherwise the return type is ``value_type`` and the
+   value returned is
+   ::
+
+     static_cast<Derived const*>(this)->dereference()
+
 :Throws: 
 :Complexity: 
 
@@ -627,18 +647,24 @@ implementation defined type is returned.  The proxy type must have a
 ``Derived& operator++();``
 
 :Requires: 
-:Effects: 
+:Effects: Invokes the ``increment`` core interface function. 
 :Postconditions: 
-:Returns: ``static_cast<Derived const*>(this)->dereference();``
+:Returns: ``*this``
 :Throws: 
 :Complexity: 
 
 ``Derived operator++(int);``
 
 :Requires: 
-:Effects: 
+:Effects:
+  ::
+
+    Derived tmp(static_cast<Derived const*>(this));
+    ++*this;
+    return tmp;
+
 :Postconditions: 
-:Returns: ``static_cast<Derived const*>(this)->dereference();``
+:Returns: A copy of ``*this``.
 :Throws: 
 :Complexity: 
 
@@ -716,7 +742,7 @@ Class template ``iterator_adaptor``
     , class Difference = use_default
   >
   class iterator_adaptor 
-    : public iterator_facade<Derived, /*impl detail ...*/>
+    : public iterator_facade<Derived, /* see details ...*/>
   {
       friend class iterator_core_access;
   public:
@@ -729,13 +755,10 @@ Class template ``iterator_adaptor``
         { return *m_iterator; }
 
       template <
-          class OtherDerived, class OtherIterator, class V, class C, class R, class P, class D
+          class OtherDerived, class OtherBase, class V, class C, class R, class P, class D
       >   
-      bool equal(iterator_adaptor<OtherDerived, OtherIterator, V, C, R, P, D> const& x) const
+      bool equal(iterator_adaptor<OtherDerived, OtherBase, V, C, R, P, D> const& x) const
       {
-          BOOST_STATIC_ASSERT(
-              (detail::same_category_and_difference<Derived,OtherDerived>::value)
-              );
           return m_iterator == x.base();
       }
       void advance(typename super_t::difference_type n)
@@ -747,14 +770,11 @@ Class template ``iterator_adaptor``
       void decrement() { --m_iterator; }
 
       template <
-          class OtherDerived, class OtherIterator, class V, class C, class R, class P, class D
+          class OtherDerived, class OtherBase, class V, class C, class R, class P, class D
       >   
       typename super_t::difference_type distance_to(
-          iterator_adaptor<OtherDerived, OtherIterator, V, C, R, P, D> const& y) const
+          iterator_adaptor<OtherDerived, OtherBase, V, C, R, P, D> const& y) const
       {
-          BOOST_STATIC_ASSERT(
-              (detail::same_category_and_difference<Derived,OtherDerived>::value)
-              );
           return y.base() - m_iterator;
       }
       Base const& base_reference() const
@@ -768,15 +788,49 @@ Class template ``iterator_adaptor``
 ``iterator_adaptor`` requirements
 ---------------------------------
 
-.. Make sure to mention that this works for both old and new
-   style iterators. -JGS
+The ``Derived`` template parameter must be a derived class of
+``iterator_adaptor``. The ``Base`` type must implement the expressions
+used in the protected member functions of ``iterator_adaptor`` that
+are not overriden by the ``Derived`` class.  The rest of the template
+parameters specify the types for the member typedefs in
+``iterator_facade``.  The following pseudo-code specifies the traits
+types for ``iterator_adaptor``.
 
-.. I'm not sure we should say that in the standard text; let other
-   people add non-normative  in editing if they feel the need
-   ;-) -DWA
+::
 
-.. Well, we have to specify the requirements for the template
-   parameters such as ``Category``, so this will come up. -JGS
+    if (Value == use_default)
+	value_type = iterator_traits<Base>::value_type;
+    else 
+	value_type = remove_cv<Value>::type;
+
+    if (Reference == use_default) {
+	if (Value == use_default)
+	    reference = iterator_traits<Base>::reference;
+	else 
+	    reference = Value&;
+    } else
+	reference = Reference;
+
+    if (Pointer == use_default) {
+	if (Value == use_default)
+	    pointer = iterator_traits<Base>::pointer;
+	else 
+	    pointer = Value*;
+    } else
+	pointer = Pointer;
+
+    if (Category == use_default)
+	iterator_category = iterator_traits<Base>::iterator_category;
+    else
+	iterator_category = Category;
+
+    if (Distance == use_default)
+	difference_type = iterator_traits<Base>::difference_type;
+    else
+	difference_type = Distance;
+
+
+
 
 Specialized adaptors [lib.iterator.special.adaptors]
 ====================================================
