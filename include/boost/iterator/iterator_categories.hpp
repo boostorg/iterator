@@ -12,7 +12,8 @@
 #include <boost/type_traits/cv_traits.hpp>
 #include <boost/pending/ct_if.hpp>
 #include <boost/detail/iterator.hpp>
-#include <boost/mpl/if.hpp>
+#include <boost/mpl/apply_if.hpp>
+#include <boost/type_traits/ice.hpp>
 #include <iterator>
 
 namespace boost {
@@ -119,6 +120,7 @@ namespace boost {
         >::type type;
     };
 
+#if 0
     struct return_category_from_old_traits {
       template <typename Iterator> class bind {
         typedef boost::detail::iterator_traits<Iterator> OldTraits;
@@ -157,9 +159,25 @@ namespace boost {
     public:
       typedef typename Choice:: template bind<Iterator>::type type;
     };
+#else
+
+
+    template <class T>
+    type_traits::yes_type is_new_iter_cat(T*, typename T::traversal* = 0) { }
+
+    type_traits::no_type is_new_iter_cat(...) { }
+
+    template <class Tag>
+    struct is_new_iterator_tag
+    {
+      static Tag* t;
+      enum { value = sizeof(is_new_iter_cat(t)) == sizeof(type_traits::yes_type) };
+    };
+#endif
     
   } // namespace detail
   
+#if 0
   template <class Iterator>
   struct return_category {
     typedef typename detail::choose_return_category<Iterator>::type type;
@@ -170,6 +188,56 @@ namespace boost {
   struct traversal_category {
     typedef typename detail::choose_traversal_category<Iterator>::type type;
   };
+#else
+
+  namespace detail {
+
+    template <class NewCategoryTag>
+    struct get_return_category {
+      typedef typename NewCategoryTag::returns type;
+    };
+    template <class NewCategoryTag>
+    struct get_traversal_category {
+      typedef typename NewCategoryTag::traversal type;
+    };
+
+    template <class CategoryTag, class Value>
+    struct return_category_tag
+    {
+      typedef typename 
+	mpl::apply_if< 
+	  is_new_iterator_tag<CategoryTag>
+	  , get_return_category<CategoryTag>
+	  , iter_category_to_return<CategoryTag, Value>
+	>::type type;
+    };
+    template <class CategoryTag, class Value>
+    struct traversal_category_tag
+    {
+      typedef typename 
+	mpl::apply_if< 
+	  is_new_iterator_tag<CategoryTag>
+	  , get_traversal_category<CategoryTag>
+	  , iter_category_to_return<CategoryTag, Value>
+	>::type type;
+    };
+
+  } // namespace detail
+
+  template <class Iterator>
+  struct return_category {
+    typedef typename detail::return_category_tag<
+      typename detail::iterator_traits<Iterator>::iterator_category
+      , typename detail::iterator_traits<Iterator>::value_type>::type type;
+  };
+
+  template <class Iterator>
+  struct traversal_category {
+    typedef typename detail::traversal_category_tag<
+      typename detail::iterator_traits<Iterator>::iterator_category
+      , typename detail::iterator_traits<Iterator>::value_type>::type type;
+  };
+#endif
 
 #if !defined(BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION)
 
