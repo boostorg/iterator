@@ -6,153 +6,196 @@
 
 namespace boost {
 
-template <class Derived, class Base>
-struct iterator_comparisons : Base { };
+template <class Final, class V, class R, class P, class C, class D>
+struct repository
+    : iterator<C, V, D, P, R>
 
-template <class D1, class D2, class B1, class B2>
-inline bool operator==(const iterator_comparisons<D1,B1>& xb,
+{
+    typedef Final type;
+    typedef V value_type;
+    typedef R reference;
+    typedef C iterator_category;
+    typedef D difference_type;
+};
+
+template <class Base>
+struct downcastable : Base
+{
+    typedef typename Base::type final_t;
+ public:
+    final_t& downcast() { return static_cast<final_t&>(*this); }
+    const final_t& downcast() const { return static_cast<const final_t&>(*this); }
+};
+
+template <class Base>
+struct iterator_comparisons : Base
+{
+};
+
+template <class Base1, class Base2>
+inline bool operator==(const iterator_comparisons<Base1>& xb,
+                       const iterator_comparisons<Base2>& yb)
+{
+    return xb.downcast().equal(yb.downcast());
+}
+
+template <class Base1, class Base2>
+inline bool operator!=(const iterator_comparisons<Base1>& xb,
                        const iterator_comparisons<D2,B2>& yb)
 {
-    const D1& x = static_cast<const D1&>(xb);
-    const D2& y = static_cast<const D2&>(yb);
-    return x.equal(y);
+    return !xb.downcast().equal(yb.downcast());
 }
 
-template <class D1, class D2, class B1, class B2>
-inline bool operator!=(const iterator_comparisons<D1,B1>& xb,
-                       const iterator_comparisons<D2,B2>& yb)
+template <class Base1, class Base2>
+inline bool operator<(const iterator_comparisons<Base1>& xb,
+                      const iterator_comparisons<Base2>& yb)
 {
-    const D1& x = static_cast<const D1&>(xb);
-    const D2& y = static_cast<const D2&>(yb);
-    return !x.equal(y);
+    return yb.downcast().distance_from(xb.downcast()) < 0;
 }
 
-template <class D1, class D2, class B1, class B2>
-inline bool operator<(const iterator_comparisons<D1,B1>& xb,
-                      const iterator_comparisons<D2,B2>& yb)
+template <class Base1, class Base2>
+inline bool operator>(const iterator_comparisons<Base1>& xb,
+                      const iterator_comparisons<Base2>& yb)
 {
-    const D1& x = static_cast<const D1&>(xb);
-    const D2& y = static_cast<const D2&>(yb);
-    return y.distance(x) < 0;
+    return yb.downcast().distance_from(xb.downcast()) > 0;
 }
 
-template <class D1, class D2, class B1, class B2>
-inline bool operator>(const iterator_comparisons<D1,B1>& xb,
-                      const iterator_comparisons<D2,B2>& yb)
+template <class Base1, class Base2>
+inline bool operator>=(const iterator_comparisons<Base1>& xb,
+                       const iterator_comparisons<Base2>& yb)
 {
-    const D1& x = static_cast<const D1&>(xb);
-    const D2& y = static_cast<const D2&>(yb);
-    return y.distance(x) > 0;
+    return yb.downcast().distance_from(xb.downcast()) >= 0;
 }
 
-template <class D1, class D2, class B1, class B2>
-inline bool operator>=(const iterator_comparisons<D1,B1>& xb,
-                       const iterator_comparisons<D2,B2>& yb)
+template <class Base1, class Base2>
+inline bool operator<=(const iterator_comparisons<Base1>& xb,
+                       const iterator_comparisons<Base2>& yb)
 {
-    const D1& x = static_cast<const D1&>(xb);
-    const D2& y = static_cast<const D2&>(yb);
-    return y.distance(x) >= 0;
-}
-
-template <class D1, class D2, class B1, class B2>
-inline bool operator<=(const iterator_comparisons<D1,B1>& xb,
-                       const iterator_comparisons<D2,B2>& yb)
-{
-    const D1& x = static_cast<const D1&>(xb);
-    const D2& y = static_cast<const D2&>(yb);
-    return y.distance(x) <= 0;
+    return yb.downcast().distance_from(xb.downcast()) <= 0;
 }
 
 
-template <class Derived, class D, class Base>
-struct iterator_arith : public iterator_comparisons<Derived,Base> { };
+template <class B>
+struct iterator_arith :  B { };
 
-template <class Derived, class D, class Base>
-D operator+(iterator_arith<Derived, D, Base> i, D n) { return i += n; }
-
-template <class Derived, class D, class Base>
-D operator+(D n, iterator_arith<Derived, D, Base> i) { return i += n; }
-
-template <class Derived, class D, class Base>
-D operator-(const iterator_arith<Derived, D, Base>& i,
-            const iterator_arith<Derived, D, Base>& j)
-  { return static_cast<const Derived&>(j).distance(static_cast<const Derived&>(i)); }
-
-
-template <class Derived, 
-  class V, class R, class P, class C, class D>
-class iterator_adaptor : public iterator_arith<Derived, D, iterator<C,V,D,P,R> >
+template <class Base>
+typename Base::final operator+(
+    iterator_arith<Base> i, typename Base::distance n)
 {
-public:
-  typedef V value_type;
-  typedef R reference;
-  typedef P pointer;
-  typedef C iterator_category;
-  typedef D difference_type;
+    return i.downcast() += n;
+}
 
-  reference operator*() const
-    { return derived().dereference(); }
-  //operator->() const { return detail::operator_arrow(*this, iterator_category()); }
-  reference operator[](difference_type n) const
+template <class Base>
+typename Base::final operator+(
+    typename Base::distance n, iterator_arith<Base> i)
+{
+    return i.downcast() += n;
+}
+
+template <class Base1, class Base2>
+typename Base1::difference_type operator-(
+    const iterator_arith<Base1>& i,
+    const iterator_arith<Base2>& j)
+{
+    return j.downcast().distance_from(i.downcast());
+}
+
+
+template <class Final
+          , class V, class R, class P, class C, class D
+          , class B = iterator_arith<
+                iterator_comparisons<
+                     downcastable<repository<Final, V, R, P, C, D> > > >
+         >
+struct iterator_adaptor : B
+{
+    typedef V value_type;
+    typedef R reference;
+    typedef P pointer;
+    typedef C iterator_category;
+    typedef D difference_type;
+
+    reference operator*() const
+    { return downcast().dereference(); }
+    //operator->() const { return detail::operator_arrow(*this, iterator_category()); }
+    reference operator[](difference_type n) const
     { return *(*this + n); }
-  Derived& operator++()
-    { derived().increment(); return derived(); }
-  Derived operator++(int)
-    { Derived tmp(derived()); ++*this; return tmp; }
-  Derived& operator--()
-    { derived().decrement(); return derived(); }
-  Derived operator--(int)
-    { Derived tmp(derived()); --*this; return tmp; }
-  Derived& operator+=(difference_type n)
-    { derived().advance(n); return derived(); }
-  Derived& operator-=(difference_type n)
-    { derived().advance(-n); return derived(); }
-  Derived operator-(difference_type x) const
-    { Derived result(derived()); return result -= x; }
+    Final& operator++()
+    { downcast().increment(); return downcast(); }
+    Final operator++(int)
+    { Final tmp(downcast()); ++*this; return tmp; }
+    Final& operator--()
+    { downcast().decrement(); return downcast(); }
+    Final operator--(int)
+    { Final tmp(downcast()); --*this; return tmp; }
+    Final& operator+=(difference_type n)
+    { downcast().advance(n); return downcast(); }
+    Final& operator-=(difference_type n)
+    { downcast().advance(-n); return downcast(); }
+    Final operator-(difference_type x) const
+    { Final result(downcast()); return result -= x; }
 
-  template <class Derived2, class V2, class R2, class P2>
-  bool equal(iterator_adaptor<Derived2,V2,R2,P2,C,D> const& x) const
-    { return this->derived().base() == x.derived().base(); }
+    template <class Final2, class V2, class R2, class P2>
+    bool equal(iterator_adaptor<Final2,V2,R2,P2,C,D> const& x) const
+    {
+        return this->downcast().base() == x.downcast().base();
+    }
     
-private:
-  Derived& derived() { return static_cast<Derived&>(*this); }
-  const Derived& derived() const { return static_cast<const Derived&>(*this); }
+    void increment() { ++this->downcast().base(); }
+    void decrement() { --this->downcast().base(); }
+    
+ private:
+    using B::downcast;
 };
 
 
-
 template <class Base, 
-  class V, class R, class P, class C, class D>
-class reverse_iterator : public iterator_adaptor<reverse_iterator<Base, V, R, P, C, D>, V, R, P, C, D>
+          class V, class R, class P, class C, class D>
+struct reverse_iterator
+    : iterator_adaptor<
+         reverse_iterator<Base, V, R, P, C, D>, V, R, P, C, D
+      >
 {
-  typedef iterator_adaptor<reverse_iterator<Base, V, R, P, C, D>, V, R, P, C, D> super;
+    typedef iterator_adaptor<reverse_iterator<Base, V, R, P, C, D>, V, R, P, C, D> super;
+    
 //  friend class super;
-  // hmm, I don't like the next two lines
+    // hmm, I don't like the next two lines
 //  template <class Der> friend struct iterator_comparisons;
 //  template <class Der, class Dist> friend struct iterator_arith;
-public:
-  reverse_iterator(const Base& x) : m_base(x) { }
-
-  reverse_iterator() { }
-
-  Base const& base() const { return m_base; }
     
-  template <class B2, class V2, class R2, class P2, class C2, class D2>
-  reverse_iterator(const reverse_iterator<B2,V2,R2,P2,C2,D2>& y)
-    : m_base(y.m_base) { }
-  //private:  hmm, the above friend decls aren't doing the job.
-  typename super::reference dereference() const { return *boost::prior(m_base); }
-  void increment() { --m_base; }
-  void decrement() { ++m_base; }
-  void advance(typename super::difference_type n)
-    { m_base -= n; }
+ public:
+    reverse_iterator(const Base& x) : m_base(x) { }
 
-  template <class B2, class V2, class R2, class P2, class C2, class D2>  
-  typename super::difference_type
-  distance(const reverse_iterator<B2,V2,R2,P2,C2,D2>& y) const
-    { return m_base - y.m_base; }
+    reverse_iterator() { }
 
-  Base m_base;
+    Base const& base() const { return m_base; }
+    
+    template <class B2, class V2, class R2, class P2>
+    reverse_iterator(const reverse_iterator<B2,V2,R2,P2,C,D>& y)
+        : m_base(y.m_base) { }
+
+
+    struct state : default_iterator_policies
+    {
+    };
+    
+    typename super::reference dereference() const { return *boost::prior(m_base); }
+    
+    void increment() { --m_base; }
+    void decrement() { ++m_base; }
+    void advance(typename super::difference_type n)
+    {
+        m_base -= n;
+    }
+
+    template <class B2, class V2, class R2, class P2>
+    typename super::difference_type
+    distance_from(const reverse_iterator<B2,V2,R2,P2,C,D>& y) const
+    {
+        return m_base - y.m_base;
+    }
+ private:
+    Base m_base;
 };
 
 
