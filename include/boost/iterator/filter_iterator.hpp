@@ -35,13 +35,13 @@ namespace boost
   class filter_iterator
       : public iterator_adaptor<
             filter_iterator<Predicate, Iterator>, Iterator
-          , not_specified
+          , use_default
           , typename detail::filter_iterator_category<Iterator>::type
         >
   {
       typedef iterator_adaptor<
             filter_iterator<Predicate, Iterator>, Iterator
-          , not_specified
+          , use_default
           , typename detail::filter_iterator_category<Iterator>::type
         > super_t;
 

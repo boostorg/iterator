@@ -71,7 +71,7 @@ namespace detail
   struct counting_iterator_base
   {
       typedef typename mpl::apply_if<
-          is_same<Category, not_specified>
+          is_same<Category, use_default>
         , mpl::apply_if<
               is_numeric<Incrementable>
             , mpl::identity<std::random_access_iterator_tag>
@@ -81,7 +81,7 @@ namespace detail
       >::type category;
       
       typedef typename mpl::apply_if<
-          is_same<Difference, not_specified>
+          is_same<Difference, use_default>
         , mpl::apply_if<
               is_numeric<Incrementable>
             , numeric_difference<Incrementable>
@@ -129,7 +129,7 @@ namespace detail
   };
 }
 
-template <class Incrementable, class Category = not_specified, class Difference = not_specified>
+template <class Incrementable, class Category = use_default, class Difference = use_default>
 class counting_iterator
   : public detail::counting_iterator_base<Incrementable, Category, Difference>::type
 {

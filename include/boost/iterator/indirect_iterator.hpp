@@ -154,11 +154,11 @@ namespace boost
 
   template <
       class Iterator
-    , class Value = not_specified
-    , class Category = not_specified
-    , class Reference = not_specified
-    , class Pointer = not_specified
-    , class Difference = not_specified
+    , class Value = use_default
+    , class Category = use_default
+    , class Reference = use_default
+    , class Pointer = use_default
+    , class Difference = use_default
   >
   class indirect_iterator
     : public detail::indirect_base<

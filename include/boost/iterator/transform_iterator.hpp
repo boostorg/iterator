@@ -24,16 +24,22 @@ namespace boost
 
   namespace detail 
   {
+
     // Given the transform iterator's transformation and iterator, this
     // is the type used as its traits.
     template <class UnaryFunction, class Iterator>
     struct transform_iterator_base
     {
     private:
+
+      // transform_iterator does not support writable/swappable iterators
+#if !BOOST_WORKAROUND(BOOST_MSVC, <= 1300)
+      BOOST_STATIC_ASSERT((is_tag< readable_iterator_tag, typename access_category<Iterator>::type >::value));
+#endif
+ 
       typedef typename UnaryFunction::result_type result_type;
 
       typedef typename remove_reference< result_type >::type cv_value_type;
-      typedef typename remove_cv< cv_value_type >::type      value_type;
 
       typedef typename mpl::if_< 
           is_reference< result_type >
@@ -62,6 +68,7 @@ namespace boost
         , result_type  
       > type;
     };
+
   }
 
   template <class AdaptableUnaryFunction, class Iterator>

@@ -172,7 +172,7 @@ namespace boost
     struct ia_dflt_help
       : mpl::apply_if<
             mpl::and_<
-                is_same<T, not_specified>
+                is_same<T, use_default>
               , Condition
             >
           , DefaultNullaryFn
@@ -194,11 +194,11 @@ namespace boost
     {
         typedef iterator_facade<
             Derived
-          , typename detail::ia_dflt_help<Value       , mpl::true_                       , iterator_value<Base> >::type
-          , typename detail::ia_dflt_help<Category    , mpl::true_                       , BOOST_ITERATOR_CATEGORY<Base> >::type
-          , typename detail::ia_dflt_help<Reference   , is_same<Value, not_specified>    , iterator_reference<Base> >::type
-          , typename detail::ia_dflt_help<Pointer     , is_same<Value, not_specified>    , iterator_pointer<Base> >::type
-          , typename detail::ia_dflt_help<Difference  , mpl::true_                       , iterator_difference<Base> >::type
+          , typename detail::ia_dflt_help<Value       , mpl::true_                     , iterator_value<Base> >::type
+          , typename detail::ia_dflt_help<Category    , mpl::true_                     , BOOST_ITERATOR_CATEGORY<Base> >::type
+          , typename detail::ia_dflt_help<Reference   , is_same<Value, use_default>    , iterator_reference<Base> >::type
+          , typename detail::ia_dflt_help<Pointer     , is_same<Value, use_default>    , iterator_pointer<Base> >::type
+          , typename detail::ia_dflt_help<Difference  , mpl::true_                     , iterator_difference<Base> >::type
         >
         type;
     };
@@ -211,11 +211,11 @@ namespace boost
   template <
       class Derived
     , class Base
-    , class Value        = not_specified
-    , class Category     = not_specified
-    , class Reference    = not_specified
-    , class Pointer      = not_specified
-    , class Difference   = not_specified
+    , class Value        = use_default
+    , class Category     = use_default
+    , class Reference    = use_default
+    , class Pointer      = use_default
+    , class Difference   = use_default
   >
   class iterator_adaptor
     : public detail::iterator_adaptor_base<

@@ -29,7 +29,7 @@
 namespace boost
 {
 
-  struct not_specified;
+  struct use_default;
   
   namespace detail
   {
@@ -67,6 +67,12 @@ namespace boost
     // Generates the corresponding std::iterator specialization
     // from the given iterator traits type
     //
+    // The use_default support is needed for iterator_adaptor.
+    // For practical reasons iterator_adaptor needs to specify
+    // fixed number of template arguments of iterator_facade.
+    // So use_default is its way to say what I really mean
+    // is youre default parameter.
+    //
     template <class Value, class Category, class Reference, class Pointer, class Difference>
     struct iterator_facade_base
     {
@@ -78,13 +84,13 @@ namespace boost
           , Difference
 
           , typename mpl::if_<
-                is_same<Pointer, not_specified>
+                is_same<Pointer, use_default>
               , Value*
               , Pointer
             >::type
 
           , typename mpl::if_<
-                is_same<Reference, not_specified>
+                is_same<Reference, use_default>
               , Value&
               , Reference
             >::type
@@ -263,9 +269,9 @@ namespace boost
       class Derived
     , class Value
     , class Category
-    , class Reference        = not_specified
-    , class Pointer          = not_specified
-    , class Difference       = not_specified
+    , class Reference        = Value&
+    , class Pointer          = Value*
+    , class Difference       = std::ptrdiff_t
   >
   class iterator_facade
       : public detail::iterator_facade_base<Value, Category, Reference, Pointer, Difference>::type
