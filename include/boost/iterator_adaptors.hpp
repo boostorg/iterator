@@ -523,7 +523,31 @@ namespace detail {
   // built out of std::pair's and is terminated by end_of_list.
 
 #ifdef BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
-  // UNDER CONSTRUCTION 
+  struct find_param_continue {
+    template <class AssocList, class Key2> struct bind {
+      typedef typename AssocList::first_argument Head;
+      typedef typename Head::first_argument Key1;
+      typedef typename Head::second_argument Value;
+      typedef typename ct_if<is_same<Key1, Key2>::value,
+        Value, 
+        typename find_param<typename AssocList::second_argument>::type
+      >::type type;
+    };
+  };
+  struct find_param_end {
+    template <class AssocList, class Key>
+    struct bind { typedef default_argument type; };
+  };
+  template <class AssocList> struct find_param_helper1
+  { typedef find_param_continue type; };
+  template <> struct find_param_helper1<end_of_list>
+  { typedef find_param_end type; };
+
+  template <class AssocList, class Key>
+  struct find_param {
+    typedef typename find_param_helper1<AssocList>::type select1;
+    typedef typename select1::template bind<AssocList, Key>::type type;
+  };
 #else
   template <class AssocList, class Key> struct find_param;
 
