@@ -6,7 +6,7 @@
 :Contact: dave@boost-consulting.com, jsiek@osl.iu.edu, witt@ive.uni-hannover.de
 :organization: `Boost Consulting`_, Indiana University `Open Systems Lab`_, University of Hanover `Institute for Transport Railway Operation and Construction`_
 :date: $Date$
-
+:Number: N1476=03-0059
 :copyright: Copyright Dave Abrahams, Jeremy Siek, and Thomas Witt 2003. All rights reserved
 
 .. _`Boost Consulting`: http://www.boost-consulting.com
@@ -14,7 +14,7 @@
 .. _`Institute for Transport Railway Operation and Construction`: http://www.ive.uni-hannover.de
 
 :abstract: We propose a set of class templates that help programmers
-           build standard-conforming iterators and to build iterators
+           build standard-conforming iterators and iterators
            that adapt other iterators.
 
 .. contents:: Table of Contents
@@ -121,12 +121,12 @@ Iterator Concepts.
 Interoperability
 ================
 
-The question of iterator interoperability is poorly adressed in the current standard.
-There are currently two defect reports that are concerned with interoperability
-issues.
+The question of iterator interoperability is poorly adressed in the
+current standard.  There are currently two defect reports that are
+concerned with interoperability issues.
 
 Issue `179`_ concerns the fact that mutable container iterator types
-are only required to be convertible the corresponding constant
+are only required to be convertible to the corresponding constant
 iterator types, but objects of these types are not required to
 interoperate in comparison or subtraction expressions.  This situation
 is tedious in practice and out of line with the way built in types
@@ -161,7 +161,8 @@ identified the following core behaviors for iterators:
 
 In addition to the behaviors listed above, the core interface elements
 include the associated types exposed through iterator traits:
-``value_type``, ``reference``, ``pointer``, and ``iterator_category``.
+``value_type``, ``reference``, ``pointer``, ``difference_type``, and
+``iterator_category``.
 
 Iterator facade uses the Curiously Recurring Template Pattern (CRTP)
 [Cop95]_ so that the user can specifiy the behaviour of
@@ -222,43 +223,47 @@ interoperable with X.
 |                                        |                                        |>= c``.                                          |                                           |
 +----------------------------------------+----------------------------------------+-------------------------------------------------+-------------------------------------------+
 
-.. Should we add a comment that a zero  overhead implementation of iterator_facade
+.. Should we add a comment that a zero overhead implementation of iterator_facade
    is possible with proper inlining?
+
+.. Would this be a good place to talk about constructors? -JGS
 
 Iterator Core Access
 ====================
 
 ``iterator_facade`` and the operator implementations need to be able
-to access the core interface member functions in the derived class.
-Making the core interface member funtions public would expose an
-implementation detail to the user.  This proposal frees the public
-interface of the derived iterator type from any implementation detail.
+to access the core member functions in the derived class.  Making the
+core member funtions public would expose an implementation detail to
+the user.  This proposal frees the public interface of the derived
+iterator type from any implementation detail.
 
-Preventing direct access to the core interface has two advantages.
-First, there is no possibility for the user to accidently use a member
-function of the iterator when a member of the value_type was intended.
-This has been an issue with smart pointer implementations in the past.
-The second and main advantage is that library implementers can freely
-exchange a hand-rolled iterator implementation for one based on
-``iterator_facade`` without fear of breaking code that was accessing
-the public core interface directly.
+Preventing direct access to the core member functions has two
+advantages.  First, there is no possibility for the user to accidently
+use a member function of the iterator when a member of the value_type
+was intended.  This has been an issue with smart pointer
+implementations in the past.  The second and main advantage is that
+library implementers can freely exchange a hand-rolled iterator
+implementation for one based on ``iterator_facade`` without fear of
+breaking code that was accessing the public core member functions
+directly.
 
-In a naive implementation, keeping the derived class' core interface
-private would require it to grant friendship to ``iterator_facade``
-and each of the seven operators.  In order to reduce the burden of
-limiting access, this proposal provides ``iterator_core_access``, a
-class that acts as a gateway to the core interface in the derived
-iterator class.  The author of the derived class only needs to grant
-friendship to ``iterator_core_access`` to make his core interface
-available to the library.
+In a naive implementation, keeping the derived class' core member
+functions private would require it to grant friendship to
+``iterator_facade`` and each of the seven operators.  In order to
+reduce the burden of limiting access, this proposal provides
+``iterator_core_access``, a class that acts as a gateway to the core
+member functions in the derived iterator class.  The author of the
+derived class only needs to grant friendship to
+``iterator_core_access`` to make his core member functions available
+to the library.
 
 ``iterator_core_access`` would be typically implemented as an empty
 class containing only static member functions which invoke the
-iterator core interface. There is, however, no need to standardize the
-gateway protocol.
+iterator core member functions. There is, however, no need to
+standardize the gateway protocol.
 
 It is important to note that ``iterator_core_access`` does not open a
-safety loophole, as every function in the core interface preserves the
+safety loophole, as every core member function preserves the
 invariants of the iterator.
 
 Iterator Adaptor
@@ -279,7 +284,11 @@ instance of the ``Base`` type, which it stores as a member.
 The user of ``iterator_adaptor`` creates a class derived from an
 instantiation of ``iterator_adaptor`` and then selectively overrides
 some of the core operations by implementing the (non-virtual) member
-functions described in the table above.   
+functions described in the table above. The ``Base`` type
+need not meet the full requirements for an iterator. It need
+only support the operations that are not overriden by the
+users derived class.
+
 
 .. In addition, the derived
    class will typically need to define some constructors.
@@ -321,8 +330,8 @@ which were easily implemented using ``iterator_adaptor``:
 
 Based on examples in the Boost library, users have generated many new
 adaptors, among them a permutation adaptor which applies some
-permutation to a RandomAccessIterator, and a strided adaptor, which
-adapts a RandomAccessIterator by multiplying its unit of motion by a
+permutation to a Random Access Iterator, and a strided adaptor, which
+adapts a Random Access Iterator by multiplying its unit of motion by a
 constant factor.  In addition, the Boost Graph Library (BGL) uses
 iterator adaptors to adapt other graph libraries, such as LEDA [10]
 and Stanford GraphBase [8], to the BGL interface (which requires C++
@@ -332,51 +341,95 @@ Standard compliant iterators).
  Proposed Text
 ===============
 
+Header ``<iterator_helper>`` synopsis    [lib.iterator.helper.synopsis]
+=======================================================================
 
+.. How's that for a name for the header? -JGS
+.. Also, below I changed "not_specified" to the user-centric "use_default" -JGS
 
 ::
 
-  struct not_specified { };
+  struct use_default { };
 
   struct iterator_core_access { /* implementation detail */ };
   
   template <
       class Derived
-    , class Value      = not_specified
-    , class Category   = not_specified
-    , class Reference  = not_specified
-    , class Pointer    = not_specified
-    , class Difference = not_specified
+    , class Value      = use_default
+    , class Category   = use_default
+    , class Reference  = use_default
+    , class Pointer    = use_default
+    , class Difference = use_default
   >
   class iterator_facade;
 
   template <
       class Derived
     , class Base
-    , class Value      = not_specified
-    , class Category   = not_specified
-    , class Reference  = not_specified
-    , class Pointer    = not_specified
-    , class Difference = not_specified
+    , class Value      = use_default
+    , class Category   = use_default
+    , class Reference  = use_default
+    , class Pointer    = use_default
+    , class Difference = use_default
   >
   class iterator_adaptor;
   
+  template <
+      class Iterator
+    , class Value = use_default
+    , class Category = use_default
+    , class Reference = use_default
+    , class Pointer = use_default
+    , class Difference = use_default
+  >
+  class indirect_iterator;
   
-  
+  template <class Iterator>
+  class reverse_iterator;
+
+  template <class AdaptableUnaryFunction, class Iterator>
+  class transform_iterator;
+
+  template <class Predicate, class Iterator>
+  class filter_iterator;
+
+  template <
+      class Incrementable, 
+      class Category = use_default, 
+      class Difference = use_default
+  >
+  class counting_iterator
+
+  template <class UnaryFunction>
+  class function_output_iterator;
 
 
-``iterator_facade``
-===================
+
+Iterator facade [lib.iterator.facade]
+=====================================
+
+The iterator requirements define a rich interface, containing many
+redundant operators, so that using iterators is convenient.  The
+``iterator_facade`` class template makes it easier to create iterators
+by implementing the rich interface of standard iterators in terms of a
+few core functions.  The user of ``iterator_facade`` derives his
+iterator class from an instantiation of ``iterator_facade`` and
+defines member functions implementing the core behaviors.
+
+
+
+Template class ``iterator_facade``
+----------------------------------
 
 ::
 
   template <
       class Derived
-    , class Value      = not_specified
-    , class Category   = not_specified
-    , class Reference  = not_specified
-    , class Pointer    = not_specified
-    , class Difference = not_specified
+    , class Value      = use_default
+    , class Category   = use_default
+    , class Reference  = use_default
+    , class Pointer    = use_default
+    , class Difference = use_default
   >
   class iterator_facade {
   public:
@@ -387,8 +440,8 @@ Standard compliant iterators).
       typedef ... iterator_category;
 
       reference operator*() const;
-      <see details> operator->() const;
-      <see details> operator[](difference_type n) const;
+      /* see details */ operator->() const;
+      /* see details */ operator[](difference_type n) const;
       Derived& operator++();
       Derived operator++(int);
       Derived& operator--();
@@ -455,6 +508,63 @@ Standard compliant iterators).
 
 
 .. nothing
+
+
+``iterator_facade`` requirements
+--------------------------------
+
+The ``Derived`` template parameter must be the class deriving from
+``iterator_facade``.
+
+.. We need to describe how the defaults work and what
+   the typedefs come out to.  -JGS
+
+
+The following table describes the requirements on the type deriving
+from the ``iterator_facade``. The expressions listed in the table are
+required to be valid depending on the category of the derived iterator
+type.
+
+In the table below, ``X`` is the derived iterator type, ``a`` is an
+object of type ``X``, ``b`` and ``c`` are objects of type ``const X``,
+``n`` is an object of ``X::difference_type``, ``y`` is a constant
+object of a single pass iterator type interoperable with X, and ``z``
+is a constant object of a random access traversal iterator type
+interoperable with X.
+
++----------------------------------------+----------------------------------------+-------------------------------------------------+-------------------------------------------+
+| Expression                             | Return Type                            |    Assertion/Note/Precondition/Postcondition    | Required to implement Iterator Concept(s) |
+|                                        |                                        |                                                 |                                           |
++========================================+========================================+=================================================+===========================================+
+| ``c.dereference()``                    | ``X::reference``                       |                                                 | Readable Iterator, Writable Iterator      |
++----------------------------------------+----------------------------------------+-------------------------------------------------+-------------------------------------------+
+| ``c.equal(b)``                         | convertible to bool                    |true iff ``b`` and ``c`` are equivalent.         | Single Pass Iterator                      |
++----------------------------------------+----------------------------------------+-------------------------------------------------+-------------------------------------------+
+| ``c.equal(y)``                         | convertible to bool                    |true iff ``c`` and ``y`` refer to the same       | Single Pass Iterator                      |
+|                                        |                                        |position.  Implements ``c == y`` and ``c != y``. |                                           |
++----------------------------------------+----------------------------------------+-------------------------------------------------+-------------------------------------------+
+| ``a.advance(n)``                       | unused                                 |                                                 | Random Access Traversal Iterator          |
++----------------------------------------+----------------------------------------+-------------------------------------------------+-------------------------------------------+
+| ``a.increment()``                      | unused                                 |                                                 | Incrementable Iterator                    |
++----------------------------------------+----------------------------------------+-------------------------------------------------+-------------------------------------------+
+| ``a.decrement()``                      | unused                                 |                                                 | Bidirectional Traversal Iterator          |
++----------------------------------------+----------------------------------------+-------------------------------------------------+-------------------------------------------+
+| ``c.distance_to(b)``                   | convertible to X::difference_type      | equivalent to ``distance(c, b)``                | Random Access Traversal Iterator          |
++----------------------------------------+----------------------------------------+-------------------------------------------------+-------------------------------------------+
+| ``c.distance_to(z)``                   | convertible to X::difference_type      |equivalent to ``distance(c, z)``.  Implements ``c| Random Access Traversal Iterator          |
+|                                        |                                        |- z``, ``c < z``, ``c <= z``, ``c > z``, and ``c |                                           |
+|                                        |                                        |>= c``.                                          |                                           |
++----------------------------------------+----------------------------------------+-------------------------------------------------+-------------------------------------------+
+
+
+.. We should explain more about how the
+   functions in the interface of iterator_facade
+   are there conditionally. -JGS
+
+
+``iterator_facade`` operations
+------------------------------
+
 
 ``reference operator*() const;``
 
@@ -544,19 +654,50 @@ Standard compliant iterators).
 :Complexity: 
 
 
-``iterator_adaptor``
-====================
+Iterator adaptor [lib.iterator.adaptor]
+=======================================
+
+A common pattern of iterator construction is the adaptation of one
+iterator to form a new one.  The functionality of an iterator is
+composed of four orthogonal aspects: traversal, indirection, equality
+comparison and distance measurement.  Adapting an old iterator to
+create a new one often saves work because one can reuse one aspect of
+functionality while redefining the other.  For example, the Standard
+provides ``reverse_iterator``, which adapts any Bidirectional Iterator
+by inverting its direction of traversal.  
+
+The ``iterator_adaptor`` class template fulfills the need for
+constructing adaptors.  Instantiations of ``iterator_adaptor`` serve
+as a base classes for new iterators, providing the default behaviour
+of forwarding all operations to the underlying iterator.  The deriving
+class can selectively replace these features in the derived iterator
+class.
+
+The ``iterator_adaptor`` class template adapts a ``Base`` type to
+create a new iterator ("base" here means the type being adapted) .
+The ``iterator_adaptor`` forwards all operations to an instance of the
+``Base`` type, which it stores as a member.  The user of
+``iterator_adaptor`` creates a class derived from an instantiation of
+``iterator_adaptor`` and then selectively overrides some of the core
+operations by implementing the (non-virtual) member functions
+described in [lib.iterator.facade]. The ``Base`` type need not meet
+the full requirements for an iterator. It need only support the
+operations that are not overriden by the users derived class.
+
+
+Template class ``iterator_adaptor``
+-----------------------------------
 
 ::
   
   template <
       class Derived
     , class Base
-    , class Value      = not_specified
-    , class Category   = not_specified
-    , class Reference  = not_specified
-    , class Pointer    = not_specified
-    , class Difference = not_specified
+    , class Value      = use_default
+    , class Category   = use_default
+    , class Reference  = use_default
+    , class Pointer    = use_default
+    , class Difference = use_default
   >
   class iterator_adaptor : public iterator_facade<Derived, /*impl detail ...*/> {
   public:
@@ -566,8 +707,326 @@ Standard compliant iterators).
   };
 
 
+``iterator_adaptor`` requirements
+---------------------------------
 
+Write me.
+
+.. Make sure to mention that this words for both old and new
+  style iterators. -JGS
+
+
+Specialized adaptors [lib.iterator.special.adaptors]
+====================================================
+
+
+Indirect iterator
+-----------------
+
+The indirect iterator adapts an iterator by applying an *extra*
+dereference inside of ``operator*()``. For example, this iterator
+adaptor makes it possible to view a container of pointers
+(e.g. ``list<foo*>``) as if it were a container of the pointed-to type
+(e.g. ``list<foo>``) .
+
+
+Template class ``indirect_iterator``
+++++++++++++++++++++++++++++++++++++
+
+::
+
+  template <
+      class Iterator
+    , class Value = use_default
+    , class Category = use_default
+    , class Reference = use_default
+    , class Pointer = use_default
+    , class Difference = use_default
+  >
+  class indirect_iterator
+    : public iterator_adaptor</* see discussion */>
+  {
+      typedef iterator_adaptor</* see discussion */> super_t;
+      friend class iterator_core_access;
+   public:
+      indirect_iterator() {}
+
+      indirect_iterator(Iterator iter)
+        : super_t(iter) {}
+
+      template <
+          class Iterator2, class Value2, class Category2
+        , class Reference2, class Pointer2, class Difference2
+      >
+      indirect_iterator(
+          indirect_iterator<
+               Iterator2, Value2, Category2, Reference2, Pointer2, Difference2
+          > const& y
+        , typename enable_if_convertible<Iterator2, Iterator>::type* = 0
+      )
+        : super_t(y.base())
+      {}
+
+  private:    
+      typename super_t::reference dereference() const
+      {
+          return **this->base();
+      }
+  };
+
+
+``indirect_iterator`` requirements
+++++++++++++++++++++++++++++++++++
+
+The ``value_type`` of the ``Iterator`` template parameter should
+itself be dereferenceable. The return type of the ``operator*`` for
+the ``value_type`` must be the same type as the ``Reference`` template
+parameter. The ``Value`` template parameter will be the ``value_type``
+for the ``indirect_iterator``, unless ``Value`` is const. If ``Value``
+is ``const X``, then ``value_type`` will be *non-* ``const X``.  The
+default for ``Value`` is
+
+::
+
+  iterator_traits< iterator_traits<Iterator>::value_type >::value_type
+
+If the default is used for ``Value``, then there must be a valid
+specialization of ``iterator_traits`` for the value type of the base
+iterator.
+
+The ``Reference`` parameter will be the ``reference`` type of the
+``indirect_iterator``. The default is ``Value&``.
+
+The ``Pointer`` parameter will be the ``pointer`` type of the
+``indirect_iterator``. The default is ``Value*``.
+
+The ``Category`` parameter is the ``iterator_category`` type for the
+``indirect_iterator``. The default is 
+``iterator_traits<Iterator>::iterator_category``.
+
+The indirect iterator will model whichever standard iterator concepts
+are modeled by the base iterator. For example, if the base iterator is
+a model of Random Access Traversal Iterator then so is the resulting
+indirect iterator.
+  
+
+Reverse iterator
+----------------
+
+The reverse iterator adaptor flips the direction of a base iterator's
+motion. Invoking ``operator++()`` moves the base iterator backward and
+invoking ``operator--()`` moves the base iterator forward. The Boost
+reverse iterator adaptor is better to use than the
+``std::reverse_iterator`` class in situations where pairs of
+mutable/constant iterators are needed (e.g., in containers) because
+comparisons and conversions between the mutable and const versions are
+implemented correctly.
+
+Template class ``reverse_iterator``
++++++++++++++++++++++++++++++++++++
+
+::
+
+  template <class Iterator>
+  class reverse_iterator :
+    public iterator_adaptor< reverse_iterator<Iterator>, Iterator >
+  {
+    typedef iterator_adaptor< reverse_iterator<Iterator>, Iterator > super_t;
+    friend class iterator_core_access;
+  public:
+    reverse_iterator() {}
+
+    explicit reverse_iterator(Iterator x) 
+      : super_t(x) {}
+
+    template<class OtherIterator>
+    reverse_iterator(
+        reverse_iterator<OtherIterator> const& r
+      , typename enable_if_convertible<OtherIterator, Iterator>::type* = 0
+    )
+      : super_t(r.base())
+    {}
+
+  private: /* exposition */
+    typename super_t::reference dereference() const { return *prior(this->base()); }
+    
+    void increment() { super_t::decrement(); }
+    void decrement() { super_t::increment(); }
+
+    void advance(typename super_t::difference_type n)
+    {
+      super_t::advance(-n);
+    }
+
+    template <class OtherIterator>
+    typename super_t::difference_type
+    distance_to(reverse_iterator<OtherIterator> const& y) const
+    {
+      return -super_t::distance_to(y);
+    }
+  };
+
+
+``reverse_iterator`` requirements
++++++++++++++++++++++++++++++++++
+
+The base iterator must be a model of Bidirectional Traversal
+Iterator. The reverse iterator will model whichever standard iterator
+concepts are modeled by the base iterator. For example, if the base
+iterator is a model of Random Access Traversal Iterator then so is the
+resulting reverse iterator.
+
+
+Transform iterator
+------------------
+
+The transform iterator adapts an iterator by applying some function
+object to the result of dereferencing the iterator. In other words,
+the ``operator*`` of the transform iterator first dereferences the
+base iterator, passes the result of this to the function object, and
+then returns the result.
+
+
+Template class ``transform_iterator``
++++++++++++++++++++++++++++++++++++++
+
+::
+
+  template <class AdaptableUnaryFunction, class Iterator>
+  class transform_iterator
+    : public iterator_adaptor</* see discussion */>
+  {
+    typedef iterator_adaptor</* see discussion */> super_t;
+    friend class iterator_core_access;
+  public:
+    transform_iterator() { }
+
+    transform_iterator(Iterator const& x, AdaptableUnaryFunction f)
+      : super_t(x), m_f(f) { }
+
+    template<class OtherIterator>
+    transform_iterator(
+          transform_iterator<AdaptableUnaryFunction, OtherIterator> const& t
+        , typename enable_if_convertible<OtherIterator, Iterator>::type* = 0
+    )
+      : super_t(t.base()), m_f(t.functor()) {}
+
+    AdaptableUnaryFunction functor() const
+      { return m_f; }
+
+  private: /* exposition */
+    typename super_t::value_type dereference() const
+      { return m_f(super_t::dereference()); }
+
+    AdaptableUnaryFunction m_f;
+  };
+
+
+``transform_iterator`` requirements
++++++++++++++++++++++++++++++++++++
+
+Write me. Use ``result_of``?
+
+
+Filter iterator
+---------------
+
+The filter iterator adaptor creates a view of an iterator range in
+which some elements of the range are skipped over. A predicate
+function object controls which elements are skipped. When the
+predicate is applied to an element, if it returns ``true`` then the
+element is retained and if it returns ``false`` then the element is
+skipped over.
+
+
+Template class ``filter_iterator``
+++++++++++++++++++++++++++++++++++
+
+::
+
+  template <class Predicate, class Iterator>
+  class filter_iterator
+      : public iterator_adaptor<
+            filter_iterator<Predicate, Iterator>, Iterator
+          , use_default
+          , /* see details */
+        >
+  {
+   public:
+      filter_iterator() { }
+      filter_iterator(Predicate f, Iterator x, Iterator end = Iterator());
+      filter_iterator(Iterator x, Iterator end = Iterator());
+      template<class OtherIterator>
+      filter_iterator(
+          filter_iterator<Predicate, OtherIterator> const& t
+          , typename enable_if_convertible<OtherIterator, Iterator>::type* = 0
+          );
+      Predicate predicate() const;
+      Iterator end() const;
+  };
+
+
+
+Counting iterator
+-----------------
+
+
+Template class ``counting_iterator``
+++++++++++++++++++++++++++++++++++++
+
+::
+
+  template <class Incrementable, class Category = not_specified, class Difference = not_specified>
+  class counting_iterator
+    : public iterator_adaptor</* see details */>
+  {
+      typedef iterator_adaptor</* see details */> super_t;
+      friend class iterator_core_access;
+   public:
+      counting_iterator();
+      counting_iterator(counting_iterator const& rhs);
+      counting_iterator(Incrementable x);
+  };
+
+
+Function output iterator
+------------------------
+
+The function output iterator adaptor makes it easier to create custom
+output iterators. The adaptor takes a unary function and creates a
+model of Output Iterator. Each item assigned to the output iterator is
+passed as an argument to the unary function.  The motivation for this
+iterator is that creating a conforming output iterator is non-trivial,
+particularly because the proper implementation usually requires a
+proxy object.
+
+
+Template class ``function_output_iterator``
++++++++++++++++++++++++++++++++++++++++++++
+
+::
+
+  template <class UnaryFunction>
+  class function_output_iterator {
+  public:
+    typedef std::output_iterator_tag iterator_category;
+    typedef void                value_type;
+    typedef void                difference_type;
+    typedef void                pointer;
+    typedef void                reference;
+
+    explicit function_output_iterator(const UnaryFunction& f = UnaryFunction())
+      : m_f(f) {}
+
+    struct output_proxy {
+      output_proxy(UnaryFunction& f);
+      template <class T> output_proxy& operator=(const T& value);
+    };
+    output_proxy operator*();
+    function_output_iterator& operator++();
+    function_output_iterator& operator++(int);
+  };
 
 
 .. [Cop95] [Coplien, 1995] Coplien, J., Curiously Recurring Template
-   Patterns, C ++Report, February 1995, pp. 24-27.
+   Patterns, C++ Report, February 1995, pp. 24-27.

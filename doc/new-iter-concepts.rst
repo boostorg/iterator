@@ -230,7 +230,7 @@ combined into a single type using the following `iterator_tag` class.
 ::
 
   template <class AccessTag, class TraversalTag>
-  struct iterator_tag : appropriate old category
+  struct iterator_tag : /* appropriate old category */
   {
     typedef AccessTag access;
     typedef TraversalTag traversal;
@@ -530,7 +530,7 @@ Addition to [lib.iterator.synopsis]
   template <class Iterator> struct traversal_category;
 
   template <class AccessTag, class TraversalTag>
-  struct iterator_tag : appropriate old category {
+  struct iterator_tag : /* appropriate old category */ {
     typedef AccessTag access;
     typedef TraversalTag traversal;
   };
