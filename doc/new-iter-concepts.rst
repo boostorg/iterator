@@ -622,27 +622,33 @@ pseudo-code.
 ::
 
     inherit-category(access-tag, traversal-tag) =
-        if (access-tag is convertible to readable_lvalue_iterator_tag
-            or access-tag is convertible to writable_lvalue_iterator_tag) {
-            if (traversal-tag is convertible to random_access_traversal_tag)
-                return random_access_iterator_tag;
-            else if (traversal-tag is convertible to bidirectional_traversal_tag)
-                return bidirectional_iterator_tag;
-            else if (traversal-tag is convertible to forward_traversal_tag)
-                return forward_iterator_tag;
-            else
-                return null_category_tag;
-        } else if (access-tag is convertible to readable_writable_iterator_tag
-                   and traversal-tag is convertible to single_pass_iterator_tag)
-            return input_output_iterator_tag;
-        else if (access-tag is convertible to readable_iterator_tag
-                 and traversal-tag is convertible to single_pass_iterator_tag)
-            return input_iterator_tag;
-        else if (access-tag is convertible to writable_iterator_tag
-                 and traversal-tag is convertible to incrementable_iterator_tag)
-            return output_iterator_tag;
-        else
-            return null_category_tag;
+         if (access-tag is convertible to readable_lvalue_iterator_tag) {
+             if (traversal-tag is convertible to random_access_traversal_tag)
+                 return random_access_iterator_tag;
+             else if (traversal-tag is convertible to bidirectional_traversal_tag)
+                 return bidirectional_iterator_tag;
+             else if (traversal-tag is convertible to forward_traversal_tag)
+                 return forward_iterator_tag;
+             else if (traversal-tag is convertible to single_pass_traversal_tag)
+                 if (access-tag is convertible to writable_iterator_tag)
+                     return input_output_iterator_tag;
+                 else
+                     return input_iterator_tag;
+             else if (access-tag is convertible to writable_iterator_tag)
+                 return output_iterator_tag;
+             else
+                 return null_category_tag;
+         } else if (access-tag is convertible to readable_writable_iterator_tag
+                    and traversal-tag is convertible to single_pass_iterator_tag)
+             return input_output_iterator_tag;
+         else if (access-tag is convertible to readable_iterator_tag
+                  and traversal-tag is convertible to single_pass_iterator_tag)
+             return input_iterator_tag;
+         else if (access-tag is convertible to writable_iterator_tag
+                  and traversal-tag is convertible to incrementable_iterator_tag)
+             return output_iterator_tag;
+         else
+             return null_category_tag;
      
 
 The ``access_category`` and ``traversal_category`` class templates are
