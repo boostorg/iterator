@@ -50,9 +50,48 @@ struct old_iterator
 };
 old_iterator operator+(std::ptrdiff_t, old_iterator x) { return x; }
 
+void test_tag_convertibility()
+{
+#ifndef BOOST_NO_IS_CONVERTIBLE
+    {
+        typedef boost::iterator_tag<
+            boost::writable_lvalue_iterator_tag
+          , boost::single_pass_iterator_tag
+        > tag;
+        
+        BOOST_STATIC_ASSERT((
+            boost::is_convertible<tag, std::output_iterator_tag>::value
+        ));
+        BOOST_STATIC_ASSERT((
+            boost::is_convertible<tag, std::input_iterator_tag>::value
+        ));
+        BOOST_STATIC_ASSERT((
+            !boost::is_convertible<tag, std::forward_iterator_tag>::value
+        ));
+    }
+    {
+        typedef boost::iterator_tag<
+            boost::readable_lvalue_iterator_tag
+          , boost::single_pass_iterator_tag
+        > tag;
+        BOOST_STATIC_ASSERT((
+            boost::is_convertible<tag, std::input_iterator_tag>::value
+        ));
+        BOOST_STATIC_ASSERT((
+            !boost::is_convertible<tag, std::output_iterator_tag>::value
+        ));
+        BOOST_STATIC_ASSERT((
+            !boost::is_convertible<tag, std::forward_iterator_tag>::value
+        ));
+    }
+#endif 
+}
+
 int
 main()
 {
+  test_tag_convertibility();
+        
   typedef boost::iterator_tag< boost::writable_lvalue_iterator_tag, boost::random_access_traversal_tag > tag;
 
   // BOOST_STATIC_ASSERT((boost::detail::is_random_access_iterator<tag>::value));
