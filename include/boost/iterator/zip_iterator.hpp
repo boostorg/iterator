@@ -26,7 +26,7 @@
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/iterator/iterator_adaptor.hpp> // for enable_if_convertible
 #include <boost/iterator/iterator_categories.hpp>
-#include <boost/detail/iterator_traits.hpp>
+#include <boost/detail/iterator.hpp>
 
 #include <boost/tuple/tuple.hpp>
 
@@ -380,7 +380,7 @@ namespace boost {
     {
       typedef typename tuple_impl_specific::tuple_meta_transform<
           IteratorTuple
-        , traversal_category<mpl::_1>
+        , iterator_traversal<mpl::_1>
       >::type tuple_of_traversal_tags;
           
       typedef typename tuple_impl_specific::tuple_meta_accumulate<
@@ -398,31 +398,6 @@ namespace boost {
       };
 #endif
       
-      template<typename Iterator>
-      struct iterator_is_readable
-        : is_tag<
-              readable_iterator_tag
-            , typename access_category<Iterator>::type
-          >
-      {
-          BOOST_MPL_AUX_LAMBDA_SUPPORT(1, iterator_is_readable, (Iterator))
-      };
-
-# ifdef BOOST_MPL_NO_FULL_LAMBDA_SUPPORT
-  // Hack because BOOST_MPL_AUX_LAMBDA_SUPPORT doesn't seem to work
-  // out well.  Instantiating the nested apply template also
-  // requires instantiating iterator_traits on the
-  // placeholder. Instead we just specialize it as a metafunction
-  // class.
-    template <>
-    struct iterator_is_readable<mpl::_1>
-    {
-        template <class T>
-        struct apply : iterator_is_readable<T>
-        {};
-    };
-# endif 
-
       // We need to call tuple_meta_accumulate with mpl::and_ as the
       // accumulating functor. To this end, we need to wrap it into
       // a struct that has exactly two arguments (that is, template
@@ -446,28 +421,6 @@ namespace boost {
       };
 # endif 
 
-    // Metafunction to assert that all iterators in a tuple are 
-    // readable.
-    //
-    // Probably not worth it, IMO.  Why not a writable zip_iterator
-    // anyway? -- dwa.
-    //
-    template<typename IteratorTuple>
-    struct all_iterators_in_tuple_readable
-    {
-
-      typedef typename tuple_impl_specific::tuple_meta_transform<
-        IteratorTuple, 
-          iterator_is_readable<mpl::_1>
-        >::type tuple_of_readability_bools;
-
-      typedef typename tuple_impl_specific::tuple_meta_accumulate<
-        tuple_of_readability_bools, 
-          and_with_two_args<mpl::_1,mpl::_2>
-        , mpl::bool_<true>
-        >::type type;
-    };
-
     ///////////////////////////////////////////////////////////////////
     //
     // Class zip_iterator_base
@@ -479,14 +432,6 @@ namespace boost {
     struct zip_iterator_base
     {
      private:
-#if  !BOOST_WORKAROUND(BOOST_MSVC, <= 1300)
-        // seems to give vc7's parser fits, and vc6 needs help here too
-        BOOST_STATIC_ASSERT(
-            detail::all_iterators_in_tuple_readable<
-            IteratorTuple
-            >::type::value
-        );
-#endif 
         // Reference type is the type of the tuple obtained from the
         // iterators' reference types.
         typedef typename 
@@ -506,11 +451,6 @@ namespace boost {
         detail::minimum_traversal_category_in_iterator_tuple<
             IteratorTuple
         >::type traversal_category;
-
-        // Access category is readable_iterator_tag. It has been
-        // asserted that all iterators in the tuple are readable.
-        typedef readable_iterator_tag access_category;
-
      public:
       
         // The iterator facade type from which the zip iterator will
@@ -518,7 +458,6 @@ namespace boost {
         typedef iterator_facade<
             zip_iterator<IteratorTuple>,
             value_type,  
-            access_category,
             traversal_category,
             reference,
             difference_type

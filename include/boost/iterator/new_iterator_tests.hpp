@@ -160,9 +160,6 @@ void bidirectional_readable_iterator_test(Iterator i, T v1, T v2)
   readable_iterator_test(i2, v2);
 }
 
-template <class T>
-void id_type(T const&) { T::no_SuchMember x; }
-
 // random access
 // Preconditions: [i,i+N) is a valid range
 template <class Iterator, class TrueVals>
@@ -172,11 +169,12 @@ void random_access_readable_iterator_test(Iterator i, int N, TrueVals vals)
   const Iterator j = i;
   int c;
 
-  id_type(j[c]);
-  for (c = 0; c < N-1; ++c) {
+  for (c = 0; c < N-1; ++c)
+  {
     assert(i == j + c);
     assert(*i == vals[c]);
-    assert(*i == j[c]);
+    typename detail::iterator_traits<Iterator>::value_type x = j[c];
+    assert(*i == x);
     assert(*i == *(j + c));
     assert(*i == *(c + j));
     ++i;
@@ -187,10 +185,12 @@ void random_access_readable_iterator_test(Iterator i, int N, TrueVals vals)
   }
 
   Iterator k = j + N - 1;
-  for (c = 0; c < N-1; ++c) {
+  for (c = 0; c < N-1; ++c)
+  {
     assert(i == k - c);
     assert(*i == vals[N - 1 - c]);
-    assert(*i == j[N - 1 - c]);
+    typename detail::iterator_traits<Iterator>::value_type x = j[N - 1 - c];
+    assert(*i == x);
     Iterator q = k - c; 
     assert(*i == *q);
     assert(i > j);

@@ -231,7 +231,7 @@ main()
 
     boost::constant_lvalue_iterator_test(boost::make_transform_iterator((pair_t*)values, const_select_first()), x[0]); 
 
-    boost::mutable_lvalue_iterator_test(boost::make_transform_iterator((pair_t*)values, select_first()), x[0], 17); 
+    boost::non_const_lvalue_iterator_test(boost::make_transform_iterator((pair_t*)values, select_first()), x[0], 17); 
 
   }
 

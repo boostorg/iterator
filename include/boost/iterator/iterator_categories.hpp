@@ -17,17 +17,12 @@
 # include <boost/mpl/identity.hpp>
 # include <boost/mpl/placeholders.hpp>
 # include <boost/mpl/aux_/lambda_support.hpp>
+# include <boost/mpl/aux_/msvc_eti_base.hpp>
 
 # include <boost/type_traits/is_convertible.hpp>
+# include <boost/type_traits/is_same.hpp>
 
-# ifdef BOOST_ITERATOR_REFERENCE_PRIMACY
-#  ifdef BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
-#   include <boost/mpl/or.hpp>
-#   include <boost/python/detail/indirect_traits.hpp>
-#  else
-#   include <boost/mpl/remove_reference.hpp>
-#  endif 
-# endif
+# include <boost/static_assert.hpp>
 
 namespace boost {
 
@@ -50,6 +45,81 @@ struct random_access_traversal_tag
 
 namespace detail
 {
+
+  //
+  // Returns the minimum category type or error_type
+  // if T1 and T2 are unrelated.
+  //
+  // For compilers not supporting is_convertible this only
+  // works with the new boost return and traversal category
+  // types. The exact boost _types_ are required. No derived types
+  // will work. 
+  //
+  //
+  template <bool GreaterEqual, bool LessEqual>
+  struct minimum_category_impl;
+
+  template <class T1, class T2>
+  struct error_not_related_by_convertibility;
+  
+  template <>
+  struct minimum_category_impl<true,false>
+  {
+      template <class T1, class T2> struct apply
+      {
+          typedef T2 type;
+      };
+  };
+
+  template <>
+  struct minimum_category_impl<false,true>
+  {
+      template <class T1, class T2> struct apply
+      {
+          typedef T1 type;
+      };
+  };
+
+  template <>
+  struct minimum_category_impl<true,true>
+  {
+      template <class T1, class T2> struct apply
+      {
+          BOOST_STATIC_ASSERT((is_same<T1,T2>::value));
+          typedef T1 type;
+      };
+  };
+
+  template <>
+  struct minimum_category_impl<false,false>
+  {
+      template <class T1, class T2> struct apply
+        : error_not_related_by_convertibility<T1,T2>
+      {
+      };
+  };
+
+  template <class T1, class T2>
+  struct minimum_category
+  {
+      typedef minimum_category_impl< 
+          ::boost::is_convertible<T1,T2>::value
+        , ::boost::is_convertible<T2,T1>::value
+      > outer;
+      
+      typedef typename outer::template apply<T1,T2> inner;
+      typedef inner::type type;
+      
+      BOOST_MPL_AUX_LAMBDA_SUPPORT(2,minimum_category,(T1,T2))
+  };
+    
+# if BOOST_WORKAROUND(BOOST_MSVC, == 1200)
+  template <>
+  struct minimum_category<int,int>
+  {
+      typedef int type;
+  };
+# endif
   
   //
   // Convert a "strictly old-style" iterator category to a traversal
@@ -88,7 +158,34 @@ namespace detail
   {
       typedef int type;
   };
-# endif 
+# endif
+
+  template <class Traversal>
+  struct pure_traversal_tag
+    : mpl::apply_if<
+          is_convertible<Traversal,random_access_traversal_tag>
+        , mpl::identity<random_access_traversal_tag>
+        , mpl::apply_if<
+              is_convertible<Traversal,bidirectional_traversal_tag>
+            , mpl::identity<bidirectional_traversal_tag>
+            , mpl::apply_if<
+                  is_convertible<Traversal,forward_traversal_tag>
+                , mpl::identity<forward_traversal_tag>
+                , mpl::apply_if<
+                      is_convertible<Traversal,single_pass_traversal_tag>
+                    , mpl::identity<single_pass_traversal_tag>
+                    , mpl::apply_if<
+                          is_convertible<Traversal,incrementable_traversal_tag>
+                        , mpl::identity<incrementable_traversal_tag>
+                        , void
+                      >
+                  >
+              >
+          >
+      >
+  {
+  };
+  
 } // namespace detail
 
 
