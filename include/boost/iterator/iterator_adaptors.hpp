@@ -1012,14 +1012,10 @@ namespace boost
     struct filter_iterator_traits
       : iterator_traits<Iterator>
     {
-#if !BOOST_WORKAROUND(BOOST_MSVC,  BOOST_TESTED_AT(1300))                      
-      BOOST_STATIC_ASSERT((detail::is_forward_traversal_iterator< 
-                           typename traversal_category<Iterator>::type >::value));
-#endif
-
       typedef iterator_tag<
         typename return_category<Iterator>::type
-        , forward_traversal_tag
+        , minimum_category< forward_traversal_tag
+                            ,typename traversal_category<Iterator>::type >::type 
         > iterator_category;
     };
 
