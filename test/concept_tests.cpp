@@ -5,10 +5,8 @@
 // to its suitability for any purpose.
 
 #include <boost/iterator/iterator_concepts.hpp>
+#include <boost/iterator/iterator_categories.hpp>
 #include <boost/operators.hpp>
-#include <boost/static_assert.hpp> // remove
-#include <boost/detail/workaround.hpp>
-#include "static_assert_same.hpp" // remove
 
 struct new_random_access
   : std::random_access_iterator_tag
@@ -58,12 +56,10 @@ old_iterator operator+(std::ptrdiff_t, old_iterator x) { return x; }
 int
 main()
 {
-  typedef boost::iterator_traversal<new_iterator>::type traversal_category;
-
-  BOOST_STATIC_ASSERT(
-      (boost::is_convertible<traversal_category, boost::random_access_traversal_tag>::value
-      ));
-                          
+  boost::iterator_traversal<new_iterator>::type tc;
+  boost::random_access_traversal_tag derived = tc;
+  (void)derived;
+  
   boost::function_requires<
     boost_concepts::WritableLvalueIteratorConcept<int*> >();
   boost::function_requires<
