@@ -4,411 +4,195 @@
 // "as is" without express or implied warranty, and with no claim as
 // to its suitability for any purpose.
 
-// TODO:
-//   Add separate category tag for operator[].
-
 #ifndef BOOST_ITERATOR_CATEGORIES_HPP
-#define BOOST_ITERATOR_CATEGORIES_HPP
+# define BOOST_ITERATOR_CATEGORIES_HPP
 
-#include <boost/config.hpp>
-#include <boost/iterator/detail/categories.hpp>
+# include <boost/config.hpp>
+# include <boost/detail/iterator.hpp>
+# include <boost/iterator/detail/config_def.hpp>
 
-#include <boost/type_traits/conversion_traits.hpp>
-#include <boost/type_traits/cv_traits.hpp>
+# include <boost/detail/workaround.hpp>
 
-#include <boost/python/detail/indirect_traits.hpp>
-
-#include <boost/detail/iterator.hpp>
-#include <boost/detail/workaround.hpp>
-
-#include <boost/mpl/apply_if.hpp>
-#include <boost/mpl/if.hpp>
-#include <boost/mpl/bool.hpp>
-#include <boost/mpl/aux_/has_xxx.hpp>
-#include <boost/mpl/not.hpp>
-#include <boost/mpl/or.hpp>
-#include <boost/mpl/apply.hpp>
-#include <boost/mpl/aux_/msvc_eti_base.hpp>
-#ifdef BOOST_MPL_NO_FULL_LAMBDA_SUPPORT
+# include <boost/mpl/if.hpp>
+# include <boost/mpl/and.hpp>
+# include <boost/mpl/apply_if.hpp>
+# include <boost/mpl/identity.hpp>
 # include <boost/mpl/placeholders.hpp>
-#endif
+# include <boost/mpl/aux_/lambda_support.hpp>
 
-#include <iterator>
-
-#include <boost/iterator/detail/config_def.hpp> // must be last #include
-
-#if BOOST_WORKAROUND(__MWERKS__, <=0x2407)
-#  define BOOST_NO_IS_CONVERTIBLE // "Convertible does not provide enough/is not working"
-#endif
+# include <boost/type_traits/is_reference.hpp>
+# include <boost/type_traits/is_convertible.hpp>
+# include <boost/type_traits/is_const.hpp>
 
 namespace boost {
 
-  namespace detail
+//
+// Traversal Categories
+//
+struct incrementable_traversal_tag {};
+  
+struct single_pass_traversal_tag
+  : incrementable_traversal_tag {};
+  
+struct forward_traversal_tag
+  : single_pass_traversal_tag {};
+  
+struct bidirectional_traversal_tag
+  : forward_traversal_tag {};
+  
+struct random_access_traversal_tag
+  : bidirectional_traversal_tag {};
+
+namespace detail
+{
+  struct input_output_iterator_tag
+    : std::input_iterator_tag, std::output_iterator_tag {};
+
+  template <class Value, class Reference, class Traversal>
+  struct old_iterator_category
   {
-    // Helper metafunction for std_category below
-    template <class Cat, class Tag, class Next>
-    struct match_tag
-      : mpl::apply_if<is_tag<Tag, Cat>, mpl::identity<Tag>, Next>
-    {
-    };
-
-    // Converts a possibly user-defined category tag to the
-    // most-derived standard tag which is a base of that tag.
-    template <class Category>
-    struct std_category
-      : match_tag<
-            Category, std::random_access_iterator_tag
-          , match_tag<Category, std::bidirectional_iterator_tag
-              , match_tag<Category, std::forward_iterator_tag
-                  , match_tag<Category, std::input_iterator_tag
-                      , match_tag<Category, std::output_iterator_tag
-#  if BOOST_WORKAROUND(BOOST_MSVC, <= 1300)
-                          , mpl::identity<void>
-#  else
-                          , void
-#  endif 
-                        >
-                    >
-                >
-            >
-        >
-    {
-    };
-
-    // std_to_new_tags --
-    //
-    //  A metafunction which converts any standard tag into its
-    //  corresponding new-style traversal tag.
-    //
-    //  Also, instantiations are metafunction classes which convert a
-    //  reference type into a corresponding new-style access tag.
-    template <class Category> struct std_to_new_tags
-# if BOOST_WORKAROUND(BOOST_MSVC, == 1300) // handle ETI
-    {
-        typedef void type;
-        template <class T> struct apply { typedef void type; };
-    }
-# endif
-    ;
-
-# if BOOST_WORKAROUND(BOOST_MSVC, <= 1200) // handle ETI
-    template <> struct std_to_new_tags<int> {};
-# endif
-
-    //
-    // Specializations for specific standard tags
-    //
-    template <>
-    struct std_to_new_tags<std::input_iterator_tag>
-    {
-        typedef single_pass_traversal_tag type;
-        
-        template <class Reference>
-        struct apply
-          : access_c<readable_iterator> {};
-
-    };
-    
-    template <>
-    struct std_to_new_tags<std::output_iterator_tag>
-    {
-        typedef incrementable_traversal_tag type;
-        
-        template <class Reference>
-        struct apply
-          : access_c<writable_iterator> {};
-    };
-    
-    template <>
-    struct std_to_new_tags<std::forward_iterator_tag>
-    {
-        typedef forward_traversal_tag type;
-        
-        template <class Reference>
-        struct apply
-          : mpl::if_<
-                python::detail::is_reference_to_const<Reference>
-              , access_c<(readable_iterator|lvalue_iterator)>
-              , access_c<(readable_iterator|writable_iterator|lvalue_iterator)>
-        >
-        {};
-    };
-    
-    template <>
-    struct std_to_new_tags<std::bidirectional_iterator_tag>
-      : std_to_new_tags<std::forward_iterator_tag>
-    {
-        typedef bidirectional_traversal_tag type;
-    };
-
-    template <>
-    struct std_to_new_tags<std::random_access_iterator_tag>
-      : std_to_new_tags<std::bidirectional_iterator_tag>
-    {
-        typedef random_access_traversal_tag type;
-    };
-
-    template <class Category>
-    struct old_tag_converter
-      : std_to_new_tags<
-            // Take the category down to its most-refined known
-            // std::tag, in case of derivation/convertibility
-            typename std_category<Category>::type
-        >
-    {
-    };
-
-    template <class OldTag>
-    struct old_tag_to_traversal
-      : old_tag_converter<OldTag>
-    {};
-        
-    
-    template <typename Category, typename Reference>
-    struct old_tag_to_access
-      : mpl::apply1<
-            old_tag_converter<Category>
-          , Reference
-        >
-    {};
-
-# if BOOST_WORKAROUND(BOOST_MSVC, <= 1200)
-    // Deal with ETI
-    template <> struct old_tag_to_access<int, int> {};
-    template <> struct old_tag_converter<int> {};
-# endif
-
-    // A metafunction returning true iff T is boost::iterator_tag<R,U>
-    template <class T>
-    struct is_boost_iterator_tag;
-    
-#if BOOST_WORKAROUND(__MWERKS__, <= 0x2407)
-    //
-    // has_xxx fails, so we have to use 
-    // something less sophisticated.
-    // 
-    // The solution depends on the fact that only
-    // std iterator categories work with is_xxx_iterator
-    // meta functions, as BOOST_NO_IS_CONVERTIBLE is
-    // defined for cwpro7.
-    //
-    template <class Tag>
-    struct is_new_iterator_tag
-      : mpl::not_<
-            mpl::or_<
-                is_tag<std::input_iterator_tag, Tag>
-              , is_tag<std::output_iterator_tag, Tag>
-            >
-        >
-    {};
-
-#elif BOOST_WORKAROUND(__GNUC__, == 2 && __GNUC_MINOR__ == 95) \
-   || BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x551))
-    
-    template <class Tag>
-    struct is_new_iterator_tag
-        : is_boost_iterator_tag<Tag>
-    {
-    };
-    
-#else
-    
-  BOOST_MPL_HAS_XXX_TRAIT_DEF(traversal)
-
-    template <class Tag>
-    struct is_new_iterator_tag
-      : mpl::if_<
-            is_class<Tag>
-          , has_traversal<Tag>
-          , mpl::false_
-        >::type
-    {
-    };
-
-#endif
-
-  } // namespace detail
-  
-  namespace detail {
-
-    template <class NewCategoryTag>
-    struct new_tag_to_traversal
-    {
-        typedef typename NewCategoryTag::traversal type;
-    };
-
-    template <class NewCategoryTag>
-    struct new_tag_to_access
-    {
-        typedef typename NewCategoryTag::access_type type;
-    };
-#if 0 // what was this all about?
-    template <class NewCategoryTag, class Reference>
-    struct new_tag_to_access
-      : mpl::apply_if<
-            python::detail::is_reference_to_const<Reference>
-          , remove_access_writability<typename NewCategoryTag::access>
-          , mpl::identity<typename NewCategoryTag::access>
-        >
-    {};
-#endif
-
-    template <class CategoryTag, class Reference>
-    struct tag_access_category
-      : mpl::apply_if< 
-            is_new_iterator_tag<CategoryTag>
-          , new_tag_to_access<CategoryTag>
-          , old_tag_to_access<CategoryTag, Reference>
-        >
-    {
-    };
-  
-    template <class CategoryTag>
-    struct tag_traversal_category
-      : mpl::apply_if< 
-            is_new_iterator_tag<CategoryTag>
-          , new_tag_to_traversal<CategoryTag>
-          , old_tag_to_traversal<CategoryTag>
-        >
-    {
-    };
-
-# if BOOST_WORKAROUND(BOOST_MSVC, <= 1200)
-    // Deal with ETI
-    template <> struct tag_access_category<int, int> { typedef void type; };
-    template <> struct tag_traversal_category<int> { typedef void type; };
-# endif
-
-    // iterator_tag_base - a metafunction to compute the appropriate
-    // old-style tag (if any) to use as a base for a new-style tag.
-    template <class KnownAccessTag, class KnownTraversalTag>
-    struct iterator_tag_base
-      : minimum_category<
-            typename KnownAccessTag::max_category
-          , typename KnownTraversalTag::max_category
-        >
-    {};
-  
-# if BOOST_WORKAROUND(BOOST_MSVC,<=1200)
-    template <>
-    struct iterator_tag_base<int,int>
-     : mpl::false_ {}; // just using false_ so that the result will be
-                       // a legal base class
+      typedef typename mpl::
+# if BOOST_WORKAROUND(BOOST_MSVC, == 1200)
+      if_
+# else
+      apply_if
 # endif 
+      <
+          mpl::and_<
+              is_reference<Reference>
+            , is_convertible<Traversal,forward_traversal_tag>
+          >
+        , mpl::apply_if<
+              is_convertible<Traversal,random_access_traversal_tag>
+            , mpl::identity<std::random_access_iterator_tag>
+            , mpl::if_<
+                  is_convertible<Traversal,bidirectional_traversal_tag>
+                , std::bidirectional_iterator_tag
+                , std::forward_iterator_tag
+              >
+          >
+# if BOOST_WORKAROUND(BOOST_MSVC, == 1200)
+           ::type
+# endif 
+        , typename mpl::apply_if<
+              mpl::and_<
+                  is_convertible<Traversal, single_pass_traversal_tag>
+                , is_convertible<Reference, Value>
+              >
+            , mpl::if_<
+                  is_const<Value>
+                , std::input_iterator_tag
+                , input_output_iterator_tag
+              >
+            , mpl::identity<std::output_iterator_tag>
+          >
+# if BOOST_WORKAROUND(BOOST_MSVC, == 1200)
+           ::type
+# endif 
+      >::type type;
+  };
 
-    // specialization for this special case.  Otherwise we get
-    // input_output_iterator_tag, because the standard hierarchy has a
-    // sudden anomalous distinction between readability and
-    // writability at the level of input iterator/output iterator.
-    template <>
-    struct iterator_tag_base<
-        access_c<(readable_iterator|lvalue_iterator)>
-      , single_pass_traversal_tag
-    >
-    {
-        typedef std::input_iterator_tag type;
-    };
-        
-  } // namespace detail
-
-  template <class Iterator>
-  struct access_category
-    : detail::tag_access_category<
-          typename detail::iterator_traits<Iterator>::iterator_category
-        , typename detail::iterator_traits<Iterator>::reference
+  //
+  // Convert a "strictly old-style" iterator category to a traversal
+  // tag.  This is broken out into a separate metafunction to reduce
+  // the cost of instantiating iterator_category_to_traversal, below,
+  // for new-style types.
+  //
+  template <class Cat>
+  struct old_style_category_to_traversal
+    : mpl::apply_if<
+          is_convertible<Cat,std::random_access_iterator_tag>
+        , mpl::identity<random_access_traversal_tag>
+        , mpl::apply_if<
+              is_convertible<Cat,std::bidirectional_iterator_tag>
+            , mpl::identity<bidirectional_traversal_tag>
+            , mpl::apply_if<
+                  is_convertible<Cat,std::forward_iterator_tag>
+                , mpl::identity<forward_traversal_tag>
+                , mpl::apply_if<
+                      is_convertible<Cat,std::input_iterator_tag>
+                    , mpl::identity<single_pass_traversal_tag>
+                    , mpl::apply_if<
+                          is_convertible<Cat,std::output_iterator_tag>
+                        , mpl::identity<incrementable_traversal_tag>
+                        , void
+                      >
+                  >
+              >
+          >
       >
   {};
+  
+} // namespace detail
 
-  template <class Iterator>
-  struct traversal_category
-    : detail::tag_traversal_category<
-          typename detail::iterator_traits<Iterator>::iterator_category
-      >
-  {
-  };
+
+//
+// Convert an iterator category into a traversal tag
+//
+template <class Cat>
+struct iterator_category_to_traversal
+  : mpl::apply_if< // if already convertible to a traversal tag, we're done.
+        is_convertible<Cat,incrementable_traversal_tag>
+      , mpl::identity<Cat>
+      , detail::old_style_category_to_traversal<Cat>
+    >
+{};
+
+//
+// To be used for a new-style iterator's iterator_category; provides
+// implicit conversion to the appropriate old-style iterator category.
+//
+// If Value is const the result will not be convertible to
+// output_iterator_tag.
+//
+// Otherwise, if Traversal == single_pass_traversal_tag, the following
+// conditions will result in a tag that is convertible both to
+// input_iterator_tag and output_iterator_tag:
+//
+//    1. Reference is a reference to non-const
+//    2. Reference is not a reference and is convertible to Value
+//
+template <class Value, class Reference, class Traversal>
+struct iterator_tag
+  : detail::old_iterator_category<Value, Reference, Traversal>::type
+{
+    operator Traversal() { return Traversal(); }
+# if 0
+    typedef typename detail::old_iterator_category<
+        Value, Reference, Traversal
+    >::type old_category;
+    
+    operator old_category() const { return old_category(); }
+# endif 
+};
+
+// Trait to get an iterator's traversal category
+template <class Iterator = mpl::_1>
+struct iterator_traversal
+  : iterator_category_to_traversal<
+        typename boost::detail::iterator_traits<Iterator>::iterator_category
+    >
+{};
 
 # ifdef BOOST_MPL_NO_FULL_LAMBDA_SUPPORT
-  // Hack because BOOST_MPL_AUX_LAMBDA_SUPPORT doesn't seem to work
-  // out well.  Instantiating the nested apply template also
-  // requires instantiating iterator_traits on the
-  // placeholder. Instead we just specialize it as a metafunction
-  // class.
-  template <>
-  struct access_category<mpl::_1>
-  {
-      template <class T>
-      struct apply : access_category<T>
-      {};
-  };
-
-  template <>
-  struct traversal_category<mpl::_1>
-  {
-      template <class T>
-      struct apply : traversal_category<T>
-      {};
-  };
-# endif
-
-# if !defined(BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION)
-
-  template <typename T>
-  struct access_category<T*>
-    : mpl::if_<
-          is_const<T>
-        , detail::access_c<(readable_iterator|lvalue_iterator)>
-        , detail::access_c<(readable_iterator|writable_iterator|lvalue_iterator)>
-      >
-  {
-  };
-
-  template <typename T>
-  struct traversal_category<T*>
-  {
-    typedef random_access_traversal_tag type;
-  };
-
-# endif
-
-  template <unsigned Access, class TraversalTag>
-  struct iterator_tag
-    : detail::iterator_tag_base<
-          typename detail::max_known_access_tag<detail::access_c<Access> >::type::value
-        , typename detail::max_known_traversal_tag<TraversalTag>::type
-      >::type
-  {
-      typedef detail::access_c<(Access & ~lvalue_iterator)> access_type;
-      BOOST_STATIC_CONSTANT(iterator_access, value = (iterator_access)(Access & ~lvalue_iterator));
-      typedef TraversalTag traversal;
-  };
-
-  namespace detail
-  {
-# ifndef BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
+// Hack because BOOST_MPL_AUX_LAMBDA_SUPPORT doesn't seem to work
+// out well.  Instantiating the nested apply template also
+// requires instantiating iterator_traits on the
+// placeholder. Instead we just specialize it as a metafunction
+// class.
+template <>
+struct iterator_traversal<mpl::_1>
+{
     template <class T>
-    struct is_boost_iterator_tag
-        : mpl::false_ {};
-
-    template <unsigned A, class T>
-    struct is_boost_iterator_tag<iterator_tag<A,T> >
-        : mpl::true_ {};
-# else
-    template <class T>
-    struct is_boost_iterator_tag
-    {
-        typedef char (&yes)[1];
-        typedef char (&no)[2];
-        
-        template <unsigned A, class U>
-        static yes test(mpl::identity<iterator_tag<A,U> >*);
-        static no test(...);
-    
-        static mpl::identity<T>* inst;
-        BOOST_STATIC_CONSTANT(bool, value = sizeof(test(inst)) == sizeof(yes));
-        typedef mpl::bool_<value> type;
-    };
+    struct apply : iterator_traversal<T>
+    {};
+};
+template <>
+struct iterator_traversal<mpl::_>
+  : iterator_traversal<mpl::_1>
+{};
 # endif
-  }
+
 
 } // namespace boost
 
