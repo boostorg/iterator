@@ -32,12 +32,15 @@ struct noncopyable_iterator : boost::iterator<std::forward_iterator_tag,boost::n
     boost::noncopyable const& operator*() const;
 };
 
-struct proxy_iterator : boost::iterator<std::output_iterator_tag,v>
+template <class T>
+struct proxy_iterator
+  : boost::iterator<std::output_iterator_tag,T>
 {
+    typedef T value_type;
+    
 #if BOOST_WORKAROUND(__GNUC__, == 2)
-    typedef boost::iterator<std::input_iterator_tag,v> base;
+    typedef boost::iterator<std::input_iterator_tag,value_type> base;
     typedef base::iterator_category iterator_category;
-    typedef base::value_type value_type;
     typedef base::difference_type difference_type;
     typedef base::pointer pointer;
     typedef base::reference reference;
@@ -45,8 +48,8 @@ struct proxy_iterator : boost::iterator<std::output_iterator_tag,v>
     
     struct proxy
     {
-        operator v&() const;
-        proxy& operator=(v) const;
+        operator value_type&() const;
+        proxy& operator=(value_type) const;
     };
         
     proxy operator*() const;
@@ -66,7 +69,22 @@ struct lvalue_iterator
     lvalue_iterator operator++(int);
 };
 
-BOOST_TT_BROKEN_COMPILER_SPEC(proxy_iterator::proxy)
+template <class T>
+struct constant_lvalue_iterator
+{
+    typedef T value_type;
+    typedef T const& reference;
+    typedef T difference_type;
+    typedef std::input_iterator_tag iterator_category;
+    typedef T const* pointer;
+
+    T const& operator*() const;
+    constant_lvalue_iterator& operator++();
+    constant_lvalue_iterator operator++(int);
+};
+
+BOOST_TT_BROKEN_COMPILER_SPEC(proxy_iterator<v>::proxy)
+BOOST_TT_BROKEN_COMPILER_SPEC(proxy_iterator<int>::proxy)
 
 int main()
 {
@@ -76,7 +94,8 @@ int main()
     BOOST_STATIC_ASSERT(boost::is_lvalue_iterator<std::deque<v>::const_iterator>::value);
     BOOST_STATIC_ASSERT(!boost::is_lvalue_iterator<std::back_insert_iterator<std::deque<v> > >::value);
     BOOST_STATIC_ASSERT(!boost::is_lvalue_iterator<std::ostream_iterator<v> >::value);
-    BOOST_STATIC_ASSERT(!boost::is_lvalue_iterator<proxy_iterator>::value);
+    BOOST_STATIC_ASSERT(!boost::is_lvalue_iterator<proxy_iterator<v> >::value);
+    BOOST_STATIC_ASSERT(!boost::is_lvalue_iterator<proxy_iterator<int> >::value);
 #ifndef BOOST_NO_LVALUE_RETURN_DETECTION
     BOOST_STATIC_ASSERT(!boost::is_lvalue_iterator<value_iterator>::value);
 #endif
@@ -87,7 +106,13 @@ int main()
     BOOST_STATIC_ASSERT(boost::is_lvalue_iterator<lvalue_iterator<v> >::value);
     BOOST_STATIC_ASSERT(boost::is_lvalue_iterator<lvalue_iterator<int> >::value);
     BOOST_STATIC_ASSERT(boost::is_lvalue_iterator<lvalue_iterator<char*> >::value);
-    BOOST_STATIC_ASSERT(boost::is_lvalue_iterator<lvalue_iterator<long> >::value);
+    BOOST_STATIC_ASSERT(boost::is_lvalue_iterator<lvalue_iterator<float> >::value);
+
+    
+    BOOST_STATIC_ASSERT(boost::is_lvalue_iterator<constant_lvalue_iterator<v> >::value);
+    BOOST_STATIC_ASSERT(boost::is_lvalue_iterator<constant_lvalue_iterator<int> >::value);
+    BOOST_STATIC_ASSERT(boost::is_lvalue_iterator<constant_lvalue_iterator<char*> >::value);
+    BOOST_STATIC_ASSERT(boost::is_lvalue_iterator<constant_lvalue_iterator<float> >::value);
 
     
     
@@ -97,17 +122,24 @@ int main()
     BOOST_STATIC_ASSERT(!boost::is_non_const_lvalue_iterator<std::deque<v>::const_iterator>::value);
     BOOST_STATIC_ASSERT(!boost::is_non_const_lvalue_iterator<std::back_insert_iterator<std::deque<v> > >::value);
     BOOST_STATIC_ASSERT(!boost::is_non_const_lvalue_iterator<std::ostream_iterator<v> >::value);
-    BOOST_STATIC_ASSERT(!boost::is_non_const_lvalue_iterator<proxy_iterator>::value);
+    BOOST_STATIC_ASSERT(!boost::is_non_const_lvalue_iterator<proxy_iterator<v> >::value);
+    BOOST_STATIC_ASSERT(!boost::is_non_const_lvalue_iterator<proxy_iterator<int> >::value);
 #ifndef BOOST_NO_LVALUE_RETURN_DETECTION
     BOOST_STATIC_ASSERT(!boost::is_non_const_lvalue_iterator<value_iterator>::value);
 #endif
     BOOST_STATIC_ASSERT(!boost::is_non_const_lvalue_iterator<noncopyable_iterator>::value);
     
     BOOST_STATIC_ASSERT(boost::is_non_const_lvalue_iterator<lvalue_iterator<v> >::value);
-    BOOST_STATIC_ASSERT(boost::is_non_const_lvalue_iterator<lvalue_iterator<float> >::value);
-    BOOST_STATIC_ASSERT(boost::is_non_const_lvalue_iterator<lvalue_iterator<char*> >::value);
-    BOOST_STATIC_ASSERT(boost::is_non_const_lvalue_iterator<lvalue_iterator<long> >::value);
+#if !BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x564))
     BOOST_STATIC_ASSERT(boost::is_non_const_lvalue_iterator<lvalue_iterator<int> >::value);
+#endif 
+    BOOST_STATIC_ASSERT(boost::is_non_const_lvalue_iterator<lvalue_iterator<char*> >::value);
+    BOOST_STATIC_ASSERT(boost::is_non_const_lvalue_iterator<lvalue_iterator<float> >::value);
+    
+    BOOST_STATIC_ASSERT(!boost::is_non_const_lvalue_iterator<constant_lvalue_iterator<v> >::value);
+    BOOST_STATIC_ASSERT(!boost::is_non_const_lvalue_iterator<constant_lvalue_iterator<int> >::value);
+    BOOST_STATIC_ASSERT(!boost::is_non_const_lvalue_iterator<constant_lvalue_iterator<char*> >::value);
+    BOOST_STATIC_ASSERT(!boost::is_non_const_lvalue_iterator<constant_lvalue_iterator<float> >::value);
     
     return 0;
 }
