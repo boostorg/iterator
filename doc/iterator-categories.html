@@ -39,9 +39,9 @@ iterator categories.
 <P>Because of the mixing of iterator traversal and dereference return type, many 
 useful iterators can not be appropriately categorized. For example, 
 <TT>vector&lt;bool&gt;::iterator</TT> is almost a random access iterator, but 
-the return type is not <TT>bool&amp;</TT> (see <A 
-href="http://anubis.dkuug.dk/JTC1/SC22/WG21/docs/lwg-active.html#96">issue 
-96</A> and Herb Sutter's paper J16/99-0008 = WG21 N1185). Therefore, the 
+the return type is not <TT>bool&amp;</TT> (see
+<a href="http://anubis.dkuug.dk/JTC1/SC22/WG21/docs/lwg-active.html#96">issue 96</a>
+and Herb Sutter's paper J16/99-0008 = WG21 N1185). Therefore, the 
 iterators only meet the requirements of input iterator and output iterator. This 
 is so nonintuitive that at least one implementation erroneously assigns 
 <TT>random_access_iterator_tag</TT> as its <TT>iterator_category</TT>. Also, 
