@@ -74,12 +74,6 @@ namespace boost
     // Generates the corresponding std::iterator specialization
     // from the given iterator traits type
     //
-    // The use_default support is needed for iterator_adaptor.
-    // For practical reasons iterator_adaptor needs to specify
-    // fixed number of template arguments of iterator_facade.
-    // So use_default is its way to say what I really mean
-    // is youre default parameter.
-    //
     template <class Value, class AccessCategory, class TraversalCategory, class Reference, class Difference>
     struct iterator_facade_base
     {
@@ -92,7 +86,16 @@ namespace boost
 
           , typename const_qualified<Value, AccessCategory>::type*
 
-          , Reference
+          // The use_default support is needed for iterator_adaptor.
+          // For practical reasons iterator_adaptor needs to specify
+          // a fixed number of template arguments of iterator_facade.
+          // So use_default is its way to say: "What I really mean
+          // is your default parameter".
+          , typename mpl::if_<
+                is_same<Reference, use_default>
+              , typename const_qualified<Value, AccessCategory>::type&
+              , Reference
+            >::type
         >
         type;
     };
