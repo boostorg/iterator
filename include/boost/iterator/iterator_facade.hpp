@@ -110,33 +110,36 @@ namespace boost
     template <class T>
     struct operator_arrow_proxy
     {
-      operator_arrow_proxy(const T& x) : m_value(x) {}
-      const T* operator->() const { return &m_value; }
-      // This function is needed for MWCW and BCC, which won't call operator->
-      // again automatically per 13.3.1.2 para 8
-      operator const T*() const { return &m_value; }
-      T m_value;
+        operator_arrow_proxy(T const* px) : m_value(*px) {}
+        const T* operator->() const { return &m_value; }
+        // This function is needed for MWCW and BCC, which won't call operator->
+        // again automatically per 13.3.1.2 para 8
+        operator const T*() const { return &m_value; }
+        T m_value;
     };
 
-    template <class Reference, class Pointer>
-    struct operator_arrow_pointer
-    {
-        operator_arrow_pointer(Reference x) : m_p(&x) {}
-        operator Pointer() const { return m_p; }
-        Pointer m_p;
-    };
-    
+    // A metafunction that gets the result type for operator->.  Also
+    // has a static function make() which builds the result from a
+    // Reference
     template <class Value, class Category, class Reference, class Pointer>
     struct operator_arrow_result
-      : mpl::if_<
+    {
+        // CWPro8.3 won't accept "operator_arrow_result::type", and we
+        // need that type below, so metafunction forwarding would be a
+        // losing proposition here.
+        typedef typename mpl::if_<
             is_tag<
                 readable_lvalue_iterator_tag
               , typename access_category_tag<Category,Reference>::type
             >
           , Pointer
           , operator_arrow_proxy<Value>
-        >
-    {
+        >::type type;
+    
+        static type make(Reference x)
+        {
+            return type(&x);
+        }
     };
     
 # if BOOST_WORKAROUND(BOOST_MSVC, <= 1200)
@@ -370,7 +373,6 @@ namespace boost
           return iterator_core_access::dereference(this->derived());
       }
 
-      // Needs eventual help for input iterators
       typename detail::operator_arrow_result<
           value_type
         , iterator_category
@@ -379,14 +381,12 @@ namespace boost
       >::type
       operator->() const
       {
-          typedef typename detail::operator_arrow_result<
+          return detail::operator_arrow_result<
               value_type
             , iterator_category
             , reference
-            , detail::operator_arrow_pointer<reference,pointer>
-          >::type result_t;
-              
-          return result_t(*this->derived());
+            , pointer
+          >::make(*this->derived());
       }
         
       typename detail::operator_brackets_result<Derived,value_type,iterator_category,reference>::type

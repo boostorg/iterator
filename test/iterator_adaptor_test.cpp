@@ -188,6 +188,7 @@ main()
     BOOST_STATIC_ASSERT((boost::is_convertible<Iter1::iterator_category, std::random_access_iterator_tag>::value));
 #endif 
   }
+  
   {  
     // Test computation of default when the Value is const
     typedef ptr_iterator<int const> Iter1;

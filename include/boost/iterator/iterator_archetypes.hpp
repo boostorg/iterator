@@ -116,7 +116,13 @@ namespace boost
     template <class Derived, class Value>
     bool operator==(traversal_archetype_<Derived, Value, single_pass_iterator_tag> const&,
                     traversal_archetype_<Derived, Value, single_pass_iterator_tag> const&);
-
+  
+#if BOOST_WORKAROUND(BOOST_MSVC, <= 1300)
+  // doesn't seem to pick up != from equality_comparable
+    template <class Derived, class Value>
+    bool operator!=(traversal_archetype_<Derived, Value, single_pass_iterator_tag> const&,
+                    traversal_archetype_<Derived, Value, single_pass_iterator_tag> const&);
+#endif 
     template <>
     struct traversal_archetype_impl<forward_traversal_tag>
     {
@@ -274,39 +280,56 @@ namespace boost
       };
   };
   
-  template <class Derived, class Value, class AccessCategory, class TraversalCategory>
-  struct traversal_archetype 
-    : detail::operator_brackets< typename remove_cv<Value>::type,
-                                 AccessCategory,
-                                 TraversalCategory >,
-      detail::traversal_archetype_<Derived, Value, TraversalCategory>
+
+  template <class Value, class AccessCategory, class TraversalCategory>
+  struct iterator_archetype;
+  
+  template <class Value, class AccessCategory, class TraversalCategory>
+  struct traversal_archetype_base 
+    : detail::operator_brackets<
+          typename remove_cv<Value>::type
+        , AccessCategory
+        , TraversalCategory
+      >
+      , detail::traversal_archetype_<
+            iterator_archetype<Value, AccessCategory, TraversalCategory>
+          , Value
+          , TraversalCategory
+        >
   {
   };
 
   template <class Value, class AccessCategory, class TraversalCategory>
   struct iterator_archetype
-    : public traversal_archetype<
-          iterator_archetype<Value, AccessCategory, TraversalCategory>
-        , Value, AccessCategory, TraversalCategory
-      >
+    : public traversal_archetype_base<Value, AccessCategory, TraversalCategory>
     , public access_archetype<Value, AccessCategory>
-# if BOOST_WORKAROUND(BOOST_DINKUMWARE_STDLIB, < 310)
+
+      // These broken libraries require derivation from std::iterator
+      // (or related magic) in order to handle iter_swap and other
+      // iterator operations
+# if BOOST_WORKAROUND(BOOST_DINKUMWARE_STDLIB, < 310)          \
+    || BOOST_WORKAROUND(_RWSTD_VER, BOOST_TESTED_AT(0x20101))
     , public std::iterator<
          iterator_tag<AccessCategory,TraversalCategory>
        , typename access_archetype<Value, AccessCategory>::value_type
-       , typename traversal_archetype<
-            iterator_archetype<Value, AccessCategory, TraversalCategory>
-          , Value, AccessCategory, TraversalCategory
+       , typename traversal_archetype_base<
+             Value, AccessCategory, TraversalCategory
          >::difference_type
       >
 # endif 
   {
-# if BOOST_WORKAROUND(BOOST_DINKUMWARE_STDLIB, < 310)
+      // Derivation from std::iterator above caused ambiguity, so now
+      // we have to declare all the types here.
+# if BOOST_WORKAROUND(BOOST_DINKUMWARE_STDLIB, < 310)           \
+    || BOOST_WORKAROUND(_RWSTD_VER, BOOST_TESTED_AT(0x20101))
       typedef typename access_archetype<Value, AccessCategory>::value_type value_type;
       
-      typedef typename traversal_archetype<
-          iterator_archetype<Value, AccessCategory, TraversalCategory>
-        , Value, AccessCategory, TraversalCategory
+      typedef typename access_archetype<Value, AccessCategory>::pointer pointer;
+      
+      typedef typename access_archetype<Value, AccessCategory>::reference reference;
+      
+      typedef typename traversal_archetype_base<
+         Value, AccessCategory, TraversalCategory
       >::difference_type difference_type;
 # endif
       

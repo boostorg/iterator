@@ -20,6 +20,6 @@ int main()
     boost::function_requires< boost_concepts::WritableLvalueIteratorConcept<iter> >();
     boost::function_requires< boost_concepts::RandomAccessTraversalConcept<iter> >();
   }
-
+  return 0; // keep msvc happy
 }
 

@@ -100,7 +100,7 @@ In short, there are many useful iterators that do not fit into the
 current standard iterator categories. As a result, the following bad
 things happen:
 
-- Iterators are often miss-categorized. 
+- Iterators are often mis-categorized. 
 
 - Algorithm requirements are more strict than necessary, because they
   cannot separate the need for random access or bidirectional
@@ -402,8 +402,8 @@ Iterator Traversal Concepts [lib.iterator.traversal]
 
 In the tables below, ``X`` is an iterator type, ``a`` and ``b`` are
 constant objects of type ``X``, ``r`` and ``s`` are mutable objects of
-type ``X``, ``T`` is ``std::iterator_traits<X>::value_type``, 
-``v`` is a constant object of type ``T``, and ``u`` is an identifier.
+type ``X``, ``T`` is ``std::iterator_traits<X>::value_type``, and
+``v`` is a constant object of type ``T``.
 
 
 Incrementable Iterators [lib.incrementable.iterators]
