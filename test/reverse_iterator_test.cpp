@@ -66,6 +66,7 @@ int main()
     boost::function_requires< boost_concepts::BidirectionalTraversalConcept<Iter> >();
   }
 #endif
+#if !BOOST_WORKAROUND(BOOST_MSVC, == 1200)  // Causes Internal Error in linker.
   {
     typedef boost::iterator_archetype<
         dummyT
@@ -100,6 +101,7 @@ int main()
     boost::function_requires< boost_concepts::WritableLvalueIteratorConcept<Iter> >();
     boost::function_requires< boost_concepts::BidirectionalTraversalConcept<Iter> >();
   }
+#endif
 
   // Test reverse_iterator
   {
