@@ -276,7 +276,7 @@ namespace boost
           BOOST_STATIC_ASSERT(
               (detail::is_tag< 
                    random_access_traversal_tag
-                 , typename super_t::iterator_category::traversal
+                 , BOOST_ARG_DEPENDENT_TYPENAME super_t::iterator_category::traversal
                >::value)
               );
           m_iterator += n;
@@ -289,7 +289,7 @@ namespace boost
            BOOST_STATIC_ASSERT(
                (detail::is_tag< 
                     bidirectional_traversal_tag
-                  , typename super_t::iterator_category::traversal
+                  , BOOST_ARG_DEPENDENT_TYPENAME super_t::iterator_category::traversal
                 >::value)
                );
            --m_iterator;
@@ -304,7 +304,7 @@ namespace boost
           BOOST_STATIC_ASSERT(
               (detail::is_tag< 
                    random_access_traversal_tag
-                 , typename super_t::iterator_category::traversal
+                 , BOOST_ARG_DEPENDENT_TYPENAME super_t::iterator_category::traversal
                >::value)
               );
           // Maybe readd with same_distance

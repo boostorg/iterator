@@ -32,14 +32,14 @@ namespace boost
   {
 
     template <class UnaryFunction>
-    struct result
+    struct function_object_result
     {
       typedef typename UnaryFunction::result_type type;
     };
 
 #ifndef BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
     template <class Return, class Argument>
-    struct result<Return(*)(Argument)>
+    struct function_object_result<Return(*)(Argument)>
     {
       typedef Return type;
     };
@@ -59,7 +59,7 @@ namespace boost
  
       typedef typename mpl::apply_if<
           is_same< Reference, use_default >
-        , result<UnaryFunction>
+        , function_object_result<UnaryFunction>
         , mpl::identity<Reference>
       >::type result_type;
 
@@ -140,7 +140,7 @@ namespace boost
     return transform_iterator<UnaryFunction, Iterator>(it, fun);
   }
 
-#ifdef BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
+#if defined(BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION ) && !defined(BOOST_NO_FUNCTION_TEMPLATE_ORDERING)
   template <class Return, class Argument, class Iterator>
   transform_iterator< Return (*)(Argument), Iterator, Return>
   make_transform_iterator(Iterator it, Return (*fun)(Argument))

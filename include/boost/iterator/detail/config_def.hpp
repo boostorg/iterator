@@ -95,4 +95,10 @@
 # define BOOST_NO_STRICT_ITERATOR_INTEROPERABILITY
 #endif 
 
+# if !BOOST_WORKAROUND(BOOST_MSVC, <= 1300)
+#  define BOOST_ARG_DEPENDENT_TYPENAME typename
+# else
+#  define BOOST_ARG_DEPENDENT_TYPENAME
+# endif
+
 // no include guard multiple inclusion intended
