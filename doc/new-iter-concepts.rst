@@ -135,24 +135,39 @@ following lists the proposed changes to the type requirements of
 algorithms.
 
 Forward Iterator -> Forward Traversal Iterator and Readable Iterator
-  ``find_end, find_first_of, adjacent_find, search, search_n, rotate_copy, lower_bound, upper_bound, equal_range, binary_search, min_element, max_element``
+  ``find_end, adjacent_find, search, search_n, rotate_copy, lower_bound, upper_bound, equal_range, binary_search, min_element, max_element``
+
+Forward Iterator (1) -> Single Pass Iterator and Readable Iterator
+Forward Iterator (2) -> Forward Traversal Iterator and Readable Iterator
+  ``find_first_of``
 
 Forward Iterator -> Readable Iterator and Writable Iterator
   ``iter_swap``
 
-Forward Iterator -> Forward Traversal Iterator and Writable Iterator
+Forward Iterator -> Single Pass Iterator and Writable Iterator
   ``fill, generate``
 
 Forward Iterator -> Forward Traversal Iterator and Swappable Iterator
-  ``swap_ranges, rotate``
+  ``rotate``
+
+Forward Iterator (1) -> Swappable Iterator and Single Pass Iterator
+Forward Iterator (2) -> Swappable Iterator and  Incrementable Iterator
+  ``swap_ranges``
 
 Forward Iterator -> Forward Traversal Iterator and Readable Iterator and Writable Iterator
-  ``replace, replace_if, remove, remove_if, unique``
+  ``remove, remove_if, unique``
+
+Forward Iterator -> Single Pass Iterator and Readable Iterator and Writable Iterator
+  ``replace, replace_if``
 
 Bidirectional Iterator -> Bidirectional Traversal Iterator and Swappable Iterator
-  ``reverse, partition``
+  ``reverse``
 
-Bidirectional Iterator -> Bidirectional Traversal Iterator and Readable Iterator, Bidirectional Iterator -> Bidirectional Traversal Iterator and Writable Iterator
+Bidirectional Iterator -> Bidirectional Traversal Iterator and Readable and Writable Iterator
+  ``partition``
+
+Bidirectional Iterator (1) -> Bidirectional Traversal Iterator and Readable Iterator, 
+Bidirectional Iterator (2) -> Bidirectional Traversal Iterator and Writable Iterator
   ``copy_backwards``
 
 Bidirectional Iterator -> Bidirectional Traversal Iterator and Swappable Iterator and Readable Iterator
@@ -164,10 +179,15 @@ Bidirectional Iterator -> Bidirectional Traversal Iterator and Readable Iterator
 Bidirectional Iterator -> Bidirectional Traversal Iterator and Readable Iterator
   ``reverse_copy``
 
-Random Access Iterator -> Random Access Traversal Iterator and Swappable Iterator
+Random Access Iterator -> Random Access Traversal Iterator and Readable and Writable Iterator
   ``random_shuffle, sort, stable_sort, partial_sort, nth_element, push_heap, pop_heap
   make_heap, sort_heap``
 
+Input Iterator (2) -> Incrementable Iterator and Readable Iterator
+  ``equal``
+
+Input Iterator (2) -> Incrementable Iterator and Readable Iterator
+  ``transform``
 
 ========
  Design
