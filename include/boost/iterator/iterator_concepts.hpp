@@ -26,7 +26,8 @@ namespace boost_concepts {
   public:
     typedef typename std::iterator_traits<Iterator>::value_type value_type;
     typedef typename std::iterator_traits<Iterator>::reference reference;
-    typedef typename boost::return_category<Iterator>::type return_category;
+    typedef typename std::iterator_traits<Iterator>::iterator_category iterator_category;
+    typedef typename iterator_category::returns return_category;
 
     void constraints() {
       boost::function_requires< boost::SGIAssignableConcept<Iterator> >();
@@ -47,7 +48,8 @@ namespace boost_concepts {
   template <typename Iterator, typename ValueType>
   class WritableIteratorConcept {
   public:
-    typedef typename boost::return_category<Iterator>::type return_category;
+    typedef typename std::iterator_traits<Iterator>::iterator_category iterator_category;
+    typedef typename iterator_category::returns return_category;
 
     void constraints() {
       boost::function_requires< boost::SGIAssignableConcept<Iterator> >();
@@ -69,7 +71,8 @@ namespace boost_concepts {
   public:
     typedef typename std::iterator_traits<Iterator>::value_type value_type;
     typedef typename std::iterator_traits<Iterator>::reference reference;
-    typedef typename boost::return_category<Iterator>::type return_category;
+    typedef typename std::iterator_traits<Iterator>::iterator_category iterator_category;
+    typedef typename iterator_category::returns return_category;
 
     void constraints() {
       boost::function_requires< ReadableIteratorConcept<Iterator> >();
@@ -91,7 +94,8 @@ namespace boost_concepts {
   public:
     typedef typename std::iterator_traits<Iterator>::value_type value_type;
     typedef typename std::iterator_traits<Iterator>::reference reference;
-    typedef typename boost::return_category<Iterator>::type return_category;
+    typedef typename std::iterator_traits<Iterator>::iterator_category iterator_category;
+    typedef typename iterator_category::returns return_category;
 
     void constraints() {
       boost::function_requires< ReadableIteratorConcept<Iterator> >();
@@ -115,8 +119,8 @@ namespace boost_concepts {
   template <typename Iterator>
   class ForwardTraversalConcept {
   public:
-    typedef typename boost::traversal_category<Iterator>::type
-      traversal_category;
+    typedef typename std::iterator_traits<Iterator>::iterator_category iterator_category;
+    typedef typename iterator_category::traversal traversal_category;
 
     void constraints() {
       boost::function_requires< boost::SGIAssignableConcept<Iterator> >();
@@ -135,8 +139,8 @@ namespace boost_concepts {
   template <typename Iterator>
   class BidirectionalTraversalConcept {
   public:
-    typedef typename boost::traversal_category<Iterator>::type 
-      traversal_category;
+    typedef typename std::iterator_traits<Iterator>::iterator_category iterator_category;
+    typedef typename iterator_category::traversal traversal_category;
 
     void constraints() {
       boost::function_requires< ForwardTraversalConcept<Iterator> >();
@@ -153,8 +157,8 @@ namespace boost_concepts {
   template <typename Iterator>
   class RandomAccessTraversalConcept {
   public:
-    typedef typename boost::traversal_category<Iterator>::type
-      traversal_category;
+    typedef typename std::iterator_traits<Iterator>::iterator_category iterator_category;
+    typedef typename iterator_category::traversal traversal_category;
     typedef typename std::iterator_traits<Iterator>::difference_type
       difference_type;
 

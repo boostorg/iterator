@@ -220,6 +220,14 @@ namespace boost {
     >::type type;
   };
 
+  template <class ReturnTag, class TraversalTag>
+  struct iterator_tag : cvt_iterator_category<ReturnTag, TraversalTag>::type
+  {
+    typedef ReturnTag returns;
+    typedef TraversalTag traversal;
+  };
+
+
 } // namespace boost
 
 #endif // BOOST_ITERATOR_CATEGORIES_HPP
