@@ -4,22 +4,10 @@
 #ifndef IS_LVALUE_ITERATOR_DWA2003112_HPP
 # define IS_LVALUE_ITERATOR_DWA2003112_HPP
 
-#include <boost/mpl/bool.hpp>
-#include <boost/detail/workaround.hpp>
-
-#if BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x551))
-# include <boost/mpl/if.hpp>
-# include <boost/mpl/and.hpp>
-# include <boost/mpl/not.hpp>
-#endif 
-
-#include <boost/detail/iterator.hpp>
 #include <boost/iterator.hpp>
 
-#if BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x551))
-# include <boost/type_traits/is_integral.hpp>
-# include <boost/type_traits/is_const.hpp>
-#endif 
+#include <boost/detail/workaround.hpp>
+#include <boost/detail/iterator.hpp>
 
 #include <boost/iterator/detail/any_conversion_eater.hpp>
 
@@ -62,19 +50,7 @@ namespace detail
       // convertible to Value const&
       struct conversion_eater
       {
-          // Borland (at leasT 5.5.1) has some problems converting to
-          // non-const Value& where Value is an integral type.
-#if BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x551))
-          typedef typename mpl::if_<
-              mpl::and_<is_integral<Value>, mpl::not_<is_const<Value> > >
-            , Value
-            , Value&
-          >::type src;
-          
-          conversion_eater(src);
-#else
           conversion_eater(Value&);
-#endif 
       };
 
       static char tester(conversion_eater, int);
