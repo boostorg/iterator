@@ -77,11 +77,12 @@ void constant_lvalue_iterator_test(Iterator i, T v1)
   assert(v1 == v2);
 # if !BOOST_WORKAROUND(__MWERKS__, <= 0x2407)
   BOOST_STATIC_ASSERT(is_lvalue_iterator<Iterator>::value);
+  BOOST_STATIC_ASSERT(!is_non_const_lvalue_iterator<Iterator>::value);
 # endif 
 }
 
 template <class Iterator, class T>
-void writable_lvalue_iterator_test(Iterator i, T v1, T v2)
+void non_const_lvalue_iterator_test(Iterator i, T v1, T v2)
 {
   Iterator i2(i);
   typedef typename detail::iterator_traits<Iterator>::value_type value_type;
@@ -89,11 +90,12 @@ void writable_lvalue_iterator_test(Iterator i, T v1, T v2)
   BOOST_STATIC_ASSERT((is_same<value_type&, reference>::value));
   T& v3 = *i2;
   assert(v1 == v3);
-  *i = v2;
+  // *i = v2;            -- A non-const lvalue iterator is not neccessarily writable
   T& v4 = *i2;
   assert(v2 == v4);
 # if !BOOST_WORKAROUND(__MWERKS__, <= 0x2407)
   BOOST_STATIC_ASSERT(is_lvalue_iterator<Iterator>::value);
+  BOOST_STATIC_ASSERT(is_non_const_lvalue_iterator<Iterator>::value);
 # endif 
 }
 
@@ -158,6 +160,8 @@ void bidirectional_readable_iterator_test(Iterator i, T v1, T v2)
   readable_iterator_test(i2, v2);
 }
 
+template <class T>
+void id_type(T const&) { T::no_SuchMember x; }
 
 // random access
 // Preconditions: [i,i+N) is a valid range
@@ -168,6 +172,7 @@ void random_access_readable_iterator_test(Iterator i, int N, TrueVals vals)
   const Iterator j = i;
   int c;
 
+  id_type(j[c]);
   for (c = 0; c < N-1; ++c) {
     assert(i == j + c);
     assert(*i == vals[c]);

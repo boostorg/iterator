@@ -25,8 +25,23 @@
 #endif 
 
 #if defined(BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION)           \
-    || BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x531)) 
+    || BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x531))
+
+// Recall that in general, compilers without partial specialization
+// can't strip constness.  Consider counting_iterator, which normally
+// passes a const Value to iterator_facade.  As a result, any code
+// which makes a std::vector of the iterator's value_type will fail
+// when its allocator declares functions overloaded on reference and
+// const_reference (the same type).
+//
+// Furthermore, Borland 5.5.1 drops constness in enough ways that we
+// end up using a proxy for operator[] when we otherwise shouldn't.
+// Using reference constness gives it an extra hint that it can
+// return the value_type from operator[] directly, but is not
+// strictly neccessary.  Not sure how best to resolve this one.
+
 # define BOOST_ITERATOR_REF_CONSTNESS_KILLS_WRITABILITY 1
+
 #endif
 
 #if BOOST_WORKAROUND(BOOST_MSVC, <= 1300)                                       \

@@ -119,11 +119,6 @@ struct is_iterator_category
 {
 };
 
-template <>
-struct is_iterator_category<int>
-  : mpl::false_
-{};
-
 template <class T>
 struct is_iterator_traversal
   : is_convertible<T,incrementable_traversal_tag>
@@ -164,10 +159,6 @@ struct iterator_category_with_traversal
 # endif 
 };
 
-template <>
-struct iterator_category_with_traversal<int,int>
-{};
-
 // Computes an iterator_category tag whose traversal is Traversal and
 // which is appropriate for an iterator
 template <class Traversal, class ValueParam, class Reference>
@@ -191,9 +182,6 @@ struct facade_iterator_category_impl
     >::type type;
 };
 
-template <>
-struct facade_iterator_category_impl<int,int,int> {};
-
 //
 // Compute an iterator_category for iterator_facade
 //
@@ -205,12 +193,6 @@ struct facade_iterator_category
       , facade_iterator_category_impl<CategoryOrTraversal,ValueParam,Reference>
     >
 {
-};
-
-template <>
-struct facade_iterator_category<int,int,int>
-{
-    typedef int type;
 };
 
 }} // namespace boost::detail

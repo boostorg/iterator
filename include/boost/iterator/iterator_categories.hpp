@@ -58,7 +58,7 @@ namespace detail
   // for new-style types.
   //
   template <class Cat>
-  struct category_to_traversal
+  struct old_category_to_traversal
     : mpl::apply_if<
           is_convertible<Cat,std::random_access_iterator_tag>
         , mpl::identity<random_access_traversal_tag>
@@ -84,7 +84,7 @@ namespace detail
 
 # if BOOST_WORKAROUND(BOOST_MSVC, == 1200)
   template <>
-  struct category_to_traversal<int>
+  struct old_category_to_traversal<int>
   {
       typedef int type;
   };
@@ -100,7 +100,7 @@ struct iterator_category_to_traversal
   : mpl::apply_if< // if already convertible to a traversal tag, we're done.
         is_convertible<Cat,incrementable_traversal_tag>
       , mpl::identity<Cat>
-      , detail::category_to_traversal<Cat>
+      , detail::old_category_to_traversal<Cat>
     >
 {};
 

@@ -15,7 +15,12 @@
 
 namespace boost {
 
-template <class Incrementable, class Traversal, class Difference> class counting_iterator;
+template <
+    class Incrementable
+  , class CategoryOrTraversal
+  , class Difference
+>
+class counting_iterator;
 
 namespace detail
 {
@@ -67,11 +72,12 @@ namespace detail
   };
 
   BOOST_STATIC_ASSERT(is_numeric<int>::value);
-  template <class Incrementable, class Traversal, class Difference>
+  
+  template <class Incrementable, class CategoryOrTraversal, class Difference>
   struct counting_iterator_base
   {
       typedef typename detail::ia_dflt_help<
-          Traversal
+          CategoryOrTraversal
         , mpl::apply_if<
               is_numeric<Incrementable>
             , mpl::identity<random_access_traversal_tag>
@@ -89,7 +95,7 @@ namespace detail
       >::type difference;
       
       typedef iterator_adaptor<
-          counting_iterator<Incrementable, Traversal, Difference> // self
+          counting_iterator<Incrementable, CategoryOrTraversal, Difference> // self
         , Incrementable                                           // Base
         , Incrementable                                           // Value
 # ifndef BOOST_ITERATOR_REF_CONSTNESS_KILLS_WRITABILITY
@@ -130,11 +136,20 @@ namespace detail
   };
 }
 
-template <class Incrementable, class Traversal = use_default, class Difference = use_default>
+template <
+    class Incrementable
+  , class CategoryOrTraversal = use_default
+  , class Difference = use_default
+>
 class counting_iterator
-  : public detail::counting_iterator_base<Incrementable, Traversal, Difference>::type
+  : public detail::counting_iterator_base<
+        Incrementable, CategoryOrTraversal, Difference
+    >::type
 {
-    typedef typename detail::counting_iterator_base<Incrementable, Traversal, Difference>::type super_t;
+    typedef typename detail::counting_iterator_base<
+        Incrementable, CategoryOrTraversal, Difference
+    >::type super_t;
+    
     friend class iterator_core_access;
 
  public:
