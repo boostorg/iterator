@@ -30,9 +30,7 @@
 #  define BOOST_ARG_DEP_TYPENAME typename
 #endif
 
-// CWPro7 never works, and unfortunately vc7.1 final beta sometimes fails
-#if BOOST_WORKAROUND(__MWERKS__, <=0x2407)      \
- || BOOST_WORKAROUND(_MSC_FULL_VER, BOOST_TESTED_AT(13102292) && BOOST_MSVC > 1300)
+#if BOOST_WORKAROUND(__MWERKS__, <=0x2407)
 #  define BOOST_NO_IS_CONVERTIBLE // "is_convertible doesn't always work"
 #endif
 
@@ -109,7 +107,7 @@ namespace boost
     //
     template <typename A, typename B>
     struct is_interoperable
-#if defined(BOOST_NO_IS_CONVERTIBLE) && !(BOOST_MSVC > 1300) // vc7.1 is_convertible works sometimes
+#if defined(BOOST_NO_IS_CONVERTIBLE)
       : mpl::true_c
 #else
       : mpl::logical_or<
@@ -221,11 +219,17 @@ namespace boost
   {
       // Borland 551 and vc6 have a problem with the use of base class
       // forwarding in this template, so  we write it all out here
-#if defined(BOOST_NO_IS_CONVERTIBLE) || defined(BOOST_NO_SFINAE)
+# if defined(BOOST_NO_IS_CONVERTIBLE) || defined(BOOST_NO_SFINAE)
       typedef detail::enable_type type;
 # else
       typedef typename detail::enabled<
+#  if BOOST_WORKAROUND(_MSC_FULL_VER, BOOST_TESTED_AT(13102292) && BOOST_MSVC > 1300)
+          // For some reason vc7.1 needs us to "cut off" instantiation
+          // of is_convertible in the case where From == To.
+          mpl::logical_or<is_same<From,To>, is_convertible<From, To> >::value
+#  else 
           ::boost::is_convertible<From, To>::value
+#  endif 
       >::template base<detail::enable_type>::type type;
 # endif 
   };
