@@ -18,15 +18,11 @@
 
 #include "boost/type_traits/detail/bool_trait_def.hpp"
 
-#if BOOST_WORKAROUND(BOOST_MSVC, <= 1301)                       \
+#if BOOST_WORKAROUND(BOOST_MSVC,  <= 1300)                      \
  || BOOST_WORKAROUND(__GNUC__, <= 2 && __GNUC_MINOR__ <= 95)    \
  || BOOST_WORKAROUND(__MWERKS__, <= 0x3000)
 #  define BOOST_NO_SFINAE // "Substitution Failure Is Not An Error not implemented"
 #endif
-
-#if BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x551))
-# define BOOST_NO_ENABLE_IF_CONSTRUCTORS // Can't parse the syntax needed for enable_if in constructors
-#endif 
 
 #if BOOST_WORKAROUND(BOOST_MSVC, <=1200)
 #  define BOOST_ARG_DEP_TYPENAME
@@ -35,9 +31,9 @@
 #endif
 
 // CWPro7 never works, and unfortunately vc7.1 final beta sometimes fails
-#if BOOST_WORKAROUND(__MWERKS__, <=0x2407) \
- || BOOST_WORKAROUND(_MSC_FULL_VER, BOOST_TESTED_AT(13102292))
-#  define BOOST_NO_IS_CONVERTIBLE // "is_convertible doesn't work"
+#if BOOST_WORKAROUND(__MWERKS__, <=0x2407)      \
+ || BOOST_WORKAROUND(_MSC_FULL_VER, BOOST_TESTED_AT(13102292) && BOOST_MSVC > 1300)
+#  define BOOST_NO_IS_CONVERTIBLE // "is_convertible doesn't always work"
 #endif
 
 #if BOOST_WORKAROUND(__GNUC__, == 2 && __GNUC_MINOR__ == 95)    \
@@ -113,11 +109,12 @@ namespace boost
     //
     template <typename A, typename B>
     struct is_interoperable
-#ifdef BOOST_NO_IS_CONVERTIBLE
+#if defined(BOOST_NO_IS_CONVERTIBLE) && !(BOOST_MSVC > 1300) // vc7.1 is_convertible works sometimes
       : mpl::true_c
 #else
-      : mpl::logical_or< is_convertible< A, B >,
-                         is_convertible< B, A > >
+      : mpl::logical_or<
+           is_convertible< A, B >
+         , is_convertible< B, A > >
 #endif
     {
     };
@@ -217,19 +214,19 @@ namespace boost
   // false positives for user/library defined iterator types. See comments
   // on operator implementation for consequences.
   //
-  template<typename From,
-           typename To>
+  template<
+      typename From
+    , typename To>
   struct enable_if_convertible
-#if !defined(BOOST_NO_IS_CONVERTIBLE) && !defined(BOOST_NO_SFINAE)
-      : detail::enabled<
-          ::boost::is_convertible<From, To>::value
-        >::template base<detail::enable_type>
-#else
-      : mpl::identity<detail::enable_type>
-#endif 
   {
-# if BOOST_WORKAROUND(BOOST_MSVC, <= 1200)
-        typedef detail::enable_type type;
+      // Borland 551 and vc6 have a problem with the use of base class
+      // forwarding in this template, so  we write it all out here
+#if defined(BOOST_NO_IS_CONVERTIBLE) || defined(BOOST_NO_SFINAE)
+      typedef detail::enable_type type;
+# else
+      typedef typename detail::enabled<
+          ::boost::is_convertible<From, To>::value
+      >::template base<detail::enable_type>::type type;
 # endif 
   };
 
@@ -995,9 +992,9 @@ namespace boost
 // clean up local workaround macros
 //
 
-#undef BOOST_NO_SFINAE
-#undef BOOST_ARG_DEP_TYPENAME
-#undef BOOST_NO_IS_CONVERTIBLE
-#undef BOOST_NO_MPL_AUX_HAS_XXX
+# undef BOOST_NO_SFINAE
+# undef BOOST_ARG_DEP_TYPENAME
+# undef BOOST_NO_IS_CONVERTIBLE
+# undef BOOST_NO_MPL_AUX_HAS_XXX
 
 #endif // BOOST_ITERATOR_ADAPTORS_HPP
