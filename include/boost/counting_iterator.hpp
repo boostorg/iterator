@@ -4,7 +4,7 @@
 // without express or implied warranty, and with no claim as to its suitability
 // for any purpose.
 //
-//  See http://www.boost.org for most recent version including documentation.
+// See http://www.boost.org for most recent version including documentation.
 //
 // Supplies:
 //
@@ -15,16 +15,35 @@
 //     value progresses through consecutive values of Incrementable when the
 //     iterator is derferenced.
 //
+//   template <class Incrementable> struct counting_iterator_generator;
+//
+//     A "type generator" whose nested type "type" is a counting iterator as
+//     described above.
+//
 //   template <class Incrementable>
-//     iterator_adaptor<Incrementable,
-//                      counting_iterator_policies<Incrementable>,
-//                      counting_iterator_traits<Incrementable> >
-//   counting_iterator(Incrementable);
+//     typename counting_iterator_generator<Incrementable>::type
+//     make_counting_iterator(Incrementable);
 //
 //     A function which produces an adapted counting iterator over values of
 //     Incrementable.
 // 
 // Revision History
+// 14 Feb 2001  Removed unnecessary typedefs from counting_iterator_traits
+//              (Jeremy Siek)
+// 11 Feb 2001  Use BOOST_STATIC_CONSTANT (Dave Abrahams)
+// 11 Feb 2001  Clean up after John Maddocks's (finally effective!) Borland
+//              fixes (David Abrahams).
+// 10 Feb 2001  Use new iterator_adaptor<> interface (David Abrahams)
+// 10 Feb 2001  Rolled in supposed Borland fixes from John Maddock, but not
+//              seeing any improvement yet (David Abrahams)
+// 09 Feb 2001  Factored out is_numeric computation. Borland still
+//              unhappy :( (David Abrahams)
+// 08 Feb 2001  Beginning of a failed attempt to appease Borland
+//              (David Abrahams)
+// 07 Feb 2001  rename counting_iterator() -> make_counting_iterator()
+//              (David Abrahams)        
+// 04 Feb 2001  Added counting_iterator_generator; updated comments
+//              (David Abrahams)
 // 24 Jan 2001  initial revision, based on Jeremy Siek's
 //              boost/pending/integer_range.hpp (David Abrahams)
 
@@ -33,9 +52,10 @@
 
 # include <boost/config.hpp>
 # include <boost/detail/iterator.hpp>
-# include <boost/pending/iterator_adaptors.hpp>
+# include <boost/iterator_adaptors.hpp>
 # include <boost/type_traits.hpp>
 # include <boost/detail/numeric_traits.hpp>
+# include <boost/static_assert.hpp>
 # ifndef BOOST_NO_LIMITS
 #  include <limits>
 # endif
@@ -108,20 +128,32 @@ namespace detail {
       };
   };
 
+  // Try to detect numeric types at compile time in ways compatible with the
+  // limitations of the compiler and library.
+  template <class T>
+  struct is_numeric {
+    // For a while, this wasn't true, but we rely on it below. This is a regression assert.
+    BOOST_STATIC_ASSERT(::boost::is_integral<char>::value);
+# ifndef BOOST_NO_LIMITS_COMPILE_TIME_CONSTANTS
+    BOOST_STATIC_CONSTANT(bool, value = std::numeric_limits<T>::is_specialized);
+# else
+#  if !defined(__BORLANDC__)
+    BOOST_STATIC_CONSTANT(bool, value = (
+        boost::is_convertible<int,T>::value && boost::is_convertible<T,int>::value));
+#  else
+    BOOST_STATIC_CONSTANT(bool, value = ::boost::is_arithmetic<T>::value);
+#  endif
+# endif
+  };
+
   // Compute the distance over arbitrary numeric and/or iterator types
   template <class Distance, class Incrementable>
   Distance any_distance(Incrementable start, Incrementable finish, Distance* = 0)
   {
-      return distance_policy_select<
-#ifndef BOOST_NO_LIMITS_COMPILE_TIME_CONSTANTS
-         std::numeric_limits<Incrementable>::is_specialized
-#else
-          // Causes warnings with GCC, but how else can I detect numeric types
-          // at compile-time?
-          (boost::is_convertible<int,Incrementable>::value &&
-           boost::is_convertible<Incrementable,int>::value)
-#endif
-           >::template policy<Distance, Incrementable>::distance(start, finish);
+    
+      return distance_policy_select<(
+          is_numeric<Incrementable>::value)>::template
+          policy<Distance, Incrementable>::distance(start, finish);
   }
   
 } // namespace detail
@@ -129,20 +161,11 @@ namespace detail {
 template <class Incrementable>
 struct counting_iterator_traits {
  private:
-    typedef typename detail::counting_iterator_traits_select<(
-#ifndef BOOST_NO_LIMITS_COMPILE_TIME_CONSTANTS
-        std::numeric_limits<Incrementable>::is_specialized
-#else
-        // Causes warnings with GCC, but how else can I detect numeric types at
-        // compile-time?
-        (boost::is_convertible<int,Incrementable>::value &&
-         boost::is_convertible<Incrementable,int>::value)
-#endif
-    )>::template traits<Incrementable> traits;
+    typedef ::boost::detail::counting_iterator_traits_select<(
+        ::boost::detail::is_numeric<Incrementable>::value
+        )> binder;
+    typedef typename binder::template traits<Incrementable> traits;
  public:
-    typedef Incrementable value_type;
-    typedef const Incrementable& reference;
-    typedef const value_type* pointer;
     typedef typename traits::difference_type difference_type;
     typedef typename traits::iterator_category iterator_category;
 };
@@ -161,17 +184,31 @@ struct counting_iterator_policies : public default_iterator_policies
     }
 };
 
+// A type generator for counting iterators
+template <class Incrementable>
+struct counting_iterator_generator
+{
+    typedef counting_iterator_traits<Incrementable> traits;
+    
+    typedef iterator_adaptor<Incrementable,
+        counting_iterator_policies<Incrementable>,
+        Incrementable,
+        const Incrementable&,
+        const Incrementable*,
+        typename traits::iterator_category,
+        typename traits::difference_type
+    > type;
+};
+
 // Manufacture a counting iterator for an arbitrary incrementable type
 template <class Incrementable>
-inline iterator_adaptor<Incrementable,
-    counting_iterator_policies<Incrementable>,
-    counting_iterator_traits<Incrementable> >
-counting_iterator(Incrementable x)
+inline typename counting_iterator_generator<Incrementable>::type
+make_counting_iterator(Incrementable x)
 {
-    return iterator_adaptor<Incrementable,
-        counting_iterator_policies<Incrementable>,
-        counting_iterator_traits<Incrementable> >(x);
+  typedef typename counting_iterator_generator<Incrementable>::type result_t;
+  return result_t(x);
 }
+
 
 } // namespace boost
 
