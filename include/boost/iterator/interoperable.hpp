@@ -39,7 +39,7 @@ namespace boost
     : mpl::true_
 #else
     : mpl::or_<
-        is_convertible< A, B >
+          is_convertible< A, B >
         , is_convertible< B, A > >
 #endif
   { 

@@ -23,10 +23,12 @@ namespace boost
       : iterator_traits<Iterator>
     {
       typedef iterator_tag<
-        typename return_category<Iterator>::type
-        , minimum_category< forward_traversal_tag
-                            ,typename traversal_category<Iterator>::type >::type 
-        > iterator_category;
+          typename return_category<Iterator>::type
+        , typename minimum_category<
+              forward_traversal_tag
+            , typename traversal_category<Iterator>::type
+          >::type 
+      > iterator_category;
     };
 
   } // namespace detail
@@ -34,13 +36,13 @@ namespace boost
   template <class Predicate, class Iterator>
   class filter_iterator
       : public iterator_adaptor<
-           filter_iterator<Predicate, Iterator>, Iterator
-           , detail::filter_iterator_traits<Iterator>
+            filter_iterator<Predicate, Iterator>, Iterator
+          , detail::filter_iterator_traits<Iterator>
         >
   {
       typedef iterator_adaptor<
-           filter_iterator<Predicate, Iterator>, Iterator
-          , detail::filter_iterator_traits<Iterator>
+          filter_iterator<Predicate, Iterator>, Iterator
+        , detail::filter_iterator_traits<Iterator>
       > super_t;
 
       friend class iterator_core_access;

@@ -44,29 +44,31 @@ namespace boost
 
     template <class T>
     struct has_element_type
+        : mpl::bool_<
+              mpl::if_<
+                  is_class<T>
+                , ::boost::detail::aux::has_element_type<T>
+                , mpl::false_
+              >::type::value
+          >
     {
-      typedef typename mpl::if_<
-          is_class<T>
-        , aux::has_element_type<T>
-        , mpl::false_
-          >::type type;
     };
 # else
     template <class T>
     struct has_element_type
-        : mpl::false_c {};
+        : mpl::false_ {};
     
     template <class T>
     struct has_element_type<boost::shared_ptr<T> >
-        : mpl::true_c {};
+        : mpl::true_ {};
     
     template <class T>
     struct has_element_type<boost::scoped_ptr<T> >
-        : mpl::true_c {};
+        : mpl::true_ {};
     
     template <class T>
     struct has_element_type<std::auto_ptr<T> >
-        : mpl::true_c {};
+        : mpl::true_ {};
 # endif 
   
     // Metafunction returning the nested element_type typedef
@@ -86,7 +88,10 @@ namespace boost
     template <class Iter>
     struct indirect_defaults
       : mpl::if_<
-            has_element_type<typename iterator_traits<Iter>::value_type>
+            mpl::and_<
+                is_class<typename iterator_traits<Iter>::value_type>
+              , has_element_type<typename iterator_traits<Iter>::value_type>
+            >
           , smart_pointer_traits<typename iterator_traits<Iter>::value_type>
           , iterator_traits<typename iterator_traits<Iter>::value_type>
         >::type

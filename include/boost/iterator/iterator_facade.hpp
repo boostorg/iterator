@@ -31,12 +31,16 @@ namespace boost
     // enable_if_interoperable falls back to always enabled for compilers
     // that don't support enable_if or is_convertible. 
     //
-    template <class Facade1,
-              class Facade2,
-              class Return>
-    struct enable_if_interoperable :
-      ::boost::detail::enable_if< is_convertible< Facade1, Facade2 >
-                                  , Return >
+    template <
+        class Facade1
+      , class Facade2
+      , class Return
+    >
+    struct enable_if_interoperable
+      : ::boost::detail::enable_if<
+           is_convertible<Facade1, Facade2>
+         , Return
+        >
     {
 # if BOOST_WORKAROUND(BOOST_MSVC, <= 1200)
         typedef Return type;
@@ -285,155 +289,73 @@ namespace boost
   // a == b;
   // ----------------
   //
-  template <class Derived1,
-            class Traits1,
-            class Derived2,
-            class Traits2>
-  inline
-  typename detail::enable_if_interoperable<Derived1,
-                                           Derived2,
-                                           bool>::type
-  operator==(iterator_facade<Derived1, Traits1> const& lhs,
-             iterator_facade<Derived2, Traits2> const& rhs)
-  {
-    // For those compilers that do not support enable_if
-    BOOST_STATIC_ASSERT((is_interoperable< Derived1, Derived2 >::value));
 
-    return iterator_core_access::equal(lhs.derived(),
-                                       rhs.derived());
+# define BOOST_ITERATOR_FACADE_INTEROP(op, result_type, condition, return_prefix, base_op)  \
+  template <class Derived1, class Traits1, class Derived2, class Traits2>                   \
+  inline typename detail::enable_if_interoperable<                                          \
+      Derived1, Derived2, result_type                                                       \
+  >::type                                                                                   \
+  operator op(                                                                              \
+      iterator_facade<Derived1, Traits1> const& lhs                                         \
+    , iterator_facade<Derived2, Traits2> const& rhs)                                        \
+  {                                                                                         \
+      /* For those compilers that do not support enable_if */                               \
+      BOOST_STATIC_ASSERT((                                                                 \
+          is_interoperable< Derived1, Derived2 >::value                                     \
+          && condition                                                                      \
+      ));                                                                                   \
+      return_prefix iterator_core_access::base_op(                                          \
+          rhs.derived(), lhs.derived());                                                    \
   }
 
-  template <class Derived1,
-            class Traits1,
-            class Derived2,
-            class Traits2>
-  inline
-  typename detail::enable_if_interoperable<Derived1,
-                                           Derived2,
-                                           bool>::type
-  operator!=(iterator_facade<Derived1, Traits1> const& lhs,
-             iterator_facade<Derived2, Traits2> const& rhs)
-  {
-    // For those compilers that do not support enable_if
-    BOOST_STATIC_ASSERT((is_interoperable< Derived1, Derived2 >::value));
+# define BOOST_ITERATOR_FACADE_RELATION(op, test, base_op)  \
+  BOOST_ITERATOR_FACADE_INTEROP(                            \
+      op                                                    \
+    , bool                                                  \
+    , true                                                  \
+    , return test                                           \
+    , base_op                                               \
+  )
 
-    return !iterator_core_access::equal(lhs.derived(),
-                                        rhs.derived());
+  BOOST_ITERATOR_FACADE_RELATION(==, (bool), equal)
+  BOOST_ITERATOR_FACADE_RELATION(!=, !, equal)
+
+  BOOST_ITERATOR_FACADE_RELATION(<, 0>, distance_to)
+  BOOST_ITERATOR_FACADE_RELATION(>, 0<, distance_to)
+  BOOST_ITERATOR_FACADE_RELATION(<=, 0>=, distance_to)
+  BOOST_ITERATOR_FACADE_RELATION(>=, 0<=, distance_to)
+# undef BOOST_ITERATOR_FACADE_RELATION
+
+  BOOST_ITERATOR_FACADE_INTEROP(
+      -
+    , typename Traits1::difference_type
+    , (is_same<
+           BOOST_ARG_DEP_TYPENAME Traits1::difference_type
+         , BOOST_ARG_DEP_TYPENAME Traits2::difference_type
+       >::value)
+    , return
+    , distance_to )
+# undef BOOST_ITERATOR_FACADE_INTEROP
+
+# define BOOST_ITERATOR_FACADE_PLUS(args)   \
+  template <class Derived, class Traits>    \
+  inline Derived operator+ args             \
+  {                                         \
+      Derived tmp(i.derived());             \
+      return tmp += n;                      \
   }
 
-  template <class Derived1,
-            class Traits1,
-            class Derived2,
-            class Traits2>
-  inline
-  typename detail::enable_if_interoperable<Derived1,
-                                           Derived2,
-                                           bool>::type
-  operator<(iterator_facade<Derived1, Traits1> const& lhs,
-             iterator_facade<Derived2, Traits2> const& rhs)
-  {
-    // For those compilers that do not support enable_if
-    BOOST_STATIC_ASSERT((is_interoperable< Derived1, Derived2 >::value));
+BOOST_ITERATOR_FACADE_PLUS((
+    iterator_facade<Derived, Traits> const& i
+  , typename Traits::difference_type n
+))
 
-    return iterator_core_access::distance_to(lhs.derived(),
-                                             rhs.derived()) > 0;
-  }
-
-  template <class Derived1,
-            class Traits1,
-            class Derived2,
-            class Traits2>
-  inline
-  typename detail::enable_if_interoperable<Derived1,
-                                           Derived2,
-                                           bool>::type
-  operator>(iterator_facade<Derived1, Traits1> const& lhs,
-             iterator_facade<Derived2, Traits2> const& rhs)
-  {
-    // For those compilers that do not support enable_if
-    BOOST_STATIC_ASSERT((is_interoperable< Derived1, Derived2 >::value));
-
-    return iterator_core_access::distance_to(lhs.derived(),
-                                             rhs.derived()) < 0;
-  }
-
-  template <class Derived1,
-            class Traits1,
-            class Derived2,
-            class Traits2>
-  inline
-  typename detail::enable_if_interoperable<Derived1,
-                                           Derived2,
-                                           bool>::type
-  operator<=(iterator_facade<Derived1, Traits1> const& lhs,
-             iterator_facade<Derived2, Traits2> const& rhs)
-  {
-    // For those compilers that do not support enable_if
-    BOOST_STATIC_ASSERT((is_interoperable< Derived1, Derived2 >::value));
-
-    return iterator_core_access::distance_to(lhs.derived(),
-                                             rhs.derived()) >= 0;
-  }
-
-  template <class Derived1,
-            class Traits1,
-            class Derived2,
-            class Traits2>
-  inline
-  typename detail::enable_if_interoperable<Derived1,
-                                           Derived2,
-                                           bool>::type
-  operator>=(iterator_facade<Derived1, Traits1> const& lhs,
-             iterator_facade<Derived2, Traits2> const& rhs)
-  {
-    // For those compilers that do not support enable_if
-    BOOST_STATIC_ASSERT((is_interoperable< Derived1, Derived2 >::value));
-
-    return iterator_core_access::distance_to(lhs.derived(),
-                                             rhs.derived()) <= 0;
-  }
-
-  template <class Derived,
-            class Traits>
-  inline
-  Derived operator+(iterator_facade<Derived, Traits> const& i,
-                    typename Traits::difference_type n)
-  {
-    Derived tmp(i.derived());
-    return tmp += n;
-  }
-
-  template <class Derived,
-            class Traits>
-  inline
-  Derived operator+(typename Traits::difference_type n,
-                    iterator_facade<Derived, Traits> const& i)
-  {
-    Derived tmp(i.derived());
-    return tmp += n;
-  }
-
-  template <class Derived1,
-            class Traits1,
-            class Derived2,
-            class Traits2>
-  inline
-  typename detail::enable_if_interoperable<Derived1,
-                                           Derived2,
-                                           typename Traits1::difference_type>::type
-  operator-(iterator_facade<Derived1, Traits1> const& lhs,
-            iterator_facade<Derived2, Traits2> const& rhs)
-  {
-    // For those compilers that do not support enable_if
-    BOOST_STATIC_ASSERT((is_interoperable< Derived1, Derived2 >::value));
-
-    BOOST_STATIC_ASSERT((is_same<BOOST_ARG_DEP_TYPENAME Traits1::difference_type,
-                                 BOOST_ARG_DEP_TYPENAME Traits2::difference_type>::value));
-
-    return iterator_core_access::distance_to(rhs.derived(),
-                                             lhs.derived());
-  }
-
+BOOST_ITERATOR_FACADE_PLUS((
+    typename Traits::difference_type n
+  , iterator_facade<Derived, Traits> const& i
+))
+# undef BOOST_ITERATOR_FACADE_PLUS
+    
 } // namespace boost
 
 #include <boost/iterator/detail/config_undef.hpp>

@@ -32,14 +32,14 @@ namespace boost
     template <class Traits, class Other>
     struct same_category_and_difference
       : mpl::and_<
-          is_same<
-              typename Traits::iterator_category
-            , typename Other::iterator_category
-          >
+            is_same<
+                typename Traits::iterator_category
+              , typename Other::iterator_category
+            >
           , is_same<
-              typename Traits::iterator_category
-            , typename Other::iterator_category
-          >
+                typename Traits::iterator_category
+              , typename Other::iterator_category
+            >
         >
     {};
 
@@ -110,7 +110,8 @@ namespace boost
 #  else 
           ::boost::is_convertible<From, To>
 #  endif 
-      ,detail::enable_type >::type type;
+        , detail::enable_type
+      >::type type;
 # endif 
   };
 
@@ -121,18 +122,22 @@ namespace boost
   // argument ordering is different from the std::iterator template, so that default 
   // arguments can be used effectivly.
   //
-  template <class Iterator,
-            class ValueType        = typename detail::iterator_traits<Iterator>::value_type,
-            class Reference        = ValueType&,
-            class Pointer          = ValueType*,
-            class IteratorCategory = typename detail::iterator_traits<Iterator>::iterator_category,
-            class DifferenceType   = typename detail::iterator_traits<Iterator>::difference_type >
+  template <
+      class Iterator
+    , class ValueType = typename detail::iterator_traits<Iterator>::value_type
+    , class Reference = ValueType&
+    , class Pointer = ValueType*
+    , class IteratorCategory = typename detail::iterator_traits<Iterator>::iterator_category
+    , class DifferenceType = typename detail::iterator_traits<Iterator>::difference_type
+  >
   struct iterator_traits_adaptor
-    : iterator<IteratorCategory,
-               ValueType,
-               DifferenceType,
-               Pointer,
-               Reference>
+    : iterator<
+          IteratorCategory
+        , ValueType
+        , DifferenceType
+        , Pointer
+        , Reference
+      >
   {
   };
 
@@ -141,58 +146,60 @@ namespace boost
   //
   template <
       class Derived
-      , class Iterator
-      , class Traits = detail::iterator_traits<Iterator>
+    , class Iterator
+    , class Traits = detail::iterator_traits<Iterator>
   >
   class iterator_adaptor
       : public iterator_facade<Derived,Traits>
   {
-    friend class iterator_core_access;
+      friend class iterator_core_access;
 
-  public:
-    iterator_adaptor() {}
+   public:
+      iterator_adaptor() {}
 
-    explicit iterator_adaptor(Iterator iter)
-      : m_iterator(iter)
-    {
-    }
+      explicit iterator_adaptor(Iterator iter)
+          : m_iterator(iter)
+      {
+      }
 
-    Iterator base() const { return m_iterator; }
+      Iterator base() const
+        { return m_iterator; }
 
-  protected:
-    // Core iterator interface for iterator_facade
-    // 
+   protected:
+      // Core iterator interface for iterator_facade
+      // 
 
-    typename Traits::reference dereference() const { return *m_iterator; }
+      typename Traits::reference dereference() const
+        { return *m_iterator; }
 
-    template <
-        class OtherDerived, class OtherIterator, class OtherTraits
-    >   
-    bool equal(iterator_adaptor<OtherDerived,OtherIterator,OtherTraits> const& x) const
-    {
-        BOOST_STATIC_ASSERT(
-            (detail::same_category_and_difference<Traits,OtherTraits>::value)
-            );
-        return m_iterator == x.base();
-    }
+      template <
+          class OtherDerived, class OtherIterator, class OtherTraits
+      >   
+      bool equal(iterator_adaptor<OtherDerived,OtherIterator,OtherTraits> const& x) const
+      {
+          BOOST_STATIC_ASSERT(
+              (detail::same_category_and_difference<Traits,OtherTraits>::value)
+              );
+          return m_iterator == x.base();
+      }
   
-    void advance(typename Traits::difference_type n)
-    {
-        m_iterator += n;
-    }
+      void advance(typename Traits::difference_type n)
+      {
+          m_iterator += n;
+      }
   
-    void increment() { ++m_iterator; }
-    void decrement() { --m_iterator; }
+      void increment() { ++m_iterator; }
+      void decrement() { --m_iterator; }
 
-    template <class OtherDerived, class OtherIterator, class OtherTraits>   
-    typename Traits::difference_type distance_to(
-        iterator_adaptor<OtherDerived, OtherIterator, OtherTraits> const& y) const
-    {
-        BOOST_STATIC_ASSERT(
-            (detail::same_category_and_difference<Traits,OtherTraits>::value)
-            );
-        return y.base() - m_iterator;
-    }
+      template <class OtherDerived, class OtherIterator, class OtherTraits>   
+      typename Traits::difference_type distance_to(
+          iterator_adaptor<OtherDerived, OtherIterator, OtherTraits> const& y) const
+      {
+          BOOST_STATIC_ASSERT(
+              (detail::same_category_and_difference<Traits,OtherTraits>::value)
+              );
+          return y.base() - m_iterator;
+      }
 
    private: // data members
       Iterator m_iterator;
