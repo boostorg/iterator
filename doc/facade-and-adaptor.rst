@@ -839,6 +839,10 @@ Class template ``iterator_adaptor``
       {
           return y.base() - m_iterator;
       }
+
+      Base& base_reference()
+        { return m_iterator; }
+
       Base const& base_reference() const
         { return m_iterator; }
 
@@ -905,8 +909,8 @@ types for ``iterator_adaptor``.
 
 ``explicit iterator_adaptor(Base iter);``
 
-:Returns: An instance of ``iterator_adaptor`` with 
-    the position specified by ``iter``.
+:Returns: An instance of ``iterator_adaptor`` whose base() member
+    function returns a copy of iter.
 
 ``Base base() const;``
 
@@ -1308,8 +1312,8 @@ expression ``p(x)`` must be valid where ``p`` is an object of type
 Counting iterator
 -----------------
 
-The counting iterator adaptor implements dereference by returning the
-current value of the base object. The other operations are implemented
+The counting iterator adaptor implements dereference by returning a
+reference to the base object. The other operations are implemented
 by the base object, as per the inheritance from ``iterator_adaptor``.
 
 
@@ -1339,7 +1343,7 @@ Class template ``counting_iterator``
 
       typename super_t::reference dereference() const
       {
-	  return this->base_reference();
+      	  return this->base_reference();
       }
 
       // Why is this complicated? Why not let the default impl handle this? -JGS
