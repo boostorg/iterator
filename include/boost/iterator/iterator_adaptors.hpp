@@ -34,7 +34,7 @@ namespace boost {
       template<typename T>
       struct base
       {
-#ifdef BOOST_MSVC 
+#if BOOST_WORKAROUND(BOOST_MSVC, <= 1300)
         // Disable enable if for MSVC
         typedef T type;
 
@@ -167,6 +167,12 @@ namespace boost {
   {
   };
 
+#if BOOST_WORKAROUND(BOOST_MSVC, <=1200)
+#define BOOST_ARG_DEP_TYPENAME
+#else
+#define BOOST_ARG_DEP_TYPENAME typename
+#endif
+
   template <class Base1,
             class Base2>
   inline
@@ -178,8 +184,8 @@ namespace boost {
   {
     // For those compilers that do not support enable_if
     BOOST_STATIC_ASSERT((detail::is_interoperable< 
-                         typename Base1::derived_t,
-                         typename Base2::derived_t >::value));
+                         BOOST_ARG_DEP_TYPENAME Base1::derived_t,
+                         BOOST_ARG_DEP_TYPENAME Base2::derived_t >::value));
 
     return iterator_core_access::equal(lhs.derived(),
                                        rhs.derived());
@@ -196,8 +202,8 @@ namespace boost {
   {
     // For those compilers that do not support enable_if
     BOOST_STATIC_ASSERT((detail::is_interoperable< 
-                         typename Base1::derived_t,
-                         typename Base2::derived_t >::value));
+                         BOOST_ARG_DEP_TYPENAME Base1::derived_t,
+                         BOOST_ARG_DEP_TYPENAME Base2::derived_t >::value));
 
     return !iterator_core_access::equal(lhs.derived(),
                                         rhs.derived());
@@ -214,8 +220,8 @@ namespace boost {
   {
     // For those compilers that do not support enable_if
     BOOST_STATIC_ASSERT((detail::is_interoperable< 
-                         typename Base1::derived_t,
-                         typename Base2::derived_t >::value));
+                         BOOST_ARG_DEP_TYPENAME Base1::derived_t,
+                         BOOST_ARG_DEP_TYPENAME Base2::derived_t >::value));
 
     return iterator_core_access::distance_to(lhs.derived(),
                                              rhs.derived()) > 0;
@@ -232,8 +238,8 @@ namespace boost {
   {
     // For those compilers that do not support enable_if
     BOOST_STATIC_ASSERT((detail::is_interoperable< 
-                         typename Base1::derived_t,
-                         typename Base2::derived_t >::value));
+                         BOOST_ARG_DEP_TYPENAME Base1::derived_t,
+                         BOOST_ARG_DEP_TYPENAME Base2::derived_t >::value));
 
     return iterator_core_access::distance_to(lhs.derived(),
                                              rhs.derived()) < 0;
@@ -250,8 +256,8 @@ namespace boost {
   {
     // For those compilers that do not support enable_if
     BOOST_STATIC_ASSERT((detail::is_interoperable< 
-                         typename Base1::derived_t,
-                         typename Base2::derived_t >::value));
+                         BOOST_ARG_DEP_TYPENAME Base1::derived_t,
+                         BOOST_ARG_DEP_TYPENAME Base2::derived_t >::value));
 
     return iterator_core_access::distance_to(lhs.derived(),
                                              rhs.derived()) >= 0;
@@ -268,8 +274,8 @@ namespace boost {
   {
     // For those compilers that do not support enable_if
     BOOST_STATIC_ASSERT((detail::is_interoperable< 
-                         typename Base1::derived_t,
-                         typename Base2::derived_t >::value));
+                         BOOST_ARG_DEP_TYPENAME Base1::derived_t,
+                         BOOST_ARG_DEP_TYPENAME Base2::derived_t >::value));
 
     return iterator_core_access::distance_to(lhs.derived(),
                                              rhs.derived()) <= 0;
@@ -311,11 +317,11 @@ namespace boost {
   {
     // For those compilers that do not support enable_if
     BOOST_STATIC_ASSERT((detail::is_interoperable< 
-                         typename Base1::derived_t,
-                         typename Base2::derived_t >::value));
+                         BOOST_ARG_DEP_TYPENAME Base1::derived_t,
+                         BOOST_ARG_DEP_TYPENAME Base2::derived_t >::value));
 
-    BOOST_STATIC_ASSERT((is_same<typename Base1::difference_type,
-                                 typename Base2::difference_type>::value));
+    BOOST_STATIC_ASSERT((is_same<BOOST_ARG_DEP_TYPENAME Base1::difference_type,
+                                 BOOST_ARG_DEP_TYPENAME Base2::difference_type>::value));
 
     return iterator_core_access::distance_to(rhs.derived(),
                                              lhs.derived());
