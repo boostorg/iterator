@@ -46,14 +46,15 @@ objects for several reasons:
 Usage
 -----
 
-The user of ``iterator_facade`` derives his iterator class from an
-specialization of ``iterator_facade`` which takes the derived iterator
-class as the first template parameter.  The order of the other
-template parameters to ``iterator_facade`` have been carefully chosen
-to take advantage of useful defaults.  For example, when defining a
-constant lvalue iterator, the user can pass a const-qualified version
-of the iterator's ``value_type`` as ``iterator_facade``\ 's ``Value``
-parameter and omit the ``Reference`` parameter which follows.
+The user of ``iterator_facade`` derives his iterator class from a
+specialization of ``iterator_facade`` and passes the derived
+iterator class as ``iterator_facade``\ 's first template parameter.
+The order of the other template parameters have been carefully
+chosen to take advantage of useful defaults.  For example, when
+defining a constant lvalue iterator, the user can pass a
+const-qualified version of the iterator's ``value_type`` as
+``iterator_facade``\ 's ``Value`` parameter and omit the
+``Reference`` parameter which follows.
 
 The derived iterator class must define member functions implementing
 the iterator's core behaviors.  The following table describes
@@ -150,14 +151,16 @@ into the temporary iterator ``p+n``, which is destroyed when
 
 Writable iterators built with ``iterator_facade`` implement the
 semantics required by the preferred resolution to `issue 299`_ and
-adopted by proposal n1550_: the result of ``p[n]`` is a proxy object
-containing a copy of ``p+n``, and ``p[n] = x`` is equivalent to ``*(p
-+ n) = x``.  This approach will work properly for any random-access
-iterator regardless of the other details of its implementation.  A
-user who knows more about the implementation of her iterator is free
-to implement an ``operator[]`` which returns an lvalue in the derived
-iterator class; it will hide the one supplied by ``iterator_facade``
-from clients of her iterator.
+adopted by proposal n1550_: the result of ``p[n]`` is an object
+convertible to the iterator's ``value_type``, and ``p[n] = x`` is
+equivalent to ``*(p + n) = x`` (Note: This result object may be
+implemented as a proxy containing a copy of ``p+n``).  This approach
+will work properly for any random-access iterator regardless of the
+other details of its implementation.  A user who knows more about
+the implementation of her iterator is free to implement an
+``operator[]`` that returns an lvalue in the derived iterator
+class; it will hide the one supplied by ``iterator_facade`` from
+clients of her iterator.
 
 .. _n1550: http://anubis.dkuug.dk/JTC1/SC22/WG21/docs/papers/2003/n1550.html
 
