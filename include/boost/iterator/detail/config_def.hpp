@@ -18,7 +18,46 @@
 #include <boost/config.hpp> // for prior
 #include <boost/detail/workaround.hpp>
 
-#define BOOST_ITERATOR_CONFIG_DEF // if you get an error here, you have nested config_def #inclusion.
+#ifdef BOOST_ITERATOR_CONFIG_DEF
+# error you have nested config_def #inclusion.
+#else 
+# define BOOST_ITERATOR_CONFIG_DEF
+#endif 
+
+#if BOOST_WORKAROUND(BOOST_MSVC, <= 1300)                                       \
+    || BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x531))                   \
+    || (BOOST_WORKAROUND(BOOST_INTEL_CXX_VERSION, <= 700) && defined(_MSC_VER))
+# define BOOST_NO_LVALUE_RETURN_DETECTION
+
+# if 0 // test code
+  struct v  {};
+
+  typedef  char (&no)[3];
+
+  template <class T>
+  no foo(T const&, ...);
+
+  template <class T>
+  char foo(T&, int);
+
+
+  struct value_iterator
+  {
+      v operator*() const;
+  };
+
+  template <class T>
+  struct lvalue_deref_helper
+  {
+      static T& x;
+      enum { value = (sizeof(foo(*x,0)) == 1) };
+  };
+
+  int z2[(lvalue_deref_helper<v*>::value == 1) ? 1 : -1];
+  int z[(lvalue_deref_helper<value_iterator>::value) == 1 ? -1 : 1 ];
+# endif 
+
+#endif
 
 #if BOOST_WORKAROUND(BOOST_MSVC,  <= 1300)                      \
  || BOOST_WORKAROUND(__GNUC__, <= 2 && __GNUC_MINOR__ <= 95)    \

@@ -340,7 +340,7 @@ namespace boost
   template <
       class Derived             // The derived iterator type being constructed
     , class Value
-    , class AccessCategory
+    , unsigned AccessCategory
     , class TraversalCategory
     , class Reference   = Value&
     , class Difference  = std::ptrdiff_t

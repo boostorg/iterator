@@ -302,7 +302,7 @@ namespace boost {
     // writability at the level of input iterator/output iterator.
     template <>
     struct iterator_tag_base<
-        readable_iterator|lvalue_iterator
+        access_c<(readable_iterator|lvalue_iterator)>
       , single_pass_traversal_tag
     >
     {
@@ -378,7 +378,7 @@ namespace boost {
       >::type
   {
       typedef detail::access_c<(Access & ~lvalue_iterator)> access_type;
-      BOOST_STATIC_CONSTANT(iterator_access, access_type::value);
+      BOOST_STATIC_CONSTANT(iterator_access, value = (iterator_access)(Access & ~lvalue_iterator));
       typedef TraversalTag traversal;
   };
 
@@ -389,8 +389,8 @@ namespace boost {
     struct is_boost_iterator_tag
         : mpl::false_ {};
 
-    template <class R, class T>
-    struct is_boost_iterator_tag<iterator_tag<R,T> >
+    template <unsigned A, class T>
+    struct is_boost_iterator_tag<iterator_tag<A,T> >
         : mpl::true_ {};
 # else
     template <class T>
@@ -399,8 +399,8 @@ namespace boost {
         typedef char (&yes)[1];
         typedef char (&no)[2];
         
-        template <class R, class U>
-        static yes test(mpl::identity<iterator_tag<R,U> >*);
+        template <unsigned A, class U>
+        static yes test(mpl::identity<iterator_tag<A,U> >*);
         static no test(...);
     
         static mpl::identity<T>* inst;
