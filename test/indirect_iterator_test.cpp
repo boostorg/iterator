@@ -116,7 +116,7 @@ main()
 #endif
       > indirect_iterator;
 
-    typedef boost::indirect_iterator<dummyT* const*
+    typedef boost::indirect_iterator<dummyT const* const*
 #ifdef BOOST_NO_PARTIAL_SPECIALIZATION
         , dummyT
 #endif
@@ -137,7 +137,7 @@ main()
 
     
 #if 0 // BOOST_NO_STD_ITERATOR_TRAITS
-    dummyT*const* const_ptr = ptr;
+    dummyT const*const* const_ptr = ptr;
     boost::random_access_iterator_test(boost::make_indirect_iterator(const_ptr), N, array);
 #endif
     boost::const_nonconst_iterator_test(i, ++j);
