@@ -223,7 +223,7 @@ namespace boost {
         : mpl::apply_if< 
 	  is_new_iterator_tag<CategoryTag>
 	  , get_traversal_category<CategoryTag>
-	  , iter_category_to_return<CategoryTag, Value>
+	  , iter_category_to_traversal<CategoryTag>
 	>
     {
     };
