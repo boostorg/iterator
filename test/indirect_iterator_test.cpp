@@ -82,7 +82,7 @@ struct indirect_iterator_pair_generator
     
     typedef boost::indirect_iterator<
         typename Container::iterator
-        , indirect_const_iterator_traits<typename Container::iterator>
+        , indirect_const_iterator_traits<typename Container::const_iterator>
     > const_iterator;
 };
 
@@ -95,11 +95,17 @@ namespace boost { namespace detail
   template<> struct iterator_traits<dummyT*>
   : ptr_iter_traits<dummyT> {};
   
+  template<> struct iterator_traits<dummyT*const>
+  : ptr_iter_traits<dummyT> {};
+  
   template<> struct iterator_traits<dummyT const*>
   : ptr_iter_traits<dummyT, dummyT const> {};
   
   template<> struct iterator_traits<dummyT**>
   : ptr_iter_traits<dummyT*> {};
+  
+  template<> struct iterator_traits<dummyT*const*>
+  : ptr_iter_traits<dummyT*const> {};
   
   template<> struct iterator_traits<dummyT const*const*>
   : ptr_iter_traits<dummyT const*, dummyT const*const> {};
@@ -155,7 +161,7 @@ void more_indirect_iterator_tests()
     typedef boost::indirect_iterator<iterator_set::iterator> indirect_set_iterator;
     typedef boost::indirect_iterator<
         iterator_set::iterator
-        , indirect_const_iterator_traits<iterator_set::iterator>
+        , indirect_const_iterator_traits<iterator_set::const_iterator>
         > const_indirect_set_iterator;
 
     indirect_set_iterator sb(iter_set.begin());
@@ -202,7 +208,7 @@ main()
     
     typedef boost::indirect_iterator<
         shared_t::iterator
-        , indirect_const_iterator_traits<shared_t::iterator>
+        , indirect_const_iterator_traits<shared_t::const_iterator>
         > c_iter_t;
 
 # ifndef NO_MUTABLE_CONST_RA_ITERATOR_INTEROPERABILITY
@@ -221,7 +227,7 @@ main()
 
       typedef boost::indirect_iterator<dummyT**> indirect_iterator;
 
-      typedef boost::indirect_iterator<dummyT**, indirect_const_iterator_traits<dummyT**> >
+      typedef boost::indirect_iterator<dummyT**, indirect_const_iterator_traits<dummyT* const*> >
           const_indirect_iterator;
 
       indirect_iterator i(ptr);
