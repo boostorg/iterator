@@ -262,10 +262,10 @@ of ``reference``; the same as ``operator*``. However, going in this
 direction would mean that an iterator satisfying the old Random Access
 Iterator requirements would not necessarily be a model of Readable or
 Writable Lvalue Iterator.  Instead we have chosen a design that
-matches the resolution of `issue 299`_: ``operator[]`` is only
-required to return something convertible to the ``value_type`` (for a
-Readable Iterator), and is required to support assignment ``i[n] = t``
-(for a Writable Iterator).
+matches the preferred resolution of `issue 299`_: ``operator[]`` is
+only required to return something convertible to the ``value_type``
+(for a Readable Iterator), and is required to support assignment
+``i[n] = t`` (for a Writable Iterator).
 
 
 ===============

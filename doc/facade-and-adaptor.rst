@@ -4,7 +4,9 @@
 
 :Author: David Abrahams, Jeremy Siek, Thomas Witt
 :Contact: dave@boost-consulting.com, jsiek@osl.iu.edu, witt@ive.uni-hannover.de
-:organization: `Boost Consulting`_, Indiana University `Open Systems Lab`_, University of Hanover `Institute for Transport Railway Operation and Construction`_
+:organization: `Boost Consulting`_, Indiana University `Open Systems
+               Lab`_, University of Hanover `Institute for Transport
+               Railway Operation and Construction`_
 :date: $Date$
 :Number: N1476=03-0059
 :copyright: Copyright Dave Abrahams, Jeremy Siek, and Thomas Witt 2003. All rights reserved
@@ -268,30 +270,41 @@ invariants of the iterator.
 ``operator[]``
 ================
 
-The indexing operator for a generalized iterator presents special challenges;
+The indexing operator for a generalized iterator presents special
+challenges.  A random access iterator's ``operator[]`` is only
+required to return something convertible to its ``value_type``.
+Requiring that it return an lvalue would rule out currently-legal
+random-access iterators which hold the referenced value in a data
+member (e.g. `counting_iterator`_), because ``*(p+n)`` is a reference
+into the temporary iterator ``p+n``, which is destroyed when
+``operator[]`` returns.
 
 Writable iterators built with ``iterator_facade`` implement the
-semantics required by the proposed resolution to issue `299`_ and
-adopted by proposal `n1477`_: ``p[n] = x`` is equivalent to ``*(p + n)
-= x``.  To make that possible regardless of the other details of the
-iterator's implementation, the return type of ``operator[]`` is a
-proxy object containing a copy of 
+semantics required by the preferred resolution to `issue 299`_ and
+adopted by proposal `n1477`_: the result of ``p[n]`` is a proxy object
+containing a copy of ``p+n``, and ``p[n] = x`` is equivalent to ``*(p
++ n) = x``.  This approach will work properly for any random-access
+iterator regardless of the other details of its implementation.  A
+user who knows more about the implementation of her iterator is free
+to implement an ``operator[]`` which returns an lvalue in the derived
+iterator class; it will hide the one supplied by ``iterator_facade``
+from clients of her iterator.
 
-result of indexing the iterator is assignable
-iterator
-
-.. _`299`: http://anubis.dkuug.dk/jtc1/sc22/wg21/docs/lwg-active.html#299
+.. _issue 299: http://anubis.dkuug.dk/jtc1/sc22/wg21/docs/lwg-active.html#299
 
 ``operator->``
 ==============
 
-For ``readable iterators`` the reference type is only required to be
-convertible to the value type, but accessing members through
-``operator->()`` must still be possible. As a result a conformant
-``readable iterator`` must return a proxy from ``operator->()``.
+The ``reference`` type of a readable iterator (and today's input
+iterator) need not in fact be a reference, so long as it is
+convertible to the iterator's ``value_type``.  When the ``value_type``
+is a class, however, it must still be possible to access members
+through ``operator->``.  Therefore, an iterator whose ``reference``
+type is not in fact a reference must return a proxy containing a copy
+of the referenced value from its ``operator->``.
 
 This proposal does not explicitly specify the return type for
-``operator->()`` and ``operator[]()``. Instead it requires each
+``operator->`` and ``operator[]``. Instead it requires each
 ``iterator_facade`` instantiation to meet the requirements of its
 ``iterator_category``.
 
@@ -351,6 +364,8 @@ which were easily implemented using ``iterator_adaptor``:
 
 * ``filter_iterator``, which provides a view of an iterator range in
   which some elements of the underlying range are skipped.
+
+.. _counting_iterator:
 
 * ``counting_iterator``, which adapts any incrementable type
   (e.g. integers, iterators) so that incrementing/decrementing the
@@ -472,8 +487,8 @@ Class template ``iterator_facade``
       typedef Category iterator_category;
 
       reference operator*() const;
-      /* see details */ operator->() const;
-      /* see details */ operator[](difference_type n) const;
+      /* see below */ operator->() const;
+      /* unspecified */ operator[](difference_type n) const;
       Derived& operator++();
       Derived operator++(int);
       Derived& operator--();
@@ -606,49 +621,36 @@ through member functions of class ``iterator_core_access``.
 
 :Returns: ``static_cast<Derived const*>(this)->dereference()``
 
-*see details* ``operator->() const;``
+*see below* ``operator->() const;``
 
 :Requires: 
 :Effects: 
 :Postconditions: 
 
-:Returns: If ``iterator_category`` is a derived class of
-  ``readable_lvalue_iterator_tag`` then the return type is ``pointer``
-  and the value returned is
-  ::
+:Returns: If ``X::reference`` is a reference type, returns an object
+  of type ``X::pointer`` equal to::
 
     &static_cast<Derived const*>(this)->dereference()
 
-  Otherwise a proxy object is returned. The type of
-  the proxy is implementation defined. The proxy class must have
-  the following member function.
-  ::
+  Otherwise returns an object of unspecified type such that, given an
+  object ``a`` of type ``X``, ``a->m`` is equivalent to ``(w = *a,
+  *w*.m)`` for some temporary object ``w`` of type ``X::value_type``.
 
-    const value_type* operator->() const;
 
 :Throws: 
 :Complexity: 
 
 
-*see details* ``operator[](difference_type n) const;``
+*unspecified* ``operator[](difference_type n) const;``
 
 :Requires: 
 :Effects: 
 :Postconditions: 
-:Returns: If ``iterator_category`` is a derived class of
-   ``writable_iterator_tag`` then the return type is
-   a proxy object of implementation defined type ``P``
-   with the following member functions.
-   ::
-     
-     operator reference();
-     P& operator=(value_type const&);
 
-   Otherwise the return type is ``value_type`` and the
-   value returned is
-   ::
-
-     static_cast<Derived const*>(this)->dereference()
+:Returns: an object convertible to ``X::reference`` and holding a copy
+     *p* of ``a+n`` such that, for a constant object ``v`` of type
+     ``X::value_type``, ``X::reference(a[n] = v)`` is equivalent
+     to ``p = v``.
 
 :Throws: 
 :Complexity: 
