@@ -538,16 +538,19 @@ Addition to [lib.iterator.synopsis]
   struct readable_iterator_tag { };
   struct writable_iterator_tag { };
   struct swappable_iterator_tag { };
-  struct readable_writable_iterator_tag { };
+  struct readable_writable_iterator_tag
+    : virtual readable_iterator_tag
+    , virtual writable_iterator_tag
+    , virtual swappable_iterator_tag { };
   struct readable_lvalue_iterator_tag { };
   struct writable_lvalue_iterator_tag
-    : virtual public readable_writable_iterator_tag,
-      virtual public readable_lvalue_iterator_tag { };
+    : virtual public readable_writable_iterator_tag
+    , virtual public readable_lvalue_iterator_tag { };
 
   struct incrementable_iterator_tag { };
-  struct single_pass_iterator_tag : public incrementable_iterator_tag { };
-  struct forward_traversal_tag : public single_pass_iterator_tag { };
-  struct bidirectional_traversal_tag : public forward_traversal_tag { };
+  struct single_pass_iterator_tag : incrementable_iterator_tag { };
+  struct forward_traversal_tag : single_pass_iterator_tag { };
+  struct bidirectional_traversal_tag : forward_traversal_tag { };
   struct random_access_traversal_tag : bidirectional_traversal_tag { };
 
   struct null_category_tag { };
