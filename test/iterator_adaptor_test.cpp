@@ -155,8 +155,6 @@ public:
   in_iterator(boost::input_iterator_archetype<T> d) : super_t(d) { }
 };
 
-template <class T> struct undefined;
-
 int
 main()
 {
@@ -198,8 +196,6 @@ main()
     BOOST_STATIC_ASSERT((boost::is_same<Iter1::reference, const int&>::value));
 
     BOOST_STATIC_ASSERT((boost::is_same<Iter1::iterator_category::returns, boost::readable_lvalue_iterator_tag>::value));
-
-    undefined<Iter1::iterator_category> un;
 
 #if !BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x551))
     // Borland has known problems with const
