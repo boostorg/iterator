@@ -18,6 +18,14 @@
 #include <boost/operators.hpp>
 #include <boost/compressed_pair.hpp>
 
+// I was having some problems with VC6. I couldn't tell whether our hack for
+// stock GCC was causing problems so I needed an easy way to turn it on and
+// off. Now we can test the hack with various compilers and still have an "out"
+// if it doesn't work. -dwa 7/31/00
+#if __GNUC__ == 2 && __GNUC_MINOR__ <= 95 && !defined(__STL_USE_NAMESPACES)
+# define BOOST_RELOPS_AMBIGUITY_BUG 1
+#endif
+
 namespace boost {
 
 // Just a "type envelope"; works around some MSVC deficiencies.
@@ -61,62 +69,64 @@ struct default_iterator_policies
 // putting the comparisons in a base class avoids the g++ 
 // ambiguous overload bug due to the relops operators
 
-template <class Derived, class NonconstIterator, class Base>
-struct iterator_comparisons : public Base { };
+#ifdef BOOST_RELOPS_AMBIGUITY_BUG
+template <class Derived, class Base>
+struct iterator_comparisons : Base { };
 
-template <class D1, class D2, class NcIter, class Base1, class Base2>
-inline bool operator==(const iterator_comparisons<D1,NcIter,Base1>& xb, 
-                       const iterator_comparisons<D2,NcIter,Base2>& yb)
+template <class D1, class D2, class Base1, class Base2>
+inline bool operator==(const iterator_comparisons<D1,Base1>& xb, 
+                       const iterator_comparisons<D2,Base2>& yb)
 {
         const D1& x = static_cast<const D1&>(xb);
     const D2& y = static_cast<const D2&>(yb);
     return x.policies().equal(x.iter(), y.iter());
 }
 
-template <class D1, class D2, class NcIter, class Base1, class Base2>
-inline bool operator!=(const iterator_comparisons<D1,NcIter,Base1>& xb, 
-                       const iterator_comparisons<D2,NcIter,Base2>& yb)
+template <class D1, class D2, class Base1, class Base2>
+inline bool operator!=(const iterator_comparisons<D1,Base1>& xb, 
+                       const iterator_comparisons<D2,Base2>& yb)
 {
     const D1& x = static_cast<const D1&>(xb);
     const D2& y = static_cast<const D2&>(yb);
     return !x.policies().equal(x.iter(), y.iter());
 }
 
-template <class D1, class D2, class NcIter, class Base1, class Base2>
-inline bool operator<(const iterator_comparisons<D1,NcIter,Base1>& xb, 
-                      const iterator_comparisons<D2,NcIter,Base2>& yb)
+template <class D1, class D2, class Base1, class Base2>
+inline bool operator<(const iterator_comparisons<D1,Base1>& xb, 
+                      const iterator_comparisons<D2,Base2>& yb)
 {
     const D1& x = static_cast<const D1&>(xb);
     const D2& y = static_cast<const D2&>(yb);
     return x.policies().less(x.iter(), y.iter());
 }
 
-template <class D1, class D2, class NcIter, class Base1, class Base2>
-inline bool operator>(const iterator_comparisons<D1,NcIter,Base1>& xb, 
-                      const iterator_comparisons<D2,NcIter,Base2>& yb)
+template <class D1, class D2, class Base1, class Base2>
+inline bool operator>(const iterator_comparisons<D1,Base1>& xb, 
+                      const iterator_comparisons<D2,Base2>& yb)
 { 
     const D1& x = static_cast<const D1&>(xb);
     const D2& y = static_cast<const D2&>(yb);
     return x.policies().less(y.iter(), x.iter());
 }
 
-template <class D1, class D2, class NcIter, class Base1, class Base2>
-inline bool operator>=(const iterator_comparisons<D1,NcIter,Base1>& xb, 
-                       const iterator_comparisons<D2,NcIter,Base2>& yb)
+template <class D1, class D2, class Base1, class Base2>
+inline bool operator>=(const iterator_comparisons<D1,Base1>& xb, 
+                       const iterator_comparisons<D2,Base2>& yb)
 {
     const D1& x = static_cast<const D1&>(xb);
     const D2& y = static_cast<const D2&>(yb);
     return !x.policies().less(x.iter(), y.iter());
 }
 
-template <class D1, class D2, class NcIter, class Base1, class Base2>
-inline bool operator<=(const iterator_comparisons<D1,NcIter,Base1>& xb, 
-                       const iterator_comparisons<D2,NcIter,Base2>& yb)
+template <class D1, class D2, class Base1, class Base2>
+inline bool operator<=(const iterator_comparisons<D1,Base1>& xb, 
+                       const iterator_comparisons<D2,Base2>& yb)
 {
     const D1& x = static_cast<const D1&>(xb);
     const D2& y = static_cast<const D2&>(yb);
     return !x.policies().less(y.iter(), x.iter());
 }
+#endif
 
 //=============================================================================
 // iterator_adaptor - A generalized adaptor around an existing
@@ -142,13 +152,17 @@ template <class Iterator, class Policies,
 #endif
           class NonconstIterator = Iterator
          >
-struct iterator_adaptor
-    : iterator_comparisons<
+struct iterator_adaptor :
+#ifdef BOOST_RELOPS_AMBIGUITY_BUG
+    iterator_comparisons<
           iterator_adaptor<Iterator,Policies,Traits,NonconstIterator>,
-          NonconstIterator,
+#endif
           boost::iterator<typename Traits::iterator_category, 
               typename Traits::value_type, typename Traits::difference_type,
-              typename Traits::pointer, typename Traits::reference> >
+              typename Traits::pointer, typename Traits::reference>
+#ifdef BOOST_RELOPS_AMBIGUITY_BUG
+>
+#endif
 {
     typedef iterator_adaptor<Iterator, Policies, Traits,NonconstIterator> Self;
 public:
@@ -166,7 +180,7 @@ public:
     template <class OtherTraits>
     iterator_adaptor(const iterator_adaptor<NonconstIterator, Policies, OtherTraits, NonconstIterator>& rhs)
         : m_iter_p(rhs.iter(), rhs.policies()) {}
-
+    
     template <class OtherTraits>
     Self& operator=(const iterator_adaptor<NonconstIterator, Policies, OtherTraits, NonconstIterator>& rhs)
     { 
@@ -258,7 +272,7 @@ typename Traits1::difference_type operator-(
     return x.policies().distance(type<difference_type>(), y.iter(), x.iter());
 }
 
-#if 0
+#ifndef BOOST_RELOPS_AMBIGUITY_BUG
 template <class Iterator1, class Iterator2, class Policies, class Traits1, class Traits2, class NonconstIterator>
 inline bool 
 operator==(const iterator_adaptor<Iterator1,Policies,Traits1,NonconstIterator>& x, const iterator_adaptor<Iterator2,Policies,Traits2,NonconstIterator>& y) {
