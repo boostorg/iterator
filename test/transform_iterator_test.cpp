@@ -5,6 +5,8 @@
 //  to its suitability for any purpose.
 
 //  Revision History
+//  22 Nov 2002 Thomas Witt
+//       Added interoperability check.
 //  28 Oct 2002   Jeremy Siek
 //       Updated for new iterator adaptors.
 //  08 Mar 2001   Jeremy Siek
@@ -15,8 +17,10 @@
 #include <iostream>
 #include <algorithm>
 #include <boost/iterator/iterator_adaptors.hpp>
+#include <boost/iterator/iterator_concepts.hpp>
 #include <boost/iterator/new_iterator_tests.hpp>
 #include <boost/pending/iterator_tests.hpp>
+#include <boost/concept_check.hpp>
 
 struct mult_functor {
   typedef int result_type;
@@ -35,6 +39,14 @@ int
 main()
 {
   const int N = 10;
+
+  // Concept checks
+  {
+    typedef boost::transform_iterator<mult_functor, int*>       iter_t;
+    typedef boost::transform_iterator<mult_functor, int const*> c_iter_t;
+
+    boost::function_requires< boost_concepts::InteroperableConcept<iter_t, c_iter_t> >();
+  }
 
   // Test transform_iterator
   {

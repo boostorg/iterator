@@ -5,6 +5,8 @@
 //  to its suitability for any purpose.
 
 //  Revision History
+//  22 Nov 2002 Thomas Witt
+//       Added interoperability check.
 //  08 Mar 2001   Jeremy Siek
 //       Moved test of indirect iterator into its own file. It to
 //       to be in iterator_adaptor_test.cpp.
@@ -14,8 +16,10 @@
 #include <algorithm>
 
 #include <boost/iterator/iterator_adaptors.hpp>
-#include <boost/iterator/iterator_tests.hpp>
+#include <boost/iterator/iterator_concepts.hpp>
+#include <boost/iterator/new_iterator_tests.hpp>
 #include <boost/concept_archetype.hpp>
+#include <boost/concept_check.hpp>
 #include <boost/shared_ptr.hpp>
 #include <stdlib.h>
 #include <deque>
@@ -134,6 +138,19 @@ main()
   typedef std::deque<boost::shared_ptr<dummyT> > shared_t;
   shared_t shared;
   
+  // Concept checks
+  {
+    typedef boost::indirect_iterator<int**>       iter_t;
+    typedef boost::indirect_iterator<int* const*> c_iter_t;
+
+    // Older Dinkumware and GCC standard lib don't supply symmetric constant/mutable
+    // iterator operators
+#if !defined(BOOST_MSVC_STD_ITERATOR) && (!defined(_CPPLIB_VER) || _CPPLIB_VER > 310)        \
+    && (__GNUC__ != 2 || defined(__SGI_STL_PORT))
+    boost::function_requires< boost_concepts::InteroperableConcept<iter_t, c_iter_t> >();
+#endif
+  }
+
   // Test indirect_iterator_generator
   {
       for (int jj = 0; jj < N; ++jj)
