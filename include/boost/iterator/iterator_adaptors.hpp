@@ -41,7 +41,7 @@ inline bool operator==(const iterator_comparisons<Base1>& xb,
 
 template <class Base1, class Base2>
 inline bool operator!=(const iterator_comparisons<Base1>& xb,
-                       const iterator_comparisons<D2,B2>& yb)
+                       const iterator_comparisons<Base2>& yb)
 {
     return !xb.downcast().equal(yb.downcast());
 }
@@ -175,10 +175,6 @@ struct reverse_iterator
         : m_base(y.m_base) { }
 
 
-    struct state : default_iterator_policies
-    {
-    };
-    
     typename super::reference dereference() const { return *boost::prior(m_base); }
     
     void increment() { --m_base; }
