@@ -1,7 +1,14 @@
-//  (C) Copyright David Abrahams 2000. Permission to copy, use, modify, sell and
-//  distribute this software is granted provided this copyright notice appears
-//  in all copies. This software is provided "as is" without express or implied
-//  warranty, and with no claim as to its suitability for any purpose.
+//  (C) Copyright David Abrahams 2000. Permission to copy, use,
+//  modify, sell and distribute this software is granted provided this
+//  copyright notice appears in all copies. This software is provided
+//  "as is" without express or implied warranty, and with no claim as
+//  to its suitability for any purpose.
+
+// (C) Copyright Jeremy Siek 2000. Permission to copy, use, modify,
+// sell and distribute this software is granted provided this
+// copyright notice appears in all copies. This software is provided
+// "as is" without express or implied warranty, and with no claim as
+// to its suitability for any purpose.
 
 #ifndef BOOST_ITERATOR_ADAPTOR_DWA053000_HPP_
 # define BOOST_ITERATOR_ADAPTOR_DWA053000_HPP_
@@ -18,7 +25,8 @@ namespace boost {
 template <class T>
 struct type {};
 
-// Default policies for wrapped iterators. You can use this as a base
+//=============================================================================
+// Default policies for iterator adaptors. You can use this as a base
 // class if you want to customize particular policies.
 struct default_iterator_policies
 {
@@ -51,7 +59,7 @@ struct default_iterator_policies
         { return x < y; }
 };
 
-// iterator_adaptor - A generalized adaptor around an existing iterator, which is itself an iterator
+//=============================================================================// iterator_adaptor - A generalized adaptor around an existing iterator, which is itself an iterator
 //
 //      Iterator - the iterator type being wrapped.
 //
@@ -66,7 +74,7 @@ struct default_iterator_policies
 //      std::iterator_traits for the resulting iterator.
 //
 template <class Iterator, class Policies, 
-#ifndef BOOST_NO_ITERATOR_TRAITS
+#ifndef BOOST_NO_STD_ITERATOR_TRAITS
           class Traits = std::iterator_traits<Iterator>,
 #else
           class Traits,
@@ -213,6 +221,28 @@ operator!=(const iterator_adaptor<Iterator1,Policies,Traits1,NonconstIterator>& 
     return !Policies::equal(x.m_impl, y.m_impl);
 }
 
-}
+//=============================================================================
+// iterator_adaptors - A type generator that simplifies creating
+//   mutable/const pairs of iterator adaptors.
+
+template <class Iterator, class ConstIterator, 
+#ifdef BOOST_NO_STD_ITERATOR_TRAITS
+          class Traits, 
+          class ConstTraits, 
+#else
+          class Traits = std::iterator_traits<Iterator>, 
+          class ConstTraits = std::iterator_traits<ConstIterator>, 
+#endif
+          class Policies = default_iterator_policies>
+class iterator_adaptors
+{
+public:
+    typedef iterator_adaptor<Iterator, Policies, Iterator, Traits> iterator;
+    typedef iterator_adaptor<ConstIterator, Policies, Iterator, ConstTraits> 
+      const_iterator;
+};
+
+
+} // namespace boost
 
 #endif
