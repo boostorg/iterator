@@ -20,6 +20,7 @@
 #include <boost/iterator/iterator_concepts.hpp>
 #include <boost/iterator/new_iterator_tests.hpp>
 #include <boost/pending/iterator_tests.hpp>
+#include <boost/bind.hpp>
 #include <boost/concept_check.hpp>
 
 #ifdef BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
@@ -45,6 +46,48 @@ struct mult_functor {
   int operator()(int b) const { return a * b; }
   int a;
 };
+
+
+struct select_first
+{
+  typedef int& result_type;
+
+  int& operator()(std::pair<int, int>& p) const
+  {
+    return p.first;
+  }
+};
+
+struct select_second
+{
+  typedef int& result_type;
+
+  int& operator()(std::pair<int, int>& p) const
+  {
+    return p.second;
+  }
+};
+
+struct const_select_first
+{
+  typedef int const& result_type;
+
+  int const& operator()(std::pair<int, int>const& p) const
+  {
+    return p.first;
+  }
+};
+
+struct value_select_first
+{
+  typedef int result_type;
+
+  int operator()(std::pair<int, int>const& p) const
+  {
+    return p.first;
+  }
+};
+
 
 int
 main()
@@ -76,6 +119,44 @@ main()
     
     boost::random_access_readable_iterator_test(i, N, x);
   }
+
+  // Test transform_iterator as projection iterator
+  {
+    typedef std::pair<int, int> pair_t;
+
+    int    x[N];
+    int    y[N];
+    pair_t values[N];
+
+    for(int i = 0; i < N; ++i) {
+
+      x[i]             = i;
+      y[i]             = N - (i + 1);
+
+    }
+
+    std::copy(x,
+              x + N,
+              boost::make_transform_iterator((pair_t*)values, select_first()));
+
+    std::copy(y,
+              y + N,
+              boost::make_transform_iterator((pair_t*)values, select_second()));
+
+    boost::random_access_readable_iterator_test(boost::make_transform_iterator((pair_t*)values, value_select_first()),
+                                                N,
+                                                x);
+
+    boost::random_access_readable_iterator_test(boost::make_transform_iterator((pair_t*)values, const_select_first()),
+                                                N,
+                                                x);
+
+    boost::constant_lvalue_iterator_test(boost::make_transform_iterator((pair_t*)values, const_select_first()), x[0]); 
+
+    boost::mutable_lvalue_iterator_test(boost::make_transform_iterator((pair_t*)values, select_first()), x[0], 17); 
+
+  }
+
   std::cout << "test successful " << std::endl;
   return 0;
 }
