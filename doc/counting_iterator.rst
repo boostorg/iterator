@@ -14,10 +14,26 @@
 .. _`Open Systems Lab`: http://www.osl.iu.edu
 .. _`Institute for Transport Railway Operation and Construction`: http://www.ive.uni-hannover.de
 
-:abstract:
+:abstract: How would you fill up a vector with the numbers zero
+  through one hundred using ``std::copy()``?  The only iterator
+  operation missing from builtin integer types is an
+  ``operator*()`` that returns the current value of the integer.
+  The counting iterator adaptor adds this crucial piece of
+  functionality to whatever type it wraps.  One can use the
+  counting iterator adaptor not only with integer types, but with
+  any incrementable type.
 
-.. include:: counting_iterator_abstract.rst
+  .. include:: counting_iterator_abstract.rst
 
 .. contents:: Table of Contents
 
+``counting_iterator`` synopsis
+..............................
+
 .. include:: counting_iterator_ref.rst
+.. include:: make_counting_iterator.rst
+
+.. include:: counting_iterator_eg.rst
+
+.. _iterator-category: iterator_facade.html#iterator-category
+.. |iterator-category| replace:: *iterator-category*

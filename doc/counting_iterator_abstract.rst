@@ -1,5 +1,4 @@
-The counting iterator adaptor implements dereference by returning a
-reference to the base object. The other operations are implemented by
-the base ``m_iterator``, as per the inheritance from
-``iterator_adaptor``.
+``counting_iterator`` adapts an object by adding an ``operator*`` that
+returns the current value of the object. All other iterator operations
+are forwarded to the adapted object.
 
