@@ -184,14 +184,19 @@ main()
     BOOST_STATIC_ASSERT((boost::is_same<Iter1::reference, int&>::value));
     BOOST_STATIC_ASSERT((boost::is_same<Iter1::pointer, int*>::value));
     BOOST_STATIC_ASSERT((boost::is_same<Iter1::difference_type, std::ptrdiff_t>::value));
+#if !BOOST_WORKAROUND(__MWERKS__, <= 0x2407)
     BOOST_STATIC_ASSERT((boost::is_convertible<Iter1::iterator_category, std::random_access_iterator_tag>::value));
+#endif 
   }
   {  
     // Test computation of default when the Value is const
     typedef ptr_iterator<int const> Iter1;
     BOOST_STATIC_ASSERT((boost::is_same<Iter1::value_type, int>::value));
     BOOST_STATIC_ASSERT((boost::is_same<Iter1::reference, const int&>::value));
+#if !BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x551))
+    // Borland has known problems with const
     BOOST_STATIC_ASSERT((boost::is_same<Iter1::pointer, const int*>::value));
+#endif 
   }
   
   // Test the iterator_adaptor

@@ -178,18 +178,34 @@ namespace boost
     >
     struct iterator_adaptor_base
     {
-    private:
-      typedef typename detail::ia_dflt_help<Category    , mpl::true_                     , BOOST_ITERATOR_CATEGORY<Base> >::type category;
-      typedef typename detail::ia_dflt_help<Reference   , is_same<Value, use_default>    , iterator_reference<Base> >::type      reference;
+     private:
+        typedef typename detail::ia_dflt_help<
+           Category, mpl::true_, BOOST_ITERATOR_CATEGORY<Base>
+        >::type category;
+        
+        typedef typename detail::ia_dflt_help<
+            Reference, is_same<Value, use_default>, iterator_reference<Base>
+        >::type reference;
 
-    public:
+     public:
         typedef iterator_facade<
             Derived
-          , typename detail::ia_dflt_help<Value       , mpl::true_                     , iterator_value<Base> >::type
-          , typename access_category_tag< category, reference >::type
-          , typename traversal_category_tag< category >::type
-          , typename detail::ia_dflt_help<Reference   , is_same<Value, use_default>    , iterator_reference<Base> >::type
-          , typename detail::ia_dflt_help<Difference  , mpl::true_                     , iterator_difference<Base> >::type
+         
+          , typename detail::ia_dflt_help<
+                Value, mpl::true_, iterator_value<Base>
+            >::type
+                
+          , typename access_category_tag<category, reference>::type
+                
+          , typename traversal_category_tag<category>::type
+                
+          , typename detail::ia_dflt_help<
+                Reference, is_same<Value, use_default>, iterator_reference<Base>
+            >::type
+                
+          , typename detail::ia_dflt_help<
+                Difference, mpl::true_, iterator_difference<Base>
+            >::type
         >
         type;
     };

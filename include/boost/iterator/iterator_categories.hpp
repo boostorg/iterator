@@ -28,6 +28,7 @@
 #include <boost/mpl/not.hpp>
 #include <boost/mpl/or.hpp>
 #include <boost/mpl/apply.hpp>
+#include <boost/mpl/aux_/msvc_eti_base.hpp>
 
 #include <iterator>
 
@@ -257,8 +258,8 @@ namespace boost {
 
 # if BOOST_WORKAROUND(BOOST_MSVC, <= 1200)
     // Deal with ETI
-    template <> struct access_category_tag<int, int> {};
-    template <> struct traversal_category_tag<int> {};
+    template <> struct access_category_tag<int, int> { typedef void type; };
+    template <> struct traversal_category_tag<int> { typedef void type; };
 # endif
   
   } // namespace detail
@@ -299,10 +300,12 @@ namespace boost {
 
   template <class ReturnTag, class TraversalTag>
   struct iterator_tag
-    : detail::minimum_category<
-          typename ReturnTag::max_category
-        , typename TraversalTag::max_category
-      >::type
+      : mpl::aux::msvc_eti_base<
+            typename detail::minimum_category<
+                typename ReturnTag::max_category
+              , typename TraversalTag::max_category
+            >::type
+        >::type
   {
     typedef ReturnTag returns;
     typedef TraversalTag traversal;
