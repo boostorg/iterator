@@ -12,6 +12,11 @@
 #include <boost/iterator.hpp>
 #include <boost/iterator/iterator_adaptor.hpp>
 #include <boost/iterator/iterator_categories.hpp>
+#include <boost/result_of.hpp>
+#include <boost/type_traits/is_const.hpp>
+#include <boost/type_traits/is_reference.hpp>
+#include <boost/type_traits/remove_const.hpp>
+#include <boost/type_traits/remove_reference.hpp>
 
 namespace boost
 {
@@ -22,19 +27,41 @@ namespace boost
   {
     // Given the transform iterator's transformation and iterator, this
     // is the type used as its traits.
-    template <class AdaptableUnaryFunction, class Iterator>
+    template <class UnaryFunction, class Iterator>
     struct transform_iterator_base
     {
-        typedef iterator_adaptor<
-            transform_iterator<AdaptableUnaryFunction, Iterator>
-          , Iterator
-          , typename AdaptableUnaryFunction::result_type  
-          , iterator_tag<
-                readable_iterator_tag
-              , typename traversal_category<Iterator>::type
-            >
-          , typename AdaptableUnaryFunction::result_type  
-        > type;
+    private:
+      typedef typename UnaryFunction::result_type result_type;
+
+      typedef typename remove_reference< result_type >::type cv_value_type;
+      typedef typename remove_cv< cv_value_type >::type      value_type;
+
+      typedef typename mpl::if_< 
+          is_reference< result_type >
+        , typename mpl::if_<
+              is_const< cv_value_type >
+            , readable_lvalue_iterator_tag
+            , writable_lvalue_iterator_tag
+          >::type
+        , readable_iterator_tag
+      >::type maximum_access_tag;
+  
+      typedef typename minimum_category<
+          maximum_access_tag
+        , typename access_category<Iterator>::type
+      >::type access_category;
+
+    public:
+      typedef iterator_adaptor<
+          transform_iterator<UnaryFunction, Iterator>
+        , Iterator
+        , cv_value_type  
+        , iterator_tag<
+             access_category
+           , typename traversal_category<Iterator>::type
+          >
+        , result_type  
+      > type;
     };
   }
 
@@ -65,13 +92,19 @@ namespace boost
       { return m_f; }
 
   private:
-    typename super_t::value_type dereference() const
-      { return m_f(super_t::dereference()); }
+    typename super_t::reference dereference() const
+    { return m_f(*this->base()); }
 
     // Probably should be the initial base class so it can be
     // optimized away via EBO if it is an empty class.
     AdaptableUnaryFunction m_f;
   };
+
+  template <class UnaryFunction, class Iterator>
+  transform_iterator<UnaryFunction, Iterator> make_transform_iterator(Iterator it, UnaryFunction fun)
+  {
+    return transform_iterator<UnaryFunction, Iterator>(it, fun);
+  }
 
 } // namespace boost
 
