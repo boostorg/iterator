@@ -16,5 +16,7 @@ test-suite iterator_examples
     [ run indirect_iterator_example.cpp ]
     [ run permutation_iter_example.cpp ]
     [ run reverse_iterator_example.cpp ]
+    [ run projection_iterator_example.cpp ]
     [ run transform_iterator_example.cpp ]
-      ;
+
+;

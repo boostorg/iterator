@@ -91,7 +91,7 @@ int main(int, char*[])
   std::cout << std::endl;
 
 #ifndef BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
-  // Example of using make_const_projection_iterator()
+  // Example of using make_transform_iterator()
   // to print out the names in the personnel list again.
   std::copy(
       boost::make_transform_iterator<select_name>(personnel_list.begin())

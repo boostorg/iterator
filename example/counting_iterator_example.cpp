@@ -21,6 +21,13 @@ int main(int, char*[])
   std::copy(first, last, std::ostream_iterator<int>(std::cout, " "));
   std::cout << std::endl;
 
+  // Example of using make_counting_iterator()
+  std::cout << "counting from -5 to 4:" << std::endl;
+  std::copy(boost::make_counting_iterator(-5),
+            boost::make_counting_iterator(5),
+            std::ostream_iterator<int>(std::cout, " "));
+  std::cout << std::endl;
+
   // Example of using counting iterator to create an array of pointers.
   int N = 7;
   std::vector<int> numbers;
