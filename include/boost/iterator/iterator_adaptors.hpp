@@ -14,6 +14,10 @@
 
 #include "boost/type_traits/detail/bool_trait_def.hpp"
 
+#if BOOST_WORKAROUND(BOOST_MSVC, <= 1301) || BOOST_WORKAROUND(__GNUC__, <= 2 && __GNUC_MINOR__ <= 95) || BOOST_WORKAROUND(__MWERKS__, <= 0x3000)
+# define BOOST_NO_SFINAE // "Substitution Failure Is Not An Error not implemented"
+#endif 
+
 namespace boost {
 
   namespace detail {
@@ -34,7 +38,7 @@ namespace boost {
       template<typename T>
       struct base
       {
-#if BOOST_WORKAROUND(BOOST_MSVC, <= 1300)
+#ifdef BOOST_NO_SFINAE
         // Disable enable if for MSVC
         typedef T type;
 
@@ -563,7 +567,8 @@ namespace boost {
     struct has_element_type
       : mpl::if_<
       is_class<T>
-# if __GNUC__ == 2 // gcc 2.95 doesn't seem to be able to detect element_type without barfing
+// gcc 2.95 doesn't seem to be able to detect element_type without barfing    
+# if BOOST_WORKAROUND(__GNUC__, == 2 && __GNUC_MINOR__ == 95)
       , mpl::bool_c<false>
 # else 
       , aux::has_element_type<T>

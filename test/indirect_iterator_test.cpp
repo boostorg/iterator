@@ -18,9 +18,13 @@
 #include <boost/iterator/iterator_adaptors.hpp>
 #include <boost/iterator/iterator_concepts.hpp>
 #include <boost/iterator/new_iterator_tests.hpp>
+
+#include <boost/detail/workaround.hpp>
+
 #include <boost/concept_archetype.hpp>
 #include <boost/concept_check.hpp>
 #include <boost/shared_ptr.hpp>
+
 #include <stdlib.h>
 #include <deque>
 #include <set>
@@ -87,8 +91,9 @@ void more_indirect_iterator_tests()
     
     // Older Dinkumware and GCC standard lib don't supply symmetric constant/mutable
     // iterator operators
-#if !defined(BOOST_MSVC_STD_ITERATOR) && (!defined(_CPPLIB_VER) || _CPPLIB_VER > 310)        \
-    && (__GNUC__ != 2 || defined(__SGI_STL_PORT))
+#if !defined(BOOST_MSVC_STD_ITERATOR) \
+    && !BOOST_WORKAROUND(_CPPLIB_VER, <= 310) \
+    && !BOOST_WORKAROUND(__GNUC__, <= 2 && !defined(__SGI_STL_PORT))
     
     assert(db == dci);
     
