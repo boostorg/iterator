@@ -14,6 +14,10 @@
 #include <numeric>
 
 #include <boost/iterator/iterator_adaptor.hpp>
+#if !BOOST_WORKAROUND(__MWERKS__, <= 0x2407)
+# include <boost/iterator/is_readable_iterator.hpp>
+# include <boost/iterator/is_lvalue_iterator.hpp>
+#endif 
 #include <boost/pending/iterator_tests.hpp>
 
 # include <boost/type_traits/broken_compiler_spec.hpp>
@@ -25,8 +29,6 @@
 #include <list>
 
 #include "static_assert_same.hpp"
-
-struct my_iterator_tag : public std::random_access_iterator_tag { };
 
 using boost::dummyT;
 
@@ -83,7 +85,7 @@ struct ptr_iterator
         ptr_iterator<V>
       , V*
       , V
-      , std::random_access_iterator_tag
+      , boost::random_access_traversal_tag
 #if BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x551))
       , V&
 #endif 
@@ -94,7 +96,7 @@ private:
         ptr_iterator<V>
       , V*
       , V
-      , std::random_access_iterator_tag
+      , boost::random_access_traversal_tag
 #if BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x551))
       , V&
 #endif 
@@ -114,13 +116,13 @@ public:
 };
 
 // Non-functional iterator for category modification checking
-template <class Iter, class Category>
-struct modify_category 
+template <class Iter, class Traversal>
+struct modify_traversal
   :  boost::iterator_adaptor<
-         modify_category<Iter, Category>
+         modify_traversal<Iter, Traversal>
        , Iter
        , boost::use_default
-       , Category
+       , Traversal
      >
 {};
   
@@ -179,6 +181,12 @@ struct constant_iterator
     : base_t(it) {}
 };
 
+char (& traversal(boost::incrementable_traversal_tag) )[1];
+char (& traversal(boost::single_pass_traversal_tag  ) )[2];
+char (& traversal(boost::forward_traversal_tag      ) )[3];
+char (& traversal(boost::bidirectional_traversal_tag) )[4];
+char (& traversal(boost::random_access_traversal_tag) )[5];
+
 int
 main()
 {
@@ -219,7 +227,11 @@ main()
     typedef ptr_iterator<int const> Iter1;
     test = static_assert_same<Iter1::value_type, int>::value;
     test = static_assert_same<Iter1::reference, const int&>::value;
-    test = static_assert_same<Iter1::iterator_category::access, boost::readable_lvalue_iterator_tag>::value;    test = static_assert_same<Iter1::pointer, const int*>::value;
+#if !BOOST_WORKAROUND(__MWERKS__, <= 0x2407)
+    BOOST_STATIC_ASSERT(boost::is_readable_iterator<Iter1>::value);
+    BOOST_STATIC_ASSERT(boost::is_lvalue_iterator<Iter1>::value);
+#endif 
+    test = static_assert_same<Iter1::pointer, const int*>::value;
   }
 
   {
@@ -231,17 +243,26 @@ main()
     test = static_assert_same<Iter::reference, int const&>::value;
     test = static_assert_same<Iter::pointer, int const*>::value;
 
-    test = static_assert_same<BaseIter::iterator_category::access, boost::writable_lvalue_iterator_tag>::value;
-    test = static_assert_same<Iter::iterator_category::access, boost::readable_lvalue_iterator_tag>::value;
-  
-    // Test category modification
-    typedef modify_category<BaseIter, boost::readable_iterator_tag> ReadableIter;
-    test = static_assert_same<ReadableIter::iterator_category::access, boost::readable_iterator_tag>::value;
+#if !BOOST_WORKAROUND(__MWERKS__, <= 0x2407)
+    BOOST_STATIC_ASSERT(boost::is_mutable_lvalue_iterator<BaseIter>::value);
+    BOOST_STATIC_ASSERT(boost::is_lvalue_iterator<Iter>::value);
+#endif 
+    
+    typedef modify_traversal<BaseIter, boost::incrementable_traversal_tag> IncrementableIter;
 
-    typedef modify_category<BaseIter, boost::incrementable_traversal_tag> IncrementableIter;
-    test = static_assert_same<BaseIter::iterator_category::traversal, boost::random_access_traversal_tag>::value;
-    test = static_assert_same<IncrementableIter::iterator_category::traversal, boost::incrementable_traversal_tag>::value;
+    BaseIter::iterator_category base_cat;
+    boost::random_access_traversal_tag random_traversal;
+    BOOST_STATIC_ASSERT(
+        sizeof(traversal(base_cat))
+        == sizeof(traversal(random_traversal))
+    );
 
+    IncrementableIter::iterator_category incr_cat;
+    boost::incrementable_traversal_tag incrementable_traversal;
+    BOOST_STATIC_ASSERT(
+        sizeof(traversal(incr_cat))
+        == sizeof(traversal(incrementable_traversal))
+    );
   }
   
   // Test the iterator_adaptor
