@@ -108,6 +108,14 @@ namespace detail
   {
   };
   
+# if BOOST_WORKAROUND(BOOST_MSVC, == 1200)
+  template <>
+  struct pure_traversal_tag<int>
+  {
+      typedef int type;
+  };
+# endif
+
 } // namespace detail
 
 
