@@ -15,13 +15,26 @@
 #include "boost/type_traits/detail/bool_trait_def.hpp"
 
 #if BOOST_WORKAROUND(BOOST_MSVC, <= 1301) || BOOST_WORKAROUND(__GNUC__, <= 2 && __GNUC_MINOR__ <= 95) || BOOST_WORKAROUND(__MWERKS__, <= 0x3000)
-# define BOOST_NO_SFINAE // "Substitution Failure Is Not An Error not implemented"
+#  define BOOST_NO_SFINAE // "Substitution Failure Is Not An Error not implemented"
 #endif 
+
+#if BOOST_WORKAROUND(BOOST_MSVC, <=1200)
+#  define BOOST_ARG_DEP_TYPENAME
+#else
+#  define BOOST_ARG_DEP_TYPENAME typename
+#endif
+
+#if BOOST_WORKAROUND(__MWERKS__, <=0x2407)
+#  define BOOST_NO_IS_CONVERTIBLE // "Convertible does not provide enough/is not working"
+#endif
 
 namespace boost {
 
   namespace detail {
 
+    //
+    // Base machinery for all kinds of enable if
+    //
     template<bool>
     struct enabled
     {
@@ -32,6 +45,11 @@ namespace boost {
       };
     };
     
+    //
+    // For compilers that don't support "Substitution Failure Is Not An Error"
+    // enable_if falls back to always enabled. See comments
+    // on operator implementation for consequences.
+    //
     template<>
     struct enabled<false>
     {
@@ -39,27 +57,51 @@ namespace boost {
       struct base
       {
 #ifdef BOOST_NO_SFINAE
-        // Disable enable if for MSVC
+
         typedef T type;
 
-        // This would give a nice error messages containing
-        // invalid overlaod, but has the big disadvantage that
-        // there is no reference to user code.
+        // This way to do it would give a nice error messages containing
+        // invalid overload, but has the big disadvantage that
+        // there is no reference to user code in the error message.
+        //
         // struct invalid_overload;
         // typedef invalid_overload type;
+        //
 #endif
       };
     };
 
-    struct enable_type {};
-
+    //
+    // Meta function that determines whether two
+    // iterator types are considered interoperable.
+    //
+    // Two iterator types A,B are considered interoperable if either
+    // A is convertible to B or vice versa.
+    // This interoperability definition is in sync with the
+    // standards requirements on constant/mutable container
+    // iterators (23.1 [lib.container.requirements]).
+    //
+    // For compilers that don't support is_convertible 
+    // is_interoperable gives false positives. See comments
+    // on operator implementation for consequences.
+    //
     template <typename A, typename B>
     struct is_interoperable :
+#ifdef BOOST_NO_IS_CONVERTIBLE
+      mpl::true_c
+#else
       mpl::logical_or< is_convertible< A, B >,
                        is_convertible< B, A > >
+#endif
     {
     };
 
+    //
+    // enable if for use in operator implementation.
+    //
+    // enable_if_interoperable falls back to always enabled for compilers
+    // that don't support enable_if or is_convertible. 
+    //
     template <class Facade1,
               class Facade2,
               class Return>
@@ -71,9 +113,62 @@ namespace boost {
 #endif
     };
 
+    // 
+    // Result type used in enable_if_convertible meta function.
+    // This can be an incomplete type, as only pointers to 
+    // enable_if_convertible< ... >::type are used.
+    // We could have used void for this, but conversion to
+    // void* is just to easy.
+    //
+    struct enable_type;
+
   } // namespace detail
 
-
+  //
+  // enable_if for use in adapted iterators constructors.
+  //
+  // In order to provide interoperability between adapted constant and
+  // mutable iterators, adapted iterators will usually provide templated
+  // conversion constructors of the following form
+  //
+  // template <class BaseIterator>
+  // class adapted_iterator :
+  //   public iterator_adaptor< adapted_iterator<Iterator>, Iterator >
+  // {
+  // public:
+  //   
+  //   ...
+  //
+  //   template <class OtherIterator>
+  //   adapted_iterator(OtherIterator const& it,
+  //                    typename enable_if_convertible<OtherIterator, Iterator>::type* = 0);
+  //
+  //   ...
+  // };
+  //
+  // enable_if_convertible is used to remove those overloads from the overload
+  // set that cannot be instantiated. For all practical purposes only overloads
+  // for constant/mutable interaction will remain. This has the advantage that
+  // meta functions like boost::is_convertible do not return false positives,
+  // as they can only look at the signature of the conversion constructor
+  // and not at the actual instantiation.
+  //
+  // enable_if_interoperable can be safely used in user code. It falls back to
+  // always enabled for compilers that don't support enable_if or is_convertible. 
+  // There is no need for compiler specific workarounds in user code. 
+  //
+  // The operators implementation relies on boost::is_convertible not returning
+  // false positives for user/library defined iterator types. See comments
+  // on operator implementation for consequences.
+  //
+#ifdef BOOST_NO_IS_CONVERTIBLE
+  template<typename From,
+           typename To>
+  struct enable_if_convertible 
+  {
+    typedef detail::enable_type type;
+  };
+#else
   template<typename From,
            typename To>
   struct enable_if_convertible :
@@ -83,13 +178,14 @@ namespace boost {
     typedef typename detail::enabled< is_convertible<From, To>::value >::template base<detail::enable_type>::type type;
 #endif
   };
+#endif
 
   //
   // Helper class for granting access to the iterator core interface.
   //
   // The simple core interface is used by iterator_facade. The core
-  // interface should not be made public so that it does not clutter
-  // the public interface of user defined iterators. Instead iterator_core_access
+  // interface of a user/library defined iterator type should not be made public
+  // so that it does not clutter the public interface. Instead iterator_core_access
   // should be made friend so that iterator_facade can access the core
   // interface through iterator_core_access.
   //
@@ -171,12 +267,72 @@ namespace boost {
   {
   };
 
-#if BOOST_WORKAROUND(BOOST_MSVC, <=1200)
-#define BOOST_ARG_DEP_TYPENAME
-#else
-#define BOOST_ARG_DEP_TYPENAME typename
-#endif
-
+  //
+  // Operator implementation. The library supplied operators 
+  // enables the user to provide fully interoperable constant/mutable
+  // iterator types. I.e. the library provides all operators
+  // for all mutable/constant iterator combinations.
+  //
+  // Note though that this kind of interoperability for constant/mutable
+  // iterators is not required by the standard for container iterators.
+  // All the standard asks for is a conversion mutable -> constant.
+  // Most standard library implementations nowadays provide fully interoperable
+  // iterator implementations, but there are still heavily used implementations 
+  // that do not provide them. (Actually it's even worse, they do not provide 
+  // them for only a few iterators.)
+  //
+  // ?? Maybe a BOOST_ITERATOR_NO_FULL_INTEROPERABILITY macro should
+  //    enable the user to turn off mixed type operators 
+  //
+  // The library takes care to provide only the right operator overloads.
+  // I.e.
+  //
+  // bool operator==(Iterator,      Iterator);
+  // bool operator==(ConstIterator, Iterator);
+  // bool operator==(Iterator,      ConstIterator);
+  // bool operator==(ConstIterator, ConstIterator);
+  //
+  //   ...
+  //
+  // In order to do so it uses c++ idioms that are not yet widely supported
+  // by current compiler releases. The library is designed to degrade gracefully
+  // in the face of compiler deficiencies. In general compiler
+  // deficiencies result in less strict error checking and more obscure
+  // error messages, functionality is not affected.
+  //
+  // For full operation compiler support for "Substitution Failure Is Not An Error" 
+  // (aka. enable_if) and boost::is_convertible is required.
+  //
+  // The following problems occur if support is lacking.
+  //
+  // Pseudo code
+  //
+  // ---------------
+  // AdaptorA<Iterator1> a1;
+  // AdaptorA<Iterator2> a2;
+  //
+  // // This will result in a no such overload error in full operation
+  // // If enable_if or is_convertible is not supported
+  // // The instantiation will fail with an error hopefully indicating that
+  // // there is no operator== for Iterator1, Iterator2
+  // // The same will happen if no enable_if is used to remove
+  // // false overloads from the templated conversion constructor
+  // // of AdaptorA.
+  //
+  // a1 == a2; 
+  // ----------------
+  //
+  // AdaptorA<Iterator> a;
+  // AdaptorB<Iterator> b;
+  //
+  // // This will result in a no such overload error in full operation
+  // // If enable_if is not supported the static assert used
+  // // in the operator implementation will fail.
+  // // This will accidently work if is_convertible is not supported.
+  //
+  // a == b;
+  // ----------------
+  //
   template <class Base1,
             class Base2>
   inline
@@ -664,5 +820,18 @@ namespace boost {
 
 } // namespace boost
 
+//
+// clean up local workaround macros
+//
+
+#ifdef BOOST_NO_SFINAE
+#  undef BOOST_NO_SFINAE
+#endif
+
+#undef BOOST_ARG_DEP_TYPENAME
+
+#ifdef BOOST_NO_IS_CONVERTIBLE
+#  undef BOOST_NO_IS_CONVERTIBLE
+#endif
 
 #endif // BOOST_ITERATOR_ADAPTORS_HPP
