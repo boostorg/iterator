@@ -75,25 +75,6 @@ namespace boost
 #endif 
     };
 
-
-    //
-    // Add const qualification for iterators which are not writable
-    //
-    template<class Value, class AccessCategory>
-    struct const_qualified_ref :
-      mpl::if_< is_tag< writable_iterator_tag, AccessCategory >,
-                Value&,
-                Value const& >
-    {};
-
-    // The apparent duplication here works around a Borland problem
-    template<class Value, class AccessCategory>
-    struct const_qualified_ptr :
-      mpl::if_< is_tag< writable_iterator_tag, AccessCategory >,
-                Value*,
-                Value const* >
-    {};
-
     //
     // Generates the associated types for an iterator_facade with the
     // given parameters.  Additionally generates a 'base' type for
@@ -104,7 +85,7 @@ namespace boost
         class Value
       , class AccessCategory
       , class TraversalCategory
-      , class Reference
+      , class Reference 
       , class Difference
     >
     struct iterator_facade_types
@@ -117,17 +98,6 @@ namespace boost
         
         typedef typename const_qualified_ptr<Value, AccessCategory>::type pointer;
         
-        // The use_default support is needed for iterator_adaptor.
-        // For practical reasons iterator_adaptor needs to specify
-        // a fixed number of template arguments of iterator_facade.
-        // So use_default is its way to say: "What I really mean
-        // is your default parameter".
-        typedef typename mpl::if_<
-              is_same<Reference, use_default>
-            , typename const_qualified_ref<Value, AccessCategory>::type
-            , Reference
-        >::type reference;
-
 # if defined(BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION)                          \
     && (BOOST_WORKAROUND(_STLPORT_VERSION, BOOST_TESTED_AT(0x452))              \
         || BOOST_WORKAROUND(BOOST_DINKUMWARE_STDLIB, BOOST_TESTED_AT(310)))     \
@@ -372,7 +342,7 @@ namespace boost
     , class Value
     , class AccessCategory
     , class TraversalCategory
-    , class Reference   = BOOST_DEDUCED_TYPENAME detail::const_qualified_ref<Value, AccessCategory>::type
+    , class Reference   = Value&
     , class Difference  = std::ptrdiff_t
   >
   class iterator_facade
@@ -384,10 +354,6 @@ namespace boost
 # endif 
   {
    private:
-      typedef typename
-        detail::iterator_facade_types<Value, AccessCategory, TraversalCategory, Reference, Difference>
-      types;
-
       //
       // Curiously Recursive Template interface.
       //
@@ -405,9 +371,9 @@ namespace boost
 
    public:
 
-      typedef typename types::value_type value_type;
-      typedef typename types::reference reference;
-      typedef typename types::difference_type difference_type;
+      typedef typename remove_cv<Value> value_type;
+      typedef typename Reference reference;
+      typedef typename Difference difference_type;
       typedef typename types::pointer pointer;
       typedef typename types::iterator_category iterator_category;
 

@@ -105,7 +105,7 @@ namespace boost {
         
         template <class Reference>
         struct apply
-          : mpl::identity<readable_iterator_tag> {};
+          : access_c<readable_iterator> {};
 
     };
     
@@ -116,7 +116,7 @@ namespace boost {
         
         template <class Reference>
         struct apply
-          : mpl::identity<writable_iterator_tag> {};
+          : access_c<writable_iterator> {};
     };
     
     template <>
@@ -128,8 +128,8 @@ namespace boost {
         struct apply
           : mpl::if_<
                 python::detail::is_reference_to_const<Reference>
-              , boost::readable_lvalue_iterator_tag
-              , boost::writable_lvalue_iterator_tag
+              , access_c<(readable_iterator|lvalue_iterator)>
+              , access_c<(readable_iterator|writable_iterator|lvalue_iterator)>
         >
         {};
     };
@@ -151,30 +151,31 @@ namespace boost {
     template <class Category>
     struct old_tag_converter
       : std_to_new_tags<
+            // Take the category down to its most-refined known
+            // std::tag, in case of derivation/convertibility
             typename std_category<Category>::type
         >
     {
     };
-    
-    template <typename Category>
-    struct iter_category_to_traversal
-      : std_to_new_tags<
-            typename std_category<Category>::type
-        >
-    {};
 
+    template <class OldTag>
+    struct old_tag_to_traversal
+      : old_tag_converter<OldTag>
+    {};
+        
+    
     template <typename Category, typename Reference>
-    struct iter_category_to_access
+    struct old_tag_to_access
       : mpl::apply1<
-            iter_category_to_traversal<Category>
+            old_tag_converter<Category>
           , Reference
         >
     {};
 
 # if BOOST_WORKAROUND(BOOST_MSVC, <= 1200)
     // Deal with ETI
-    template <> struct iter_category_to_access<int, int> {};
-    template <> struct iter_category_to_traversal<int> {};
+    template <> struct old_tag_to_access<int, int> {};
+    template <> struct old_tag_converter<int> {};
 # endif
 
     // A metafunction returning true iff T is boost::iterator_tag<R,U>
@@ -231,71 +232,49 @@ namespace boost {
   namespace detail {
 
     template <class NewCategoryTag>
-    struct get_traversal_category {
-      typedef typename NewCategoryTag::traversal type;
+    struct new_tag_to_traversal
+    {
+        typedef typename NewCategoryTag::traversal type;
     };
 
-    // Remove all writability from the given access tag.  This
-    // functionality is part of new_category_to_access in order to
-    // support deduction of the proper default access category for
-    // iterator_adaptor; when the reference type is a reference to
-    // constant we must strip writability.
-    template <class AccessTag>
-    struct remove_access_writability
-      : mpl::apply_if<
-            is_tag<writable_lvalue_iterator_tag, AccessTag>
-          , mpl::identity<readable_lvalue_iterator_tag>
-      
-          , mpl::apply_if<
-                is_tag<readable_writable_iterator_tag, AccessTag>
-              , mpl::identity<readable_iterator_tag>
-                              
-              , mpl::if_<
-                    is_tag<writable_iterator_tag, AccessTag>
-                    // Is this OK?  I think it may correct be for all
-                    // legitimate cases, because at this point the
-                    // iterator is not readable, so it could not have
-                    // been any more than writable + swappable.
-                  , swappable_iterator_tag      
-                  , AccessTag
-                >
-            >
-        >
-    {};
-  
     template <class NewCategoryTag, class Reference>
-    struct new_category_to_access
+    struct new_tag_to_access
+    {
+        typedef typename NewCategoryTag::access_type type;
+    }
+#if 0 // what was this all about?
       : mpl::apply_if<
             python::detail::is_reference_to_const<Reference>
           , remove_access_writability<typename NewCategoryTag::access>
           , mpl::identity<typename NewCategoryTag::access>
         >
     {};
+#endif
 
     template <class CategoryTag, class Reference>
-    struct access_category_tag
-        : mpl::apply_if< 
-              is_new_iterator_tag<CategoryTag>
-            , new_category_to_access<CategoryTag, Reference>
-            , iter_category_to_access<CategoryTag, Reference>
-          >
+    struct tag_access_category
+      : mpl::apply_if< 
+            is_new_iterator_tag<CategoryTag>
+          , new_tag_to_access<CategoryTag>
+          , old_tag_to_access<CategoryTag, Reference>
+        >
     {
     };
   
     template <class CategoryTag>
-    struct traversal_category_tag
+    struct tag_traversal_category
       : mpl::apply_if< 
             is_new_iterator_tag<CategoryTag>
-          , get_traversal_category<CategoryTag>
-          , iter_category_to_traversal<CategoryTag>
+          , new_tag_to_traversal<CategoryTag>
+          , old_tag_to_traversal<CategoryTag>
         >
     {
     };
 
 # if BOOST_WORKAROUND(BOOST_MSVC, <= 1200)
     // Deal with ETI
-    template <> struct access_category_tag<int, int> { typedef void type; };
-    template <> struct traversal_category_tag<int> { typedef void type; };
+    template <> struct tag_access_category<int, int> { typedef void type; };
+    template <> struct tag_traversal_category<int> { typedef void type; };
 # endif
 
     // iterator_tag_base - a metafunction to compute the appropriate
@@ -330,14 +309,15 @@ namespace boost {
 
   template <class Iterator>
   struct access_category
-      : detail::access_category_tag<
-           typename detail::iterator_traits<Iterator>::iterator_category
-          , typename detail::iterator_traits<Iterator>::reference>
+    : detail::tag_access_category<
+          typename detail::iterator_traits<Iterator>::iterator_category
+        , typename detail::iterator_traits<Iterator>::reference
+      >
   {};
 
   template <class Iterator>
   struct traversal_category
-    : detail::traversal_category_tag<
+    : detail::tag_traversal_category<
           typename detail::iterator_traits<Iterator>::iterator_category
       >
   {
@@ -349,7 +329,7 @@ namespace boost {
   // requires instantiating iterator_traits on the
   // placeholder. Instead we just specialize it as a metafunction
   // class.
-template <>
+  template <>
   struct access_category<mpl::_1>
   {
       template <class T>
@@ -370,10 +350,11 @@ template <>
 
   template <typename T>
   struct access_category<T*>
-      : mpl::if_<
+    : mpl::if_<
           is_const<T>
-          , readable_lvalue_iterator_tag
-          , writable_lvalue_iterator_tag>
+        , detail::access_c<(readable_iterator|lvalue_iterator)>
+        , detail::access_c<(readable_iterator|writable_iterator|lvalue_iterator)>
+      >
   {
   };
 
@@ -385,15 +366,16 @@ template <>
 
 # endif
 
-  template <class AccessTag, class TraversalTag>
+  template <unsigned Access, class TraversalTag>
   struct iterator_tag
     : detail::iterator_tag_base<
-          typename detail::max_known_access_tag<AccessTag>::type
+          typename detail::max_known_access_tag<Access>::type
         , typename detail::max_known_traversal_tag<TraversalTag>::type
       >::type
   {
-    typedef AccessTag access;
-    typedef TraversalTag traversal;
+      typedef detail::access_c<(Access & ~lvalue_iterator)> access_type;
+      BOOST_STATIC_CONSTANT(iterator_access, access_type::value);
+      typedef TraversalTag traversal;
   };
 
   namespace detail

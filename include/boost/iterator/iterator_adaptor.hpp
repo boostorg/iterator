@@ -153,10 +153,8 @@ namespace boost
         typedef typename mpl::apply_if<
             mpl::or_< 
                 is_same<Category, use_default>
-              , mpl::or_<
-                    is_access_tag<Category>
-                  , is_traversal_tag<Category>
-                >
+              , is_access_tag<Category>
+              , is_traversal_tag<Category>
             >
           , BOOST_ITERATOR_CATEGORY<Base>
           , mpl::identity<Category>

@@ -39,40 +39,12 @@ namespace boost
   //
   // Access Categories
   //
-  struct readable_iterator_tag
+  enum iterator_access
   {
-      typedef std::input_iterator_tag max_category;
-  };
-  
-  struct writable_iterator_tag
-  {
-      typedef std::output_iterator_tag max_category;
-  };
-  
-  struct swappable_iterator_tag
-  {
-      typedef detail::null_category_tag max_category;
-  };
-  
-  struct readable_writable_iterator_tag
-    : virtual readable_iterator_tag
-    , virtual writable_iterator_tag
-    , virtual swappable_iterator_tag
-  {
-      typedef detail::input_output_iterator_tag max_category;
-  };
-  
-  struct readable_lvalue_iterator_tag
-    : virtual readable_iterator_tag
-  {
-      typedef std::random_access_iterator_tag max_category;
-  };
-  
-  struct writable_lvalue_iterator_tag
-    : virtual public readable_writable_iterator_tag
-    , virtual public readable_lvalue_iterator_tag
-  {
-      typedef std::random_access_iterator_tag max_category;
+      readable_iterator = 1
+    , writable_iterator = 2
+    , swappable_iterator = 4
+    , lvalue_iterator = 8
   };
 
   //
@@ -111,6 +83,11 @@ namespace boost
 
   namespace detail
   {
+    template <unsigned access>
+    access_c : mpl::integral_c<iterator_access,access>
+    {};
+      
+    
     //
     // Tag detection meta functions
     //
@@ -147,7 +124,7 @@ namespace boost
     // iterators which don't have an actual old-style category.  We
     // need that so there is a valid base class for all new-style
     // iterators.
-# define BOOST_OLD_ITERATOR_CATEGORY(category)                   \
+# define BOOST_OLD_ITERATOR_CATEGORY(category)                  \
     template <>                                                 \
     struct is_tag <detail::null_category_tag, std::category>    \
         : mpl::true_ {};
