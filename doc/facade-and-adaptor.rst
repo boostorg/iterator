@@ -266,17 +266,25 @@ It is important to note that ``iterator_core_access`` does not open a
 safety loophole, as every core member function preserves the
 invariants of the iterator.
 
-operator[]()
-============
+``operator[]``
+================
 
-For operator[]() ``iterator_facade`` implements the semantics required
-in the proposed resolution to issue `299`_ and adopted by proposal `n1477`_.
-I.e. operator[]() is not required to return an lvalue.
+The indexing operator for a generalized iterator presents special challenges;
+
+Writable iterators built with ``iterator_facade`` implement the
+semantics required by the proposed resolution to issue `299`_ and
+adopted by proposal `n1477`_: ``p[n] = x`` is equivalent to ``*(p + n)
+= x``.  To make that possible regardless of the other details of the
+iterator's implementation, the return type of ``operator[]`` is a
+proxy object containing a copy of 
+
+result of indexing the iterator is assignable
+iterator
 
 .. _`299`: http://anubis.dkuug.dk/jtc1/sc22/wg21/docs/lwg-active.html#299
 
-operator->()
-============
+``operator->``
+==============
 
 For ``readable iterators`` the reference type is only required to be
 convertible to the value type, but accessing members through

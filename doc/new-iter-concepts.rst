@@ -71,39 +71,49 @@ nonintuitive that at least one implementation erroneously assigns
 not return true references: there is the often cited example of
 disk-based collections.
 
+.. I wonder if the disk-based collection argument is valid?  I would
+   tend to do that with an internally stored lvalue. -DWA
+
 .. _issue 96: http://anubis.dkuug.dk/JTC1/SC22/WG21/docs/lwg-active.html#96
 
-Another example of a hard-to-categorize iterator is a counting
-iterator: an iterator the returns a sequence of integers when
-incremented and dereferenced (see counting_iterator_).  There are two
-ways to implement this iterator, 1) return a true reference from
-``operator[]`` (a reference to an integer data member of the counting
-iterator) or 2) return the ``value_type`` or a proxy from
-``operator[]``. Option 1) runs into the problems discussed in `issue
-198`_, the reference will not be valid after the iterator is
-destroyed. Option 2) is therefore a better choice, but then we have a
-counting iterator that cannot be a random access iterator.
+.. Another example of a hard-to-categorize iterator is a counting
+   iterator: an iterator the returns a sequence of integers when
+   incremented and dereferenced (see counting_iterator_).  This iterator are two
+   ways to implement this iterator, 1) return a true reference from
+   ``operator[]`` (a reference to an integer data member of the counting
+   iterator) or 2) return the ``value_type`` or a proxy from
+   ``operator[]``. Option 1) runs into the problems discussed in `issue
+   198`_: the reference will not be valid after the iterator is
+   destroyed. Option 2) is therefore a better choice, but then we have a
+   counting iterator that cannot be a random access iterator.
 
 .. Jeremy, option 1 is NOT an option, since there's no way to return a
    live reference from operator[].  I think you need to clarify/rework
    what you're saying here.  I'd fix it myself, but I'm not sure what
    you're getting at. -DWA
 
+.. On second thought, I think the whole paragraph is bogus (sorry).
+   The conclusion for option 2, "but then we have a counting iterator
+   that cannot be a random access iterator" is wrong, too: returning a
+   value from operator[] is compatible with the random access iterator
+   requirements.  I commented it out. -DWA
+
 .. _counting_iterator: http://www.boost.org/libs/utility/counting_iterator.htm
 .. _issue 198: http://anubis.dkuug.dk/JTC1/SC22/WG21/docs/lwg-active.html#198
 
-Yet another example is a transform iterator, an iterator adaptor that
-applies a unary function object to the dereference value of the
-wrapped iterator (see `transform_iterator`_).  For unary functions
-such as ``times`` the return type of ``operator*`` clearly needs
-to be the ``result_type`` of the function object, which is typically
-not a reference. However, with the current iterator requirements, if
-you wrap ``int*`` with a transform iterator, you do not get a random
-access iterator as expected, but an input iterator.
+Another difficult-to-categorize iterator is the transform iterator, an
+adaptor which applies a unary function object to the dereferenced
+value of the some underlying iterator (see `transform_iterator`_).
+For unary functions such as ``times``, the return type of
+``operator*`` clearly needs to be the ``result_type`` of the function
+object, which is typically not a reference.  Because random access
+iterators are prequired to return lvalues from ``operator*``, if you
+wrap ``int*`` with a transform iterator, you do not get a random
+access iterator as might be expected, but an input iterator.
 
 .. _`transform_iterator`: http://www.boost.org/libs/utility/transform_iterator.htm
 
-A fourth example is found in the vertex and edge iterators of the
+A third example is found in the vertex and edge iterators of the
 `Boost Graph Library`_. These iterators return vertex and edge
 descriptors, which are lightweight handles created on-the-fly. They
 must be returned by-value. As a result, their current standard
@@ -121,10 +131,11 @@ In short, there are many useful iterators that do not fit into the
 current standard iterator categories. As a result, the following bad
 things happen:
 
-- Iterators are often miss-categorized. 
-- Algorithm requirements are more strict than necessary, because they can 
-  not separate out the need for random-access from the need for a true reference 
-  return type.
+- Iterators are often mis-categorized. 
+
+- Algorithm requirements are more strict than necessary, because they
+  cannot separate the need for random access or bidirectional
+  traversal from the need for a true reference return type.
 
 
 ========================
@@ -276,11 +287,11 @@ direct approach for specifying ``operator[]`` would have a return type
 of ``reference``; the same as ``operator*``. However, going in this
 direction would mean that an iterator satisfying the old Random Access
 Iterator requirements would not necessarily be a model of Readable or
-Writable Lvalue Iterator. Instead we have chosen a design that matches
-the resolution of `issue 299`_. So ``operator[]`` is only required to
-return something convertible to the ``value_type`` (for a Readable
-Iterator), and is required to support assignment ``i[n] = t`` (for a
-Writable Iterator).
+Writable Lvalue Iterator.  Instead we have chosen a design that
+matches the resolution of `issue 299`_: ``operator[]`` is only
+required to return something convertible to the ``value_type`` (for a
+Readable Iterator), and is required to support assignment ``i[n] = t``
+(for a Writable Iterator).
 
 
 ===============
