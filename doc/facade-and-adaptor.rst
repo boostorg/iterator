@@ -670,7 +670,7 @@ interoperable with ``X``.
     return tmp;
 
 :Postconditions: 
-:Returns: A copy of ``*this``.
+:Returns: A copy of ``*this``, incremented once.
 :Throws: 
 :Complexity: 
 
@@ -679,7 +679,7 @@ interoperable with ``X``.
 :Requires: 
 :Effects: 
 :Postconditions: 
-:Returns: ``static_cast<Derived const*>(this)->dereference();``
+:Returns: Invokes the ``decrement`` core interface function.
 :Throws: 
 :Complexity: 
 
@@ -687,35 +687,41 @@ interoperable with ``X``.
 
 :Requires: 
 :Effects: 
+  ::
+
+    Derived tmp(static_cast<Derived const*>(this));
+    --*this;
+    return tmp;
+
 :Postconditions: 
-:Returns: ``static_cast<Derived const*>(this)->dereference();``
+:Returns: A copy of ``*this``, decremented once.
 :Throws: 
 :Complexity: 
 
 ``Derived& operator+=(difference_type n);``
 
 :Requires: 
-:Effects: 
+:Effects: Invokes ``advance(n)``.
 :Postconditions: 
-:Returns: ``static_cast<Derived const*>(this)->dereference();``
+:Returns: ``*this``
 :Throws: 
 :Complexity: 
 
 ``Derived& operator-=(difference_type n);``
 
 :Requires: 
-:Effects: 
+:Effects: Invokes ``advance(-n)``.
 :Postconditions: 
-:Returns: ``static_cast<Derived const*>(this)->dereference();``
+:Returns: ``*this``
 :Throws: 
 :Complexity: 
 
-``Derived operator-(difference_type x) const;``
+``Derived operator-(difference_type n) const;``
 
 :Requires: 
 :Effects: 
 :Postconditions: 
-:Returns: ``static_cast<Derived const*>(this)->dereference();``
+:Returns: A copy of ``*this`` advanced by ``-n``.
 :Throws: 
 :Complexity: 
 
