@@ -8,7 +8,7 @@
 #define BOOST_ITERATOR_CONCEPTS_HPP
 
 #include <boost/concept_check.hpp>
-#include <boost/iterator_categories.hpp>
+#include <boost/iterator/iterator_categories.hpp>
 #include <boost/type_traits/conversion_traits.hpp>
 #include <boost/static_assert.hpp>
 

@@ -1,4 +1,10 @@
-#include <boost/iterator_concepts.hpp>
+// (C) Copyright Jeremy Siek 2002. Permission to copy, use, modify,
+// sell and distribute this software is granted provided this
+// copyright notice appears in all copies. This software is provided
+// "as is" without express or implied warranty, and with no claim as
+// to its suitability for any purpose.
+
+#include <boost/iterator/iterator_concepts.hpp>
 #include <boost/operators.hpp>
 
 struct new_iterator
