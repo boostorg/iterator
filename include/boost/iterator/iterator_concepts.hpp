@@ -139,7 +139,7 @@ namespace boost_concepts {
       traversal_category;
 
     void constraints() {
-      boost::function_requires< ForwardIteratorConcept<Iterator> >();
+      boost::function_requires< ForwardTraversalConcept<Iterator> >();
       
       BOOST_STATIC_ASSERT((boost::is_convertible<traversal_category*, 
                            boost::bidirectional_traversal_tag*>::value));
@@ -159,7 +159,7 @@ namespace boost_concepts {
       difference_type;
 
     void constraints() {
-      boost::function_requires< BidirectionalIteratorConcept<Iterator> >();
+      boost::function_requires< BidirectionalTraversalConcept<Iterator> >();
 
       BOOST_STATIC_ASSERT((boost::is_convertible<traversal_category*, 
                            boost::random_access_traversal_tag*>::value));

@@ -123,7 +123,7 @@ namespace boost {
         typedef typename OldTraits::iterator_category Cat;
         typedef typename OldTraits::value_type value_type;
       public:
-        typedef iter_category_to_return<Cat, value_type>::type type;
+        typedef typename iter_category_to_return<Cat, value_type>::type type;
       };      
     };
 
@@ -132,7 +132,7 @@ namespace boost {
         typedef boost::detail::iterator_traits<Iterator> OldTraits;
         typedef typename OldTraits::iterator_category Cat;
       public:
-        typedef iter_category_to_traversal<Cat>::type type;
+        typedef typename iter_category_to_traversal<Cat>::type type;
       };      
     };
 
