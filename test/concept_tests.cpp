@@ -74,23 +74,23 @@ main()
 
 #if !defined(BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION)
   boost::function_requires<
-    boost_concepts::MutableLvalueIteratorConcept<int*> >();
+    boost_concepts::WritableLvalueIteratorConcept<int*> >();
   boost::function_requires<
     boost_concepts::RandomAccessTraversalConcept<int*> >();
 
   boost::function_requires<
-    boost_concepts::ConstantLvalueIteratorConcept<const int*> >();
+    boost_concepts::ReadableLvalueIteratorConcept<const int*> >();
   boost::function_requires<
     boost_concepts::RandomAccessTraversalConcept<const int*> >();
 #endif
 
   boost::function_requires<
-    boost_concepts::MutableLvalueIteratorConcept<new_iterator> >();
+    boost_concepts::WritableLvalueIteratorConcept<new_iterator> >();
   boost::function_requires<
     boost_concepts::RandomAccessTraversalConcept<new_iterator> >();
 
   boost::function_requires<
-    boost_concepts::MutableLvalueIteratorConcept<old_iterator> >();
+    boost_concepts::WritableLvalueIteratorConcept<old_iterator> >();
   boost::function_requires<
     boost_concepts::RandomAccessTraversalConcept<old_iterator> >();
   return 0;

@@ -23,14 +23,22 @@
 #include <boost/bind.hpp>
 #include <boost/concept_check.hpp>
 
+
 #ifdef BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
 namespace boost { namespace detail
 {
   template<> struct iterator_traits<int*>
   : ptr_iter_traits<int> {};
+
+  template<> struct iterator_traits<std::pair<int, int>*>
+  : ptr_iter_traits<std::pair<int, int> > {};
   
   template<> struct iterator_traits<int const*>
   : ptr_iter_traits<int, int const> {};
+
+  template<> struct iterator_traits<std::pair<int, int> const*>
+  : ptr_iter_traits<std::pair<int, int>, std::pair<int, int> const> {};
+
 }}
 #endif
 
