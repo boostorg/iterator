@@ -663,12 +663,6 @@ interoperable with ``X``.
 
 :Requires: 
 :Effects:
-  ::
-
-    Derived tmp(static_cast<Derived const*>(this));
-    ++*this;
-    return tmp;
-
 :Postconditions: 
 :Returns: A copy of ``*this``, incremented once.
 :Throws: 
@@ -677,9 +671,9 @@ interoperable with ``X``.
 ``Derived& operator--();``
 
 :Requires: 
-:Effects: 
+:Effects: Invokes the ``decrement`` core interface function. 
 :Postconditions: 
-:Returns: Invokes the ``decrement`` core interface function.
+:Returns: ``*this``
 :Throws: 
 :Complexity: 
 
@@ -687,12 +681,6 @@ interoperable with ``X``.
 
 :Requires: 
 :Effects: 
-  ::
-
-    Derived tmp(static_cast<Derived const*>(this));
-    --*this;
-    return tmp;
-
 :Postconditions: 
 :Returns: A copy of ``*this``, decremented once.
 :Throws: 
