@@ -276,7 +276,7 @@ namespace boost
     //
     // For compilers not supporting is_convertible this only
     // works with the new boost return and traversal category
-    // types. The exect boost _types_ are required. No derived types
+    // types. The exact boost _types_ are required. No derived types
     // will work. 
     //
     //
