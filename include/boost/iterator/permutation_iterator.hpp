@@ -18,40 +18,64 @@ namespace boost
 {
 
 template< class ElementIterator
-        , class IndexIterator>
+        , class IndexIterator
+        , class ValueT        = use_default
+        , class CategoryT     = use_default
+        , class ReferenceT    = use_default
+        , class DifferenceT   = use_default >
 class permutation_iterator
   : public iterator_adaptor< 
-             permutation_iterator<ElementIterator, IndexIterator>
-           , IndexIterator, typename detail::iterator_traits<ElementIterator>::value_type
-           , use_default, typename detail::iterator_traits<ElementIterator>::reference>
+             permutation_iterator<ElementIterator, IndexIterator, ValueT, CategoryT, ReferenceT, DifferenceT>
+           , ElementIterator, ValueT, CategoryT, ReferenceT, DifferenceT >
 {
   typedef iterator_adaptor< 
-            permutation_iterator<ElementIterator, IndexIterator>
-          , IndexIterator, typename detail::iterator_traits<ElementIterator>::value_type
-          , use_default, typename detail::iterator_traits<ElementIterator>::reference> super_t;
+            permutation_iterator<ElementIterator, IndexIterator, ValueT, CategoryT, ReferenceT, DifferenceT>
+          , ElementIterator, ValueT, CategoryT, ReferenceT, DifferenceT > super_t;
 
   friend class iterator_core_access;
 
 public:
-  permutation_iterator() : m_elt_iter() {}
+  permutation_iterator() : order_it_() {}
 
   explicit permutation_iterator(ElementIterator x, IndexIterator y) 
-      : super_t(y), m_elt_iter(x) {}
+      : super_t(x), order_it_(y) {}
 
-  template<class OtherElementIterator, class OtherIndexIterator>
+  template<class OtherElementIterator, class OtherIndexIterator, class V, class C, class R, class D >
   permutation_iterator(
-      permutation_iterator<OtherElementIterator, OtherIndexIterator> const& r
+      permutation_iterator<OtherElementIterator, OtherIndexIterator, V, C, R, D> const& r
       , typename enable_if_convertible<OtherElementIterator, ElementIterator>::type* = 0
       , typename enable_if_convertible<OtherIndexIterator, IndexIterator>::type* = 0
       )
-    : super_t(r.base()), m_elt_iter(r.m_elt_iter)
+      : super_t(r.base())
   {}
 
 private:
     typename super_t::reference dereference() const
-        { return *(m_elt_iter + *this->base()); }
+        { return *(this->base() + *this->order_it_); }
+  
+    void increment() { ++this->order_it_; }
+    void decrement() { --this->order_it_; }
 
-    ElementIterator m_elt_iter;
+    void advance(typename super_t::difference_type n)
+    {
+      std::advance( order_it_, n );
+    }
+
+    template<class OtherElementIterator, class OtherIndexIterator, class V, class C, class R, class D >
+    typename super_t::difference_type
+    distance_to( permutation_iterator<OtherElementIterator, OtherIndexIterator, V, C, R, D> const& y ) const
+    {
+      return std::distance( this->order_it_, y.order_it_ );
+    }
+
+    template<class OtherElementIterator, class OtherIndexIterator, class V, class C, class R, class D >
+    bool
+    equal( permutation_iterator<OtherElementIterator, OtherIndexIterator, V, C, R, D> const& y ) const
+    {
+      return( y.order_it_ == this->order_it_ );
+    }
+
+    IndexIterator order_it_;
 };
 
 

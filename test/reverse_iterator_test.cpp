@@ -31,15 +31,13 @@ int main()
   {
     typedef boost::reverse_iterator<boost::bidirectional_iterator_archetype<dummyT> > Iter;
     boost::function_requires< boost::BidirectionalIteratorConcept<Iter> >();
-    boost::function_requires< boost_concepts::ReadableIteratorConcept<Iter> >();
-    boost::function_requires< boost_concepts::LvalueIteratorConcept<Iter> >();
+    boost::function_requires< boost_concepts::ReadableLvalueIteratorConcept<Iter> >();
     boost::function_requires< boost_concepts::BidirectionalTraversalConcept<Iter> >();
   }
   {
     typedef boost::reverse_iterator<boost::mutable_bidirectional_iterator_archetype<dummyT> > Iter;
     boost::function_requires< boost::Mutable_BidirectionalIteratorConcept<Iter> >();
-    boost::function_requires< boost_concepts::WritableIteratorConcept<Iter> >();
-    boost::function_requires< boost_concepts::LvalueIteratorConcept<Iter> >();
+    boost::function_requires< boost_concepts::WritableLvalueIteratorConcept<Iter> >();
     boost::function_requires< boost_concepts::BidirectionalTraversalConcept<Iter> >();
   }
   // Adapting new-style iterators
@@ -89,8 +87,7 @@ int main()
     > iter;
     typedef boost::reverse_iterator<iter> Iter;
     boost::function_requires< boost::BidirectionalIteratorConcept<Iter> >();
-    boost::function_requires< boost_concepts::ReadableIteratorConcept<Iter> >();
-    boost::function_requires< boost_concepts::LvalueIteratorConcept<Iter> >();
+    boost::function_requires< boost_concepts::ReadableLvalueIteratorConcept<Iter> >();
     boost::function_requires< boost_concepts::BidirectionalTraversalConcept<Iter> >();
   }
   {
@@ -101,8 +98,7 @@ int main()
     > iter;
     typedef boost::reverse_iterator<iter> Iter;
     boost::function_requires< boost::BidirectionalIteratorConcept<Iter> >();
-    boost::function_requires< boost_concepts::WritableIteratorConcept<Iter> >();
-    boost::function_requires< boost_concepts::LvalueIteratorConcept<Iter> >();
+    boost::function_requires< boost_concepts::WritableLvalueIteratorConcept<Iter> >();
     boost::function_requires< boost_concepts::BidirectionalTraversalConcept<Iter> >();
   }
 #endif

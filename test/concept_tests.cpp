@@ -61,35 +61,23 @@ main()
   (void)derived;
   
   boost::function_requires<
-    boost_concepts::WritableIteratorConcept<int*> >();
-  boost::function_requires<
-    boost_concepts::LvalueIteratorConcept<int*> >();
+    boost_concepts::WritableLvalueIteratorConcept<int*> >();
   boost::function_requires<
     boost_concepts::RandomAccessTraversalConcept<int*> >();
 
   boost::function_requires<
-    boost_concepts::ReadableIteratorConcept<const int*> >();
-  boost::function_requires<
-    boost_concepts::LvalueIteratorConcept<const int*> >();
+    boost_concepts::ReadableLvalueIteratorConcept<const int*> >();
   boost::function_requires<
     boost_concepts::RandomAccessTraversalConcept<const int*> >();
 
   boost::function_requires<
-    boost_concepts::WritableIteratorConcept<new_iterator> >();
-  boost::function_requires<
-    boost_concepts::LvalueIteratorConcept<new_iterator> >();
+    boost_concepts::WritableLvalueIteratorConcept<new_iterator> >();
   boost::function_requires<
     boost_concepts::RandomAccessTraversalConcept<new_iterator> >();
 
   boost::function_requires<
-    boost_concepts::WritableIteratorConcept<old_iterator> >();
-  boost::function_requires<
-    boost_concepts::LvalueIteratorConcept<old_iterator> >();
+    boost_concepts::WritableLvalueIteratorConcept<old_iterator> >();
   boost::function_requires<
     boost_concepts::RandomAccessTraversalConcept<old_iterator> >();
-
-  boost::function_requires<
-	boost_concepts::InteroperableIteratorConcept<int*, int const*> >();
-
   return 0;
 }
