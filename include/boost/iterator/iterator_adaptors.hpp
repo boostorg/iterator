@@ -317,8 +317,8 @@ namespace boost {
     BOOST_STATIC_ASSERT((is_same<typename Base1::difference_type,
                                  typename Base2::difference_type>::value));
 
-    return iterator_core_access::distance_to(lhs.derived(),
-                                             rhs.derived());
+    return iterator_core_access::distance_to(rhs.derived(),
+                                             lhs.derived());
   }
 
   template <class Derived,
