@@ -254,15 +254,15 @@ namespace boost
 
   //
   //
-  // iterator_facade applies iterator_traits_adaptor to it's traits argument.
+  // iterator_facade applies iterator_traits_adaptor to its traits argument.
   // The net effect is that iterator_facade is derived from std::iterator. This
   // is important for standard library interoperability of iterator types on some
   // (broken) implementations. 
   //
   template <
       class Derived
-    , class Value            = not_specified
-    , class Category         = not_specified
+    , class Value
+    , class Category
     , class Reference        = not_specified
     , class Pointer          = not_specified
     , class Difference       = not_specified
