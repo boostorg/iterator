@@ -4,6 +4,9 @@
 // "as is" without express or implied warranty, and with no claim as
 // to its suitability for any purpose.
 
+// TODO:
+//   Add separate category tag for operator[].
+
 #ifndef BOOST_ITERATOR_CATEGORIES_HPP
 #define BOOST_ITERATOR_CATEGORIES_HPP
 
@@ -21,19 +24,22 @@ namespace boost {
   // Return Type Categories
   struct readable_iterator_tag { };
   struct writable_iterator_tag { };
-  struct swappable_iterator_tag { };
-  struct mutable_lvalue_iterator_tag : 
-    virtual public writable_iterator_tag,
-    virtual public readable_iterator_tag { };
+  struct swappable_iterator_tag : 
+    virtual public readable_iterator_tag, // Not sure about this change -JGS
+    virtual public writable_iterator_tag { };
   struct constant_lvalue_iterator_tag : 
     virtual public readable_iterator_tag { };
+  struct mutable_lvalue_iterator_tag : 
+    virtual public swappable_iterator_tag,
+    virtual public constant_lvalue_iterator_tag { };
 
   // Traversal Categories
   struct input_traversal_tag { };
   struct output_traversal_tag { };
-  struct forward_traversal_tag { };
-  struct bidirectional_traversal_tag : public forward_traversal_tag { };
-  struct random_access_traversal_tag : public bidirectional_traversal_tag { };
+  struct forward_traversal_tag : virtual public input_traversal_tag, 
+    virtual public output_traversal_tag { };
+  struct bidirectional_traversal_tag : virtual public forward_traversal_tag { };
+  struct random_access_traversal_tag : virtual public bidirectional_traversal_tag { };
 
   struct error_iterator_tag { };
 

@@ -18,7 +18,7 @@ template <class Base>
 struct downcastable : Base
 {
     typedef typename Base::final final_t;
- public:
+public:
     final_t& downcast() { return static_cast<final_t&>(*this); }
     const final_t& downcast() const { return static_cast<const final_t&>(*this); }
 };
@@ -205,6 +205,47 @@ struct reverse_iterator
     }
  private:
     Base m_base;
+};
+
+template <class AdaptableUnaryFunction, class Base>
+struct transform_iterator
+    : iterator_adaptor<
+         transform_iterator<AdaptableUnaryFunction, Base>, 
+         typename AdaptableUnaryFunction::result_type,
+         typename AdaptableUnaryFunction::result_type, 
+         typename AdaptableUnaryFunction::result_type*, 
+         iterator_tag<readable_iterator_tag,
+                      typename traversal_category<Base>::type>, 
+         typename detail::iterator_traits<Base>::difference_type
+      >
+{
+  typedef typename AdaptableUnaryFunction::result_type value_type;
+private:
+  typedef iterator_adaptor<
+  transform_iterator<AdaptableUnaryFunction, Base>, value_type, value_type, value_type*, 
+    iterator_tag<readable_iterator_tag,
+				 typename traversal_category<Base>::type>, 
+    typename detail::iterator_traits<Base>::difference_type
+  > super;
+  
+public:
+  transform_iterator() { }
+
+  transform_iterator(const Base& x, AdaptableUnaryFunction f)
+    : m_base(x), m_f(f) { }
+
+  value_type dereference() const { return m_f(*m_base); }
+
+  template <class F2, class B2>
+  transform_iterator(const transform_iterator<F2,B2>& y)
+	: m_base(y.m_base), m_f(y.m_f) { }
+
+  Base& base() { return m_base; }
+  Base const& base() const { return m_base; }
+    
+private:
+  Base m_base;
+  AdaptableUnaryFunction m_f;
 };
 
 
