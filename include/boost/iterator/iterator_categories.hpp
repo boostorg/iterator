@@ -26,6 +26,23 @@ namespace boost {
 
   struct error_iterator_tag { };
 
+  // When creating new iterators, you have three options. 
+
+  // 1) The recommended option is to specialize the return_category
+  // and traversal_category for your iterator. However, if your
+  // iterator is a templates, this will cause a problem on compilers
+  // that do not have partial specialization.
+  // 2) The second option is to put two nested typedefs in your
+  // iterator, return_category and traversal_category, and derive your
+  // iterator from new_iterator_base. 
+  // 3) The third option is the create your iterator in the old STL
+  // style and let the backward compatibility parts of this header
+  // handle the rest. 
+
+  // BTW, if you choose one of the first two options, you can still
+  // implement all the old-style iterator typedefs, they will not get
+  // in the way of the new categories.
+
   // Inherit from iterator_base if your iterator defines its own
   // return_category and traversal_category. Otherwise, the "old style"
   // iterator category will be mapped to the return_category and
