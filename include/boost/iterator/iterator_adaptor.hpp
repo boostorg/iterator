@@ -273,11 +273,27 @@ namespace boost
   
       void advance(typename super_t::difference_type n)
       {
+          BOOST_STATIC_ASSERT(
+              (detail::is_tag< 
+                   random_access_traversal_tag
+                 , typename super_t::iterator_category::traversal
+               >::value)
+              );
           m_iterator += n;
       }
   
       void increment() { ++m_iterator; }
-      void decrement() { --m_iterator; }
+
+      void decrement() 
+      { 
+           BOOST_STATIC_ASSERT(
+               (detail::is_tag< 
+                    bidirectional_traversal_tag
+                  , typename super_t::iterator_category::traversal
+                >::value)
+               );
+           --m_iterator;
+      }
 
       template <
           class OtherDerived, class OtherIterator, class V, class C, class R, class D
@@ -285,10 +301,16 @@ namespace boost
       typename super_t::difference_type distance_to(
           iterator_adaptor<OtherDerived, OtherIterator, V, C, R, D> const& y) const
       {
-        // Maybe readd with same_distance
-        //           BOOST_STATIC_ASSERT(
-        //               (detail::same_category_and_difference<Derived,OtherDerived>::value)
-        //               );
+          BOOST_STATIC_ASSERT(
+              (detail::is_tag< 
+                   random_access_traversal_tag
+                 , typename super_t::iterator_category::traversal
+               >::value)
+              );
+          // Maybe readd with same_distance
+          //           BOOST_STATIC_ASSERT(
+          //               (detail::same_category_and_difference<Derived,OtherDerived>::value)
+          //               );
           return y.base() - m_iterator;
       }
 
