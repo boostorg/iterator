@@ -163,7 +163,7 @@ Forward Iterator -> Single Pass Iterator and Readable Iterator and Writable Iter
 Bidirectional Iterator -> Bidirectional Traversal Iterator and Swappable Iterator
   ``reverse``
 
-Bidirectional Iterator -> Bidirectional Traversal Iterator and Readable and Writable Iterator
+Bidirectional Iterator -> Bidirectional Traversal Iterator and Readable and Swappable Iterator
   ``partition``
 
 Bidirectional Iterator (1) -> Bidirectional Traversal Iterator and Readable Iterator, 
@@ -179,7 +179,7 @@ Bidirectional Iterator -> Bidirectional Traversal Iterator and Readable Iterator
 Bidirectional Iterator -> Bidirectional Traversal Iterator and Readable Iterator
   ``reverse_copy``
 
-Random Access Iterator -> Random Access Traversal Iterator and Readable and Writable Iterator
+Random Access Iterator -> Random Access Traversal Iterator and Readable and Swappable Iterator
   ``random_shuffle, sort, stable_sort, partial_sort, nth_element, push_heap, pop_heap
   make_heap, sort_heap``
 
