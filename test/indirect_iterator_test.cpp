@@ -145,8 +145,8 @@ main()
   
   // Concept checks
   {
-    typedef boost::indirect_iterator<int**>       iter_t;
-    typedef boost::indirect_iterator<int* const*> c_iter_t;
+    typedef boost::indirect_iterator<shared_t::iterator>       iter_t;
+    typedef boost::indirect_iterator<shared_t::const_iterator> c_iter_t;
 
     // Older Dinkumware and GCC standard lib don't supply symmetric constant/mutable
     // iterator operators
