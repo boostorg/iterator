@@ -229,11 +229,16 @@ are combined using the new `iterator_tag` class.
     typedef TraversalTag traversal;
   };
 
-The ``iterator_tag`` class template inherits the appropriate iterator
-tag from the old requirements based on the new tags of the
-iterator. The algorithm for determining the old tag from the new tags
-picks the smallest old concept that includes all of the requirements
-of the access and traversal concepts.
+The ``iterator_tag`` class template is derived from the appropriate
+iterator tag or tags from the old requirements based on the new-style
+tags passed as template parameters. The algorithm for determining the
+old tag or tags from the new tags picks the least-refined old concepts
+that include all of the requirements of the access and traversal
+concepts, if any such category exists.  For example, a the category
+tag for a Readable Single Pass Iterator will always be derived from
+``input_iterator_tag``, while the category tag for a Single Pass
+Iterator that is both Readable and Writable will be derived from both
+``input_iterator_tag`` and ``writable_iterator_tag``.
 
 We also provide two helper classes that make it convenient to obtain
 the access and traversal tags of an iterator. These helper classes
@@ -407,6 +412,8 @@ semantics.
  | Expression                       | Return Type             | Assertion/Note/Precondition/Postcondition/Semantics                                     |
  +==================================+=========================+=========================================================================================+
  | ``++r``                          | ``X&``                  | pre: ``r`` is dereferenceable; post: ``r`` is dereferenceable or ``r`` is past-the-end  |
+ +----------------------------------+-------------------------+-----------------------------------------------------------------------------------------+
+ | ``a == b``                       | convertible to ``bool`` | ``==`` is an equivalence relation over its domain                                       | 
  +----------------------------------+-------------------------+-----------------------------------------------------------------------------------------+
  | ``a != b``                       | convertible to ``bool`` | ``!(a == b)``                                                                           |
  +----------------------------------+-------------------------+-----------------------------------------------------------------------------------------+

@@ -13,9 +13,9 @@
 .. _`Open Systems Lab`: http://www.osl.iu.edu
 .. _`Institute for Transport Railway Operation and Construction`: http://www.ive.uni-hannover.de
 
-:abstract: We propose as set of class templates that help programmers
-           build standard-conforming iterators and build iterators
-           that adapt of other iterators.
+:abstract: We propose a set of class templates that help programmers
+           build standard-conforming iterators and to build iterators
+           that adapt other iterators.
 
 .. contents:: Table of Contents
 
@@ -136,42 +136,64 @@ In addition to the behaviors listed above, the core interface elements
 include the associated types exposed through iterator traits: value
 type, reference, pointer, and iterator category. 
 
-The user of the ``iterator_facade`` creates a class the derives from
-``iterator_facade`` and defines member functions that implement the
-core behaviours. The member functions are required to have the
-following interface. In the following, ``self`` is the type of the
-derived iterator.
+The user of the ``iterator_facade`` creates a class derived from an
+instantiation of ``iterator_facade`` which defines member functions
+implementing the core behaviors.  The following table describes
+expressions which are required to be valid depending on the category
+of the derived iterator type.
 
-::
+In the table below, ``X`` is the derived iterator type, ``a`` is an
+object of type ``X``, ``b`` and ``c`` are objects of type ``const X``,
+``y`` is a constant object of an arbitrary iterator type, and ``n`` is
+an object of ``X::difference_type``
 
-  reference dereference() const;
-  bool equal(self const& x) const;
-  void advance(difference_type n);
-  void increment();
-  void decrement();
-  difference_type distance_to(self const& y) const;
++----------------------------------------+----------------------------------------+-------------------------------------------------+-------------------------------------------+
+| Expression                             | Return Type                            |    Assertion/Note/Precondition/Postcondition    | Required to implement Iterator Concept(s) |
+|                                        |                                        |                                                 |                                           |
++========================================+========================================+=================================================+===========================================+
+| ``c.dereference()``                    | ``X::reference``                       |                                                 | Readable Iterator, Writable Iterator      |
++----------------------------------------+----------------------------------------+-------------------------------------------------+-------------------------------------------+
+| ``c.equal(b)``                         | convertible to bool                    |true iff ``b`` and ``c`` are equivalent.         | Single Pass Iterator                      |
++----------------------------------------+----------------------------------------+-------------------------------------------------+-------------------------------------------+
+| ``c.equal(y)``                         | convertible to bool                    |true iff ``c`` and ``y`` refer to the same       |                                           |
+|                                        |                                        |position.  Implements ``c == y`` and ``c != y``. |                                           |
++----------------------------------------+----------------------------------------+-------------------------------------------------+-------------------------------------------+
+| ``a.advance(n)``                       | unused                                 |                                                 | Random Access Traversal Iterator          |
++----------------------------------------+----------------------------------------+-------------------------------------------------+-------------------------------------------+
+| ``a.increment()``                      | unused                                 |                                                 | Incrementable Iterator                    |
++----------------------------------------+----------------------------------------+-------------------------------------------------+-------------------------------------------+
+| ``a.decrement()``                      | unused                                 |                                                 | Bidirectional Traversal Iterator          |
++----------------------------------------+----------------------------------------+-------------------------------------------------+-------------------------------------------+
+| ``c.distance_to(b)``                   | convertible to X::difference_type      | equivalent to ``distance(c, b)``                | Random Access Traversal Iterator          |
++----------------------------------------+----------------------------------------+-------------------------------------------------+-------------------------------------------+
+| ``c.distance_to(y)``                   | convertible to X::difference_type      |equivalent to ``distance(c, y)``.  Implements ``c|                                           |
+|                                        |                                        |- y``, ``c < y``, ``c <= y``, ``c > y``, and ``c |                                           |
+|                                        |                                        |>= c``.                                          |                                           |
++----------------------------------------+----------------------------------------+-------------------------------------------------+-------------------------------------------+
 
 
 Iterator Adaptor
 ================
 
-The ``iterator_adaptor`` class template adapts some ``Base``{#base]_
-type to create a new iterator. ``iterator_adaptor`` derives from
-``iterator_facade`` and implements the core interface in terms of the
-``Base`` type. In essense, the ``iterator_adaptor`` merely forwards
-all operations to the ``Base`` type. An object of the ``Base`` type is
-a data member of ``iterator_adaptor``.
+The ``iterator_adaptor`` class template adapts some ``Base`` [#base]_
+type to create a new iterator. Instantiations of ``iterator_adaptor``
+are derived from a corresponding instantiation of ``iterator_facade``
+and implement the core behaviors in terms of the ``Base`` type. In
+essence, the ``iterator_adaptor`` merely forwards all operations to
+the ``Base`` type. An object of the ``Base`` type is a data member of
+``iterator_adaptor``.
 
 
-.. [#base] The term "Base" here is not meant to imply the 
-   class being inherited from. We have followed the lead of the
-   standard library, which provides a base() function to access the
-   underlying iterator object of a ``reverse_iterator`` adaptor.
+.. [#base] The term "Base" here does not refer to a base class and is
+   not meant to imply the use of derivation. We have followed the lead
+   of the standard library, which provides a base() function to access
+   the underlying iterator object of a ``reverse_iterator`` adaptor.
 
-The user of ``iterator_adaptor`` constructs a class that derives from
-``iterator_adaptor`` and then selectively overrides some of the core
-operations. In addition, the derived class will typically need to
-define some constructors.
+The user of ``iterator_adaptor`` creates a class derived from an
+instantiation of ``iterator_adaptor`` and then selectively overrides
+some of the core operations by implementing the (non-virtual) member
+functions described in the table above.  In addition, the derived
+class will typically need to define some constructors.
 
 The library also contains several examples of specialized adaptors
 which were easily implemented using ``iterator_adaptor``:
