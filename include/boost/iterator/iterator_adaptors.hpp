@@ -4,6 +4,10 @@
 #include <boost/utility.hpp> // for prior
 #include <boost/iterator.hpp>
 #include <boost/iterator/iterator_categories.hpp>
+#include <boost/mpl/aux_/has_xxx.hpp>
+#include <boost/type_traits/is_same.hpp>
+
+#include "boost/type_traits/detail/bool_trait_def.hpp"
 
 namespace boost {
 
@@ -100,11 +104,14 @@ typename Base1::difference_type operator-(
     return j.self().distance_to(i.self());
 }
 
+// Used for a default template argument, when we can't afford to
+// instantiate the default calculation if unused.
+struct unspecified {};
+
 #if 0
 // Beginnings of a failed attempt to conditionally provide base()
 // functions in iterator_adaptor. It may be that a public m_base
 // member is the only way to avoid boilerplate!
-struct unspecified {};
 
 template <class Base>
 struct base_wrapper_impl
@@ -287,42 +294,87 @@ private:
 
 namespace detail
 {
+  //
+  // Detection for whether a type has a nested `element_type'
+  // typedef. Used to detect smart pointers. We're having trouble
+  // auto-detecting smart pointers with gcc-2.95 via the nested
+  // element_type member. However, we really ought to have a
+  // specializable is_pointer template which can be used instead with
+  // something like boost/python/pointee.hpp to find the value_type.
+  //
+  namespace aux
+  {
+    BOOST_MPL_HAS_XXX_TRAIT_DEF(element_type)
+  }
+
   template <class T>
-  struct traits_of_value_type
-      : detail::iterator_traits<typename detail::iterator_traits<T>::value_type>
+  struct has_element_type
+      : mpl::if_<
+          is_class<T>
+# if __GNUC__ == 2 // gcc 2.95 doesn't seem to be able to detect element_type without barfing
+          , mpl::bool_c<false>
+# else 
+          , aux::has_element_type<T>
+# endif 
+          , mpl::bool_c<false>
+        >::type
   {
   };
-}
+  
+  // Metafunction returning the nested element_type typedef
+  template <class T>
+  struct smart_pointer_traits
+  {
+      typedef typename remove_const<
+          typename T::element_type
+      >::type value_type;
 
-template <class Base,      // Mutable or Immutable, does not matter
-          class Value
-                = BOOST_ARG_DEPENDENT_TYPENAME detail::traits_of_value_type<
-                        Base>::value_type
-          , class Reference
-                = BOOST_ARG_DEPENDENT_TYPENAME detail::traits_of_value_type<
-                        Base>::reference
-          , class Category = BOOST_ARG_DEPENDENT_TYPENAME boost::detail::iterator_traits<
-                        Base>::iterator_category
-          , class Pointer
-                = BOOST_ARG_DEPENDENT_TYPENAME detail::traits_of_value_type<
-                        Base>::pointer
-         >
+      typedef typename T::element_type& reference;
+      typedef typename T::element_type* pointer;
+  };
+
+  // If the Value parameter is unspecified, we use this metafunction
+  // to deduce the default types
+  template <class Iter>
+  struct indirect_defaults
+      : mpl::if_c<
+          has_element_type<typename iterator_traits<Iter>::value_type>::value
+          , smart_pointer_traits<typename iterator_traits<Iter>::value_type>
+          , iterator_traits<typename iterator_traits<Iter>::value_type>
+      >::type
+  {
+      typedef typename iterator_traits<Iter>::iterator_category iterator_category;
+      typedef typename iterator_traits<Iter>::difference_type difference_type;
+  };
+
+  template <class Base, class Traits>
+  struct indirect_traits
+      : mpl::if_<is_same<Traits,unspecified>, indirect_defaults<Base>, Traits>::type
+  {
+  };
+} // namespace detail
+
+template <class Base, class Traits = unspecified>
 struct indirect_iterator
     : iterator_adaptor<
-       indirect_iterator<Base,Value,Reference,Category,Pointer>
-        , Value, Reference, Pointer, Category
-        , typename detail::iterator_traits<Base>::difference_type
+       indirect_iterator<Base,Traits>
+        , typename detail::indirect_traits<Base,Traits>::value_type
+        , typename detail::indirect_traits<Base,Traits>::reference
+        , typename detail::indirect_traits<Base,Traits>::pointer
+        , typename detail::indirect_traits<Base,Traits>::iterator_category
+        , typename detail::indirect_traits<Base,Traits>::difference_type
       >
 {
-    Reference dereference() const { return **this->m_base; }
-
     indirect_iterator() {}
+    
+    typename detail::indirect_traits<Base,Traits>::reference
+    dereference() const { return **this->m_base; }
 
     indirect_iterator(Base iter)
         : m_base(iter) {}
 
-    template <class Base2, class Reference2, class Pointer2>
-    indirect_iterator(const indirect_iterator<Base2,Value,Reference2,Category,Pointer2>& y)
+    template <class Base2, class Traits2>
+    indirect_iterator(const indirect_iterator<Base2,Traits2>& y)
         : m_base(y.base())
     {}
     
@@ -331,6 +383,18 @@ struct indirect_iterator
  private:
     Base m_base;
 };
+
+template <class Iter>
+indirect_iterator<Iter> make_indirect_iterator(Iter x)
+{
+    return indirect_iterator<Iter>(x);
+}
+
+template <class Traits, class Iter>
+indirect_iterator<Iter,Traits> make_indirect_iterator(Iter x, Traits* = 0)
+{
+    return indirect_iterator<Iter,Traits>(x);
+}
 
 } // namespace boost
 
