@@ -1,1 +1,0 @@
-unit-test ia1 : reverse_iterator.cpp : <sysinclude>../../.. <sysinclude>$(BOOST) ;
