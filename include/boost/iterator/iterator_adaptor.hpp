@@ -191,12 +191,6 @@ namespace boost
               , iterator_traversal<Base>
             >::type
 
-# ifdef BOOST_ITERATOR_REF_CONSTNESS_KILLS_WRITABILITY
-          , typename detail::ia_dflt_help<
-                Reference
-              , iterator_reference<Base>
-            >::type
-# else
           , typename detail::ia_dflt_help<
                 Reference
               , mpl::apply_if<
@@ -205,7 +199,6 @@ namespace boost
                   , add_reference<Value>
                 >
             >::type
-# endif 
 
           , typename detail::ia_dflt_help<
                 Difference, iterator_difference<Base>
