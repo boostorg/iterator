@@ -13,11 +13,9 @@
 .. _`Open Systems Lab`: http://www.osl.iu.edu
 .. _`Institute for Transport Railway Operation and Construction`: http://www.ive.uni-hannover.de
 
-:abstract: We propose to introduce a new system of iterator concepts
-           which treats access and positioning independently.  We also
-           propose two class templates that make it easier to build
-           new standard-conforming iterators and to adapt existing
-           iterator types.
+:abstract: We propose two class templates that help programmers
+           build standard-conforming iterators and build
+           iterators that adapt of other iterators.
 
 .. contents:: Table of Contents
 
@@ -83,7 +81,7 @@ in the literature:
   containers, are themselves adaptors over the underlying iterators.
 
 
-* smart iterators [5] adapt an iterator’s dereferencing behavior by
+* smart iterators [5] adapt an iterator's dereferencing behavior by
   applying a function object to the object being referenced and
   returning the result.
 
@@ -170,7 +168,7 @@ implemented using iterator adaptor:
   and applies an extra level of dereferencing.
 
 
-* Reverse Iterator Adaptor, which inverts the direction of a Base iterator’s motion,
+* Reverse Iterator Adaptor, which inverts the direction of a Base iterator's motion,
   while allowing adapted constant and mutable iterators to interact in the expected
   ways. We will discuss this further in Section 5.2.1.
 
@@ -235,19 +233,144 @@ xxx
  Proposed Text
 ===============
 
-xxx
 
-Standard Iterator Tags
-======================
 
-xxx
+::
+
+  struct not_specified { };
+
+  template <
+      class Derived
+    , class Value      = not_specified
+    , class Category   = not_specified
+    , class Reference  = not_specified
+    , class Pointer    = not_specified
+    , class Difference = not_specified
+  >
+  class iterator_facade;
+
+  template <
+      class Derived
+    , class Base
+    , class Value      = not_specified
+    , class Category   = not_specified
+    , class Reference  = not_specified
+    , class Pointer    = not_specified
+    , class Difference = not_specified
+  >
+  class iterator_adaptor;
+  
+  
+  
+
 
 ``iterator_facade``
 ===================
 
-xxx
+::
+
+  template <
+      class Derived
+    , class Value      = not_specified
+    , class Category   = not_specified
+    , class Reference  = not_specified
+    , class Pointer    = not_specified
+    , class Difference = not_specified
+  >
+  class iterator_facade {
+  public:
+      typedef ... value_type;
+      typedef ... reference;
+      typedef ... difference_type;
+      typedef ... pointer;
+      typedef ... iterator_category;
+
+      reference operator*() const;
+      <see details> operator->() const;
+      <see details> operator[](difference_type n) const;
+      Derived& operator++();
+      Derived operator++(int);
+      Derived& operator--();
+      Derived operator--(int);
+      Derived& operator+=(difference_type n);
+      Derived& operator-=(difference_type n);
+      Derived operator-(difference_type x) const;
+  };
+
+  // Comparison operators
+  template <class Dr1, class V1, class C1, class R1, class P1, class D1,
+            class Dr2, class V2, class C2, class R2, class P2, class D2>
+  typename enable_if_interoperable<Dr1, Dr2, bool>::type
+  operator ==(iterator_facade<Dr1, V1, C1, R1, P1, D1> const& lhs,
+              iterator_facade<Dr2, V2, C2, R2, P2, D2> const& rhs);
+
+  template <class Dr1, class V1, class C1, class R1, class P1, class D1,
+            class Dr2, class V2, class C2, class R2, class P2, class D2>
+  typename enable_if_interoperable<Dr1, Dr2, bool>::type
+  operator !=(iterator_facade<Dr1, V1, C1, R1, P1, D1> const& lhs,
+              iterator_facade<Dr2, V2, C2, R2, P2, D2> const& rhs);
+
+  template <class Dr1, class V1, class C1, class R1, class P1, class D1,
+            class Dr2, class V2, class C2, class R2, class P2, class D2>
+  typename enable_if_interoperable<Dr1, Dr2, bool>::type
+  operator <(iterator_facade<Dr1, V1, C1, R1, P1, D1> const& lhs,
+             iterator_facade<Dr2, V2, C2, R2, P2, D2> const& rhs);
+
+  template <class Dr1, class V1, class C1, class R1, class P1, class D1,
+            class Dr2, class V2, class C2, class R2, class P2, class D2>
+  typename enable_if_interoperable<Dr1, Dr2, bool>::type
+  operator <=(iterator_facade<Dr1, V1, C1, R1, P1, D1> const& lhs,
+              iterator_facade<Dr2, V2, C2, R2, P2, D2> const& rhs);
+
+  template <class Dr1, class V1, class C1, class R1, class P1, class D1,
+            class Dr2, class V2, class C2, class R2, class P2, class D2>
+  typename enable_if_interoperable<Dr1, Dr2, bool>::type
+  operator >(iterator_facade<Dr1, V1, C1, R1, P1, D1> const& lhs,
+             iterator_facade<Dr2, V2, C2, R2, P2, D2> const& rhs);
+
+  template <class Dr1, class V1, class C1, class R1, class P1, class D1,
+            class Dr2, class V2, class C2, class R2, class P2, class D2>
+  typename enable_if_interoperable<Dr1, Dr2, bool>::type
+  operator >=(iterator_facade<Dr1, V1, C1, R1, P1, D1> const& lhs,
+              iterator_facade<Dr2, V2, C2, R2, P2, D2> const& rhs);
+
+  template <class Dr1, class V1, class C1, class R1, class P1, class D1,
+            class Dr2, class V2, class C2, class R2, class P2, class D2>
+  typename enable_if_interoperable<Dr1, Dr2, bool>::type
+  operator >=(iterator_facade<Dr1, V1, C1, R1, P1, D1> const& lhs,
+              iterator_facade<Dr2, V2, C2, R2, P2, D2> const& rhs);
+
+  // Iterator difference
+  template <class Dr1, class V1, class C1, class R1, class P1, class D1,
+            class Dr2, class V2, class C2, class R2, class P2, class D2>
+  typename enable_if_interoperable<Dr1, Dr2, bool>::type
+  operator -(iterator_facade<Dr1, V1, C1, R1, P1, D1> const& lhs,
+             iterator_facade<Dr2, V2, C2, R2, P2, D2> const& rhs);
+
+  // Iterator addition
+  template <class Derived, class V, class C, class R, class P, class D>
+  Derived operator+ (iterator_facade<Derived, V, C, R, P, D> const&,
+                     typename Derived::difference_type n)
+
+
 
 ``iterator_adaptor``
 ====================
 
-xxx
+::
+  
+  template <
+      class Derived
+    , class Base
+    , class Value      = not_specified
+    , class Category   = not_specified
+    , class Reference  = not_specified
+    , class Pointer    = not_specified
+    , class Difference = not_specified
+  >
+  class iterator_adaptor : public iterator_facade<Derived, /*impl detail ...*/> {
+  public:
+      iterator_adaptor() {}
+      explicit iterator_adaptor(Base iter);
+      Base base() const;
+  };
