@@ -13,7 +13,7 @@
 
 #include <boost/concept_check.hpp>
 #include <boost/iterator/iterator_categories.hpp>
-#include <boost/type_traits/conversion_traits.hpp>
+#include <boost/type_traits/is_same.hpp>
 #include <boost/static_assert.hpp>
 
 // Use boost::detail::iterator_traits to work around some MSVC/Dinkumware problems.
@@ -93,8 +93,7 @@ namespace boost_concepts {
 
       static_assert_base_and_derived<boost::constant_lvalue_iterator_tag, return_category>();
 
-      BOOST_STATIC_ASSERT((boost::is_same<reference, 
-                           const value_type&>::value));
+      BOOST_STATIC_ASSERT((boost::is_same<reference, const value_type&>::value));
 
       reference v = *i;
       boost::ignore_unused_variable_warning(v);
