@@ -19,8 +19,8 @@ struct downcastable : Base
 {
     typedef typename Base::final final_t;
 public:
-    final_t& downcast() { return static_cast<final_t&>(*this); }
-    const final_t& downcast() const { return static_cast<const final_t&>(*this); }
+    final_t& self() { return static_cast<final_t&>(*this); }
+    const final_t& self() const { return static_cast<const final_t&>(*this); }
 };
 
 template <class Base>
@@ -32,42 +32,42 @@ template <class Base1, class Base2>
 inline bool operator==(const iterator_comparisons<Base1>& xb,
                        const iterator_comparisons<Base2>& yb)
 {
-    return xb.downcast().equal(yb.downcast());
+    return xb.self().equal(yb.self());
 }
 
 template <class Base1, class Base2>
 inline bool operator!=(const iterator_comparisons<Base1>& xb,
                        const iterator_comparisons<Base2>& yb)
 {
-    return !xb.downcast().equal(yb.downcast());
+    return !xb.self().equal(yb.self());
 }
 
 template <class Base1, class Base2>
 inline bool operator<(const iterator_comparisons<Base1>& xb,
                       const iterator_comparisons<Base2>& yb)
 {
-    return yb.downcast().distance_from(xb.downcast()) < 0;
+    return xb.self().distance_to(yb.self()) < 0;
 }
 
 template <class Base1, class Base2>
 inline bool operator>(const iterator_comparisons<Base1>& xb,
                       const iterator_comparisons<Base2>& yb)
 {
-    return yb.downcast().distance_from(xb.downcast()) > 0;
+    return xb.self().distance_to(yb.self()) > 0;
 }
 
 template <class Base1, class Base2>
 inline bool operator>=(const iterator_comparisons<Base1>& xb,
                        const iterator_comparisons<Base2>& yb)
 {
-    return yb.downcast().distance_from(xb.downcast()) >= 0;
+    return xb.self().distance_to(yb.self()) >= 0;
 }
 
 template <class Base1, class Base2>
 inline bool operator<=(const iterator_comparisons<Base1>& xb,
                        const iterator_comparisons<Base2>& yb)
 {
-    return yb.downcast().distance_from(xb.downcast()) <= 0;
+    return xb.self().distance_to(yb.self()) <= 0;
 }
 
 
@@ -79,7 +79,7 @@ typename Base::final operator+(
     const iterator_arith<Base>& i, // pass by ref, not value to avoid slicing -JGS
     typename Base::difference_type n)
 {
-    typename Base::final tmp(i.downcast());
+    typename Base::final tmp(i.self());
     return tmp += n;
 }
 
@@ -88,7 +88,7 @@ typename Base::final operator+(
     typename Base::difference_type n,  
     const iterator_arith<Base>& i) // pass by ref, not value to avoid slicing -JGS
 {
-    typename Base::final tmp(i.downcast());
+    typename Base::final tmp(i.self());
     return tmp += n;
 }
 
@@ -97,7 +97,7 @@ typename Base1::difference_type operator-(
     const iterator_arith<Base1>& i,
     const iterator_arith<Base2>& j)
 {
-    return j.downcast().distance_from(i.downcast());
+    return i.self().distance_to(i.self());
 }
 
 
@@ -116,49 +116,49 @@ struct iterator_adaptor : B
     typedef D difference_type;
 
     reference operator*() const
-    { return downcast().dereference(); }
+    { return self().dereference(); }
     //operator->() const { return detail::operator_arrow(*this, iterator_category()); }
     reference operator[](difference_type n) const
     { return *(*this + n); }
     Final& operator++()
-    { downcast().increment(); return downcast(); }
+    { self().increment(); return self(); }
     Final operator++(int)
-    { Final tmp(downcast()); ++*this; return tmp; }
+    { Final tmp(self()); ++*this; return tmp; }
     Final& operator--()
-    { downcast().decrement(); return downcast(); }
+    { self().decrement(); return self(); }
     Final operator--(int)
-    { Final tmp(downcast()); --*this; return tmp; }
+    { Final tmp(self()); --*this; return tmp; }
     Final& operator+=(difference_type n)
-    { downcast().advance(n); return downcast(); }
+    { self().advance(n); return self(); }
     Final& operator-=(difference_type n)
-    { downcast().advance(-n); return downcast(); }
+    { self().advance(-n); return self(); }
     Final operator-(difference_type x) const
-    { Final result(downcast()); return result -= x; }
+    { Final result(self()); return result -= x; }
 
     template <class Final2, class V2, class R2, class P2, class B2>
     bool equal(iterator_adaptor<Final2,V2,R2,P2,C,D,B2> const& x) const
     {
-        return this->downcast().base() == x.downcast().base();
+        return self().base() == x.self().base();
     }
     void advance(difference_type n)
     {
-        this->downcast().base() += n;
+        self().base() += n;
     }
 
-    reference dereference() const { return *this->downcast().base(); }  
+    reference dereference() const { return *self().base(); }  
     
-    void increment() { ++this->downcast().base(); }
-    void decrement() { --this->downcast().base(); }
+    void increment() { ++self().base(); }
+    void decrement() { --self().base(); }
 
     template <class Final2, class B2, class V2, class R2, class P2>
     difference_type
-    distance_from(const iterator_adaptor<Final2,V2,R2,P2,C,D,B2>& y) const
+    distance_to(const iterator_adaptor<Final2,V2,R2,P2,C,D,B2>& y) const
     {
-        return y.downcast().base() - this->downcast().base();//?
+        return self().base() - y.self().base();//?
     }
     
  private:
-    using B::downcast;
+    using B::self;
 };
 
 
@@ -199,9 +199,9 @@ struct reverse_iterator
 
     template <class B2, class V2, class R2, class P2>
     typename super::difference_type
-    distance_from(const reverse_iterator<B2,V2,R2,P2,C,D>& y) const
+    distance_to(const reverse_iterator<B2,V2,R2,P2,C,D>& y) const
     {
-        return m_base - y.m_base;
+        return y.m_base - m_base;
     }
  private:
     Base m_base;
@@ -241,7 +241,6 @@ private:
   Base m_base;
   AdaptableUnaryFunction m_f;
 };
-
 
 } // namespace boost
 
