@@ -28,9 +28,10 @@
 #include <stdlib.h>
 #include <set>
 
-#if defined(BOOST_MSVC_STD_ITERATOR)                    \
- || BOOST_WORKAROUND(_CPPLIB_VER, <= 310)               \
- || BOOST_WORKAROUND(__GNUC__, <= 2 && !__SGI_STL_PORT)
+#if !defined(__SGI_STL_PORT)                            \
+    && (defined(BOOST_MSVC_STD_ITERATOR)                \
+        || BOOST_WORKAROUND(_CPPLIB_VER, <= 310)        \
+        || BOOST_WORKAROUND(__GNUC__, <= 2))
 
 // std container random-access iterators don't support mutable/const
 // interoperability (but may support const/mutable interop).
