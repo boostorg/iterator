@@ -1,9 +1,11 @@
 #ifndef BOOST_ITERATOR_ADAPTORS_HPP
 #define BOOST_ITERATOR_ADAPTORS_HPP
 
+#include <boost/config.hpp> // for prior
 #include <boost/static_assert.hpp>
 #include <boost/utility.hpp> // for prior
 #include <boost/iterator.hpp>
+#include <boost/detail/workaround.hpp>
 #include <boost/iterator/iterator_categories.hpp>
 #include <boost/mpl/aux_/has_xxx.hpp>
 #include <boost/mpl/logical/or.hpp>
@@ -32,6 +34,16 @@ namespace boost {
       template<typename T>
       struct base
       {
+#ifdef BOOST_MSVC 
+        // Disable enable if for MSVC
+        typedef T type;
+
+        // This would give a nice error messages containing
+        // invalid overlaod, but has the big disadvantage that
+        // there is no reference to user code.
+        // struct invalid_overload;
+        // typedef invalid_overload type;
+#endif
       };
     };
 
@@ -48,8 +60,11 @@ namespace boost {
               class Facade2,
               class Return>
     struct enable_if_interoperable :
-      enabled<(is_interoperable<Facade1, Facade2>::value)>::template base<Return>
+      enabled< is_interoperable<Facade1, Facade2>::value >::template base<Return>
     {
+#if BOOST_WORKAROUND(BOOST_MSVC, <=1200)
+      typedef typename enabled< is_interoperable<Facade1, Facade2>::value >::template base<Return>::type type;
+#endif
     };
 
   } // namespace detail
@@ -58,8 +73,11 @@ namespace boost {
   template<typename From,
            typename To>
   struct enable_if_convertible :
-    detail::enabled<(is_convertible<From, To>::value)>::template base<detail::enable_type>
+    detail::enabled< is_convertible<From, To>::value >::template base<detail::enable_type>
   {
+#if BOOST_WORKAROUND(BOOST_MSVC, <=1200)
+    typedef typename detail::enabled< is_convertible<From, To>::value >::template base<detail::enable_type>::type type;
+#endif
   };
 
   //
@@ -123,6 +141,7 @@ namespace boost {
   class repository :
     public iterator<C, V, D, P, R>
   {
+  public:
     typedef Derived derived_t;
   };
 
@@ -141,21 +160,6 @@ namespace boost {
       return static_cast<typename Base::derived_t const&>(*this);
     }
   };
-
-#if 0
-  namespace detail {
-
-    template <class Final1,
-              class Final2>
-    struct compare_traits :
-      mpl::if_< is_convertible<Final2, Final1>,
-                Final1,
-                Final2 >
-    {
-    };
-
-  } // namespace detail
-#endif
 
   template <class Base>
   class iterator_comparisons :
@@ -371,18 +375,16 @@ namespace boost {
   };
 
   //
-  // We should provide NTP here
-  //
   // TODO Handle default arguments the same way as
   // in former ia lib
   //
   template <class Derived,
             class Iterator,
-            class Value     = typename std::iterator_traits<Iterator>::value_type,
-            class Reference = typename std::iterator_traits<Iterator>::reference,
-            class Pointer   = typename std::iterator_traits<Iterator>::pointer,
-            class Category  = typename std::iterator_traits<Iterator>::iterator_category,
-            class Distance  = typename std::iterator_traits<Iterator>::difference_type>
+            class Value     = typename detail::iterator_traits<Iterator>::value_type,
+            class Reference = typename detail::iterator_traits<Iterator>::reference,
+            class Pointer   = typename detail::iterator_traits<Iterator>::pointer,
+            class Category  = typename detail::iterator_traits<Iterator>::iterator_category,
+            class Distance  = typename detail::iterator_traits<Iterator>::difference_type>
   class iterator_adaptor :
     public iterator_facade<Derived,
                            Value,
@@ -533,13 +535,6 @@ namespace boost {
 
     AdaptableUnaryFunction m_f;
   };
-
-  // This macro definition is only temporary in this file
-# if !defined(BOOST_MSVC) || BOOST_MSVC > 1300
-#  define BOOST_ARG_DEPENDENT_TYPENAME typename
-# else
-#  define BOOST_ARG_DEPENDENT_TYPENAME
-# endif
 
   struct unspecified {};
 
