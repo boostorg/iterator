@@ -43,8 +43,6 @@ namespace boost { namespace detail
 #endif
 
 struct mult_functor {
-  typedef int result_type;
-  typedef int argument_type;
   // Functors used with transform_iterator must be
   // DefaultConstructible, as the transform_iterator must be
   // DefaultConstructible to satisfy the requirements for
@@ -53,6 +51,19 @@ struct mult_functor {
   mult_functor(int aa) : a(aa) { }
   int operator()(int b) const { return a * b; }
   int a;
+};
+
+struct adaptable_mult_functor 
+ : mult_functor
+{
+  typedef int result_type;
+  typedef int argument_type;
+  // Functors used with transform_iterator must be
+  // DefaultConstructible, as the transform_iterator must be
+  // DefaultConstructible to satisfy the requirements for
+  // TrivialIterator.
+  adaptable_mult_functor() { }
+  adaptable_mult_functor(int aa) : mult_functor(aa) { }
 };
 
 
@@ -108,8 +119,8 @@ main()
 
   // Concept checks
   {
-    typedef boost::transform_iterator<mult_functor, int*>       iter_t;
-    typedef boost::transform_iterator<mult_functor, int const*> c_iter_t;
+    typedef boost::transform_iterator<adaptable_mult_functor, int*>       iter_t;
+    typedef boost::transform_iterator<adaptable_mult_functor, int const*> c_iter_t;
 
     boost::function_requires< boost_concepts::InteroperableConcept<iter_t, c_iter_t> >();
   }
@@ -124,12 +135,51 @@ main()
     for (int k2 = 0; k2 < N; ++k2)
       x[k2] = x[k2] * 2;
     
-    typedef boost::transform_iterator<mult_functor, int*> iter_t;
+    typedef boost::transform_iterator<adaptable_mult_functor, int*> iter_t;
+    iter_t i(y, adaptable_mult_functor(2));
+    boost::input_iterator_test(i, x[0], x[1]);
+    boost::input_iterator_test(iter_t(&y[0], adaptable_mult_functor(2)), x[0], x[1]);
+    
+    boost::random_access_readable_iterator_test(i, N, x);
+  }
+
+  // Test transform_iterator non adaptable functor
+  {
+    int x[N], y[N];
+    for (int k = 0; k < N; ++k)
+      x[k] = k;
+    std::copy(x, x + N, y);
+    
+    for (int k2 = 0; k2 < N; ++k2)
+      x[k2] = x[k2] * 2;
+    
+    typedef boost::transform_iterator<mult_functor, int*, int> iter_t;
     iter_t i(y, mult_functor(2));
     boost::input_iterator_test(i, x[0], x[1]);
     boost::input_iterator_test(iter_t(&y[0], mult_functor(2)), x[0], x[1]);
     
     boost::random_access_readable_iterator_test(i, N, x);
+  }
+
+  // Test transform_iterator default argument handling
+  {
+    {
+      typedef boost::transform_iterator<adaptable_mult_functor, int*, float> iter_t;
+      BOOST_STATIC_ASSERT((boost::is_same<iter_t::reference,  float>::value));
+      BOOST_STATIC_ASSERT((boost::is_same<iter_t::value_type, float>::value));
+    }
+
+    {
+      typedef boost::transform_iterator<adaptable_mult_functor, int*, boost::use_default, float> iter_t;
+      BOOST_STATIC_ASSERT((boost::is_same<iter_t::reference,  int>::value));
+      BOOST_STATIC_ASSERT((boost::is_same<iter_t::value_type, float>::value));
+    }
+
+    {
+      typedef boost::transform_iterator<adaptable_mult_functor, int*, float, double> iter_t;
+      BOOST_STATIC_ASSERT((boost::is_same<iter_t::reference,  float>::value));
+      BOOST_STATIC_ASSERT((boost::is_same<iter_t::value_type, double>::value));
+    }
   }
 
   // Test transform_iterator with function pointers

@@ -31,6 +31,20 @@ namespace boost
   namespace detail 
   {
 
+    template <class UnaryFunction>
+    struct result
+    {
+      typedef typename UnaryFunction::result_type type;
+    };
+
+#ifndef BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
+    template <class Return, class Argument>
+    struct result<Return(*)(Argument)>
+    {
+      typedef Return type;
+    };
+#endif
+
     // Given the transform iterator's transformation and iterator, this
     // is the type used as its traits.
     template <class UnaryFunction, class Iterator, class Reference, class Value>
@@ -43,9 +57,17 @@ namespace boost
       BOOST_STATIC_ASSERT((is_tag< readable_iterator_tag, typename access_category<Iterator>::type >::value));
 #endif
  
-      typedef typename UnaryFunction::result_type result_type;
+      typedef typename mpl::apply_if<
+          is_same< Reference, use_default >
+        , result<UnaryFunction>
+        , mpl::identity<Reference>
+      >::type result_type;
 
-      typedef typename remove_reference< result_type >::type cv_value_type;
+      typedef typename mpl::if_<
+          is_same< Value, use_default >
+        , typename remove_reference< result_type >::type
+        , Value
+      >::type cv_value_type;
 
       typedef typename mpl::if_< 
           is_reference< result_type >
@@ -64,7 +86,7 @@ namespace boost
 
     public:
       typedef iterator_adaptor<
-          transform_iterator<UnaryFunction, Iterator>
+      transform_iterator<UnaryFunction, Iterator, Reference, Value>
         , Iterator
         , cv_value_type  
         , iterator_tag<
@@ -95,8 +117,8 @@ namespace boost
 
     template<class OtherIterator>
     transform_iterator(
-          transform_iterator<UnaryFunction, OtherIterator> const& t
-        , typename enable_if_convertible<OtherIterator, Iterator>::type* = 0
+                       transform_iterator<UnaryFunction, OtherIterator, Reference, Value> const& t
+                       , typename enable_if_convertible<OtherIterator, Iterator>::type* = 0
     )
       : super_t(t.base()), m_f(t.functor()) {}
 
@@ -112,20 +134,20 @@ namespace boost
     UnaryFunction m_f;
   };
 
-  template <class UnaryFunctionObject, class Iterator>
-  transform_iterator<UnaryFunctionObject, Iterator> make_transform_iterator(Iterator it, UnaryFunctionObject fun)
+  template <class UnaryFunction, class Iterator>
+  transform_iterator<UnaryFunction, Iterator> make_transform_iterator(Iterator it, UnaryFunction fun)
   {
-    return transform_iterator<UnaryFunctionObject, Iterator>(it, fun);
+    return transform_iterator<UnaryFunction, Iterator>(it, fun);
   }
 
+#ifdef BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
   template <class Return, class Argument, class Iterator>
-  transform_iterator< function1<Return, Argument>, Iterator>
+  transform_iterator< Return (*)(Argument), Iterator, Return>
   make_transform_iterator(Iterator it, Return (*fun)(Argument))
   {
-    typedef function1<Return, Argument> function_t;
-
-    return transform_iterator<function_t, Iterator>(it, function_t(fun));
+    return transform_iterator<Return (*)(Argument), Iterator, Return>(it, fun);
   }
+#endif
 
 } // namespace boost
 
