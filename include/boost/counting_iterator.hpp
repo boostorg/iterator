@@ -194,9 +194,9 @@ struct counting_iterator_generator
         counting_iterator_policies<Incrementable>,
         Incrementable,
         const Incrementable&,
-        const Incrementable*,
         typename traits::iterator_category,
-        typename traits::difference_type
+        typename traits::difference_type,
+        const Incrementable*
     > type;
 };
 
