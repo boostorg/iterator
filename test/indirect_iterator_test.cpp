@@ -15,7 +15,7 @@
 #include <iostream>
 #include <algorithm>
 
-#include <boost/iterator/iterator_adaptors.hpp>
+#include <boost/iterator/indirect_iterator.hpp>
 #include <boost/iterator/iterator_concepts.hpp>
 #include <boost/iterator/new_iterator_tests.hpp>
 
@@ -24,6 +24,7 @@
 #include <boost/concept_archetype.hpp>
 #include <boost/concept_check.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/utility.hpp>
 
 #include <stdlib.h>
 #include <set>

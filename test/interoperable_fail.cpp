@@ -1,4 +1,5 @@
-#include <boost/iterator/iterator_adaptors.hpp>
+#include <boost/iterator/indirect_iterator.hpp>
+#include <boost/iterator/reverse_iterator.hpp>
 #include <boost/concept_check.hpp>
 #include <boost/cstdlib.hpp>
 #include <list>

@@ -62,7 +62,7 @@
 #include <boost/permutation_iterator.hpp>
 #endif
 
-#include <boost/iterator/iterator_adaptors.hpp>
+#include <boost/iterator/iterator_adaptor.hpp>
 #include <boost/pending/iterator_tests.hpp>
 
 #include <stdlib.h>

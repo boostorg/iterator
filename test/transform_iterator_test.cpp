@@ -16,7 +16,7 @@
 #include <boost/config.hpp>
 #include <iostream>
 #include <algorithm>
-#include <boost/iterator/iterator_adaptors.hpp>
+#include <boost/iterator/transform_iterator.hpp>
 #include <boost/iterator/iterator_concepts.hpp>
 #include <boost/iterator/new_iterator_tests.hpp>
 #include <boost/pending/iterator_tests.hpp>

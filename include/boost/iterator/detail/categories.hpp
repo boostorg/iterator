@@ -9,9 +9,12 @@
 
 #include <boost/config.hpp>
 #include <boost/detail/workaround.hpp>
-#include <boost/type_traits/conversion_traits.hpp>
+#include <boost/type_traits/is_base_and_derived.hpp>
+#include <boost/type_traits/is_convertible.hpp>
+#include <boost/type_traits/is_same.hpp>
 #include <boost/mpl/if.hpp>
 #include <boost/mpl/bool_c.hpp>
+#include <boost/mpl/logical/or.hpp>
 #include <iterator>
 
 #if BOOST_WORKAROUND(__MWERKS__, <=0x2407)
@@ -207,7 +210,7 @@ namespace boost {
     //
     // The nested is_category template class are used for 
     // minimum category detection in iterator_adaptors. 
-    // They are basically a pore mans is_derived replacement.
+    // They are basically a poore mans is_derived replacement.
     //
     // A implementation may look like this
     //
@@ -391,6 +394,70 @@ namespace boost {
     {};
 
 #endif
+
+    // 
+    // I bet this is defined somewhere else. Let's wait and see.
+    //
+    struct error_type;
+
+#ifdef BOOST_NO_IS_CONVERTIBLE
+    template <class Cat1, class Cat2>
+    struct minimum_return_category 
+      : mpl::if_< is_return_category< Cat1 >::template is_category< Cat2 >, 
+                  Cat1,
+                  mpl::if_< is_return_category<Cat2>::template is_category<Cat1>,
+                            Cat2,
+                            error_type 
+                            >
+    > {};
+
+    template <class Cat1, class Cat2>
+    struct minimum_traversal_category 
+      : mpl::if_< is_traversal_category< Cat1 >::template is_category< Cat2 >, 
+                  Cat1,
+                  mpl::if_< is_traversal_category<Cat2>::template is_category<Cat1>,
+                            Cat2,
+                            error_type 
+                            >
+    > {};
+
+    template <class T1, class T2>
+    struct minimum_category_select
+      : mpl::if_< is_same< typename T1::type, error_type >,
+                  T2,
+                  T1 >
+    {};
+#endif
+
+    template <class Base, class Derived>
+    struct is_base_or_same :
+      mpl::logical_or< is_same< Base, Derived >,
+                       is_base_and_derived< Base, Derived > >
+    {};
+
+    //
+    // Returns the minimum category type or error_type
+    // if T1 and T2 are unrelated.
+    //
+    // For compilers not supporting is_convertible this only
+    // works with the new boost return and traversal category
+    // types. The exect boost _types_ are required. No derived types
+    // will work. 
+    //
+    //
+    template <class T1, class T2>
+    struct minimum_category :
+#ifndef BOOST_NO_IS_CONVERTIBLE
+      mpl::if_< is_base_or_same< T1, T2 >,
+                T1,
+                mpl::if_< is_base_or_same< T2, T1 >,
+                          T2,
+                          error_type > >
+#else
+      minimum_category_select< minimum_return_category<T1, T2>,
+                               minimum_traversal_category<T1, T2> >
+#endif
+    {};
 
   } // namespace detail
 

@@ -4,7 +4,8 @@
 // "as is" without express or implied warranty, and with no claim as
 // to its suitability for any purpose.
 
-#include <boost/iterator/iterator_adaptors.hpp>
+#include <boost/iterator/filter_iterator.hpp>
+#include <boost/iterator/reverse_iterator.hpp>
 #include <boost/iterator/new_iterator_tests.hpp>
 
 #include <deque>
