@@ -501,7 +501,7 @@ Class template ``iterator_facade``
   // Comparison operators
   template <class Dr1, class V1, class C1, class R1, class P1, class D1,
             class Dr2, class V2, class C2, class R2, class P2, class D2>
-  typename enable_if_interoperable<Dr1, Dr2, bool>::type
+  typename enable_if_interoperable<Dr1, Dr2, bool>::type // exposition
   operator ==(iterator_facade<Dr1, V1, C1, R1, P1, D1> const& lhs,
               iterator_facade<Dr2, V2, C2, R2, P2, D2> const& rhs);
 
@@ -554,6 +554,13 @@ Class template ``iterator_facade``
                      typename Derived::difference_type n)
 
 
+
+The ``enable_if_interoperable`` template used above is for exposition
+purposes. The member operators should be only be in an overload set
+provided the derived types ``Dr1`` and ``Dr2`` are interoperable, by
+which we mean they are convertible to each other.  The
+``enable_if_interoperable`` approach uses SFINAE to take the operators
+out of the overload set when the types are not interoperable.
 
 .. we need a new label here because the presence of markup in the
    title prevents an automatic link from being generated
@@ -801,7 +808,7 @@ Class template ``iterator_adaptor``
   {
       friend class iterator_core_access;
   public:
-      iterator_adaptor() {}
+      iterator_adaptor();
       explicit iterator_adaptor(Base iter);
       Base base() const;
    protected:
@@ -886,12 +893,34 @@ types for ``iterator_adaptor``.
 
 
 
+``iterator_adaptor`` operations
+-------------------------------
+
+``iterator_adaptor();``
+
+:Requires: The ``Base`` type must be Default Constructible.
+:Returns: An instance of ``iterator_adaptor`` with a 
+    default constructed base iterator.
+
+
+``explicit iterator_adaptor(Base iter);``
+
+:Returns: An instance of ``iterator_adaptor`` with 
+    the position specified by ``iter``.
+
+``Base base() const;``
+
+:Returns: A copy of base iterator object used to construct
+  ``*this``, but at the same position as ``*this``. 
+
+
 
 Specialized adaptors [lib.iterator.special.adaptors]
 ====================================================
 
 .. The requirements for all of these need to be written *much* more
    formally -DWA
+
 
 
 Indirect iterator
@@ -923,11 +952,8 @@ Class template ``indirect_iterator``
       typedef iterator_adaptor</* see discussion */> super_t;
       friend class iterator_core_access;
    public:
-      indirect_iterator() {}
-
-      indirect_iterator(Iterator iter)
-        : super_t(iter) {}
-
+      indirect_iterator();
+      indirect_iterator(Iterator x);
       template <
           class Iterator2, class Value2, class Category2
         , class Reference2, class Pointer2, class Difference2
@@ -937,11 +963,8 @@ Class template ``indirect_iterator``
                Iterator2, Value2, Category2, Reference2, Pointer2, Difference2
           > const& y
         , typename enable_if_convertible<Iterator2, Iterator>::type* = 0
-      )
-        : super_t(y.base())
-      {}
-
-  private:    
+      );
+  private: // as-if specification
       typename super_t::reference dereference() const
       {
           return **this->base();
@@ -978,16 +1001,43 @@ The ``Category`` parameter is the ``iterator_category`` type for the
 ``indirect_iterator``. The default is 
 ``iterator_traits<Iterator>::iterator_category``.
 
-The indirect iterator will model whichever standard iterator concepts
-are modeled by the base iterator. For example, if the base iterator is
-a model of Random Access Traversal Iterator then so is the resulting
-indirect iterator.
+The indirect iterator will model the most refined standard traversal
+concept that is modelled by the ``Iterator`` type.  The indirect
+iterator will model the most refined standard access concept that is
+modelled by the value type of ``Iterator``.
 
-.. I don't believe the above statement is true anymore in light of the
-   new categories.  I think it only applies to the traversal part of
-   the concept.
 
-.. Address the above. -JGS
+``indirect_iterator`` operations
+................................
+
+``indirect_iterator();``
+
+:Requires: ``Iterator`` must be Default Constructible.
+:Returns: An instance of ``indirect_iterator`` with
+    a default constructed base object.
+
+
+``indirect_iterator(Iterator x);``
+
+:Returns: An instance of ``indirect_iterator`` with
+    the ``iterator_adaptor`` subobject copy constructed from ``x``.
+
+::
+
+  template <
+      class Iterator2, class Value2, class Category2
+    , class Reference2, class Pointer2, class Difference2
+  >
+  indirect_iterator(
+      indirect_iterator<
+	   Iterator2, Value2, Category2, Reference2, Pointer2, Difference2
+      > const& y
+    , typename enable_if_convertible<Iterator2, Iterator>::type* = 0
+  );
+
+:Requires: ``this->base()`` and ``y.base()`` must be mutually convertible.
+:Returns: An instance of ``indirect_iterator`` that is a copy of ``y``.
+
 
 Reverse iterator
 ----------------
@@ -1023,7 +1073,7 @@ Class template ``reverse_iterator``
       : super_t(r.base())
     {}
 
-  private: /* exposition */
+  private: // as-if specification
     typename super_t::reference dereference() const { return *prior(this->base()); }
     
     void increment() { super_t::decrement(); }
@@ -1046,11 +1096,34 @@ Class template ``reverse_iterator``
 ``reverse_iterator`` requirements
 .................................
 
-The base iterator must be a model of Bidirectional Traversal
-Iterator. The reverse iterator will model whichever standard iterator
-concepts are modeled by the base iterator. For example, if the base
-iterator is a model of Random Access Traversal Iterator then so is the
-resulting reverse iterator.
+The base ``Iterator`` must be a model of Bidirectional Traversal
+Iterator. The resulting ``reverse_iterator`` will be a model of the
+most refined standard traversal and access concepts that are modeled
+by ``Iterator``.
+
+
+``reverse_iterator();``
+
+:Requires: ``Iterator`` must be Default Constructible.
+:Returns: An instance of ``reverse_iterator`` with a
+  default constructed base object.
+
+``explicit reverse_iterator(Iterator x);``
+
+:Returns: An instance of ``reverse_iterator`` with a
+  base object copy constructed from ``x``.
+
+
+::
+
+    template<class OtherIterator>
+    reverse_iterator(
+        reverse_iterator<OtherIterator> const& r
+      , typename enable_if_convertible<OtherIterator, Iterator>::type* = 0
+    );
+
+:Requires: ``this->base()`` and ``r.base()`` must be mutually convertible.
+:Returns: An instance of ``reverse_iterator`` that is a copy of ``r``.
 
 
 Transform iterator
@@ -1090,7 +1163,7 @@ Class template ``transform_iterator``
     AdaptableUnaryFunction functor() const
       { return m_f; }
 
-  private: /* exposition */
+  private: // as-if specification
     typename super_t::value_type dereference() const
       { return m_f(super_t::dereference()); }
 
@@ -1112,7 +1185,12 @@ which some elements of the range are skipped over. A predicate
 function object controls which elements are skipped. When the
 predicate is applied to an element, if it returns ``true`` then the
 element is retained and if it returns ``false`` then the element is
-skipped over.
+skipped over. When skipping over elements, it is necessary for the
+filter adaptor to know when to stop so as to avoid going past the end
+of the underlying range. Therefore the constructor of the filter
+iterator takes two iterator parameters: the position for the filtered
+iterator and the end of the range.
+
 
 
 Class template ``filter_iterator``
@@ -1129,18 +1207,98 @@ Class template ``filter_iterator``
         >
   {
    public:
-      filter_iterator() { }
+      filter_iterator();
       filter_iterator(Predicate f, Iterator x, Iterator end = Iterator());
       filter_iterator(Iterator x, Iterator end = Iterator());
       template<class OtherIterator>
       filter_iterator(
           filter_iterator<Predicate, OtherIterator> const& t
-          , typename enable_if_convertible<OtherIterator, Iterator>::type* = 0
+          , typename enable_if_convertible<OtherIterator, Iterator>::type* = 0 // exposition
           );
       Predicate predicate() const;
       Iterator end() const;
+
+   private: // as-if specification
+      void increment()
+      {
+          ++(this->base_reference());
+          satisfy_predicate();
+      }
+
+      void satisfy_predicate()
+      {
+          while (this->base() != this->m_end && !this->m_predicate(*this->base()))
+              ++(this->base_reference());
+      }
+
+      Predicate m_predicate;
+      Iterator m_end;
   };
 
+
+``filter_iterator`` requirements
+--------------------------------
+
+The base ``Iterator`` parameter must be a model of Readable Iterator
+and Single Pass Iterator. The resulting ``filter_iterator`` will be a
+model of Forward Traversal Iterator if ``Iterator`` is, otherwise the
+``filter_iterator`` will be a model of Single Pass Iterator. The
+access category of the ``filter_iterator`` will be the most refined
+standard access category that is modeled by ``Iterator``.
+
+The ``Predicate`` must be an Assignable, Copy Constructible type also
+with the valid expression ``p(x)`` where ``p`` is an object of type
+``Predicate``, ``x`` is an object of type
+``iterator_traits<Iterator>::value_type``, and where the type of
+``p(x)`` must be convertible to ``bool``.
+
+
+
+``filter_iterator`` operations
+------------------------------
+
+``filter_iterator();``
+
+:Requires: ``Predicate`` and ``Iterator`` must be Default Constructible.
+:Returns: a ``filter_iterator`` whose
+    predicate is a default constructed ``Predicate`` and
+    whose ``end`` is a default constructed ``Iterator``.
+
+
+``filter_iterator(Predicate f, Iterator x, Iterator end = Iterator());``
+
+:Returns: A ``filter_iterator`` at position ``x`` that filters according
+    to predicate ``f`` and that will not increment past ``end``.
+
+
+``filter_iterator(Iterator x, Iterator end = Iterator());``
+
+:Requires: ``Predicate`` must be Default Constructible.
+:Returns: A ``filter_iterator`` at position ``x`` that filters 
+    according to a default constructed ``Predicate``
+    and that will not increment past ``end``.
+
+
+::
+
+    template <class OtherIterator>
+    filter_iterator(
+	filter_iterator<Predicate, OtherIterator> const& t
+	, typename enable_if_convertible<OtherIterator, Iterator>::type* = 0 // exposition
+	);``
+
+:Requires: ``*this`` and ``t`` must be mutually convertible.
+:Returns: A copy of iterator ``t``. 
+
+
+``Predicate predicate() const;``
+
+:Returns: A copy of the predicate object used to construct ``*this``.
+
+
+``Iterator end() const;``
+
+:Returns: The object ``end`` used to construct ``*this``.
 
 
 Counting iterator
