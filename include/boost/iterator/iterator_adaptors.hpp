@@ -46,28 +46,28 @@ template <class Base1, class Base2>
 inline bool operator<(const iterator_comparisons<Base1>& xb,
                       const iterator_comparisons<Base2>& yb)
 {
-    return xb.self().distance_to(yb.self()) < 0;
+    return xb.self().distance_to(yb.self()) > 0;
 }
 
 template <class Base1, class Base2>
 inline bool operator>(const iterator_comparisons<Base1>& xb,
                       const iterator_comparisons<Base2>& yb)
 {
-    return xb.self().distance_to(yb.self()) > 0;
+    return xb.self().distance_to(yb.self()) < 0;
 }
 
 template <class Base1, class Base2>
 inline bool operator>=(const iterator_comparisons<Base1>& xb,
                        const iterator_comparisons<Base2>& yb)
 {
-    return xb.self().distance_to(yb.self()) >= 0;
+    return xb.self().distance_to(yb.self()) <= 0;
 }
 
 template <class Base1, class Base2>
 inline bool operator<=(const iterator_comparisons<Base1>& xb,
                        const iterator_comparisons<Base2>& yb)
 {
-    return xb.self().distance_to(yb.self()) <= 0;
+    return xb.self().distance_to(yb.self()) >= 0;
 }
 
 
@@ -97,9 +97,40 @@ typename Base1::difference_type operator-(
     const iterator_arith<Base1>& i,
     const iterator_arith<Base2>& j)
 {
-    return i.self().distance_to(i.self());
+    return j.self().distance_to(i.self());
 }
 
+#if 0
+// Beginnings of a failed attempt to conditionally provide base()
+// functions in iterator_adaptor. It may be that a public m_base
+// member is the only way to avoid boilerplate!
+struct unspecified {};
+
+template <class Base>
+struct base_wrapper_impl
+{
+    template <class Super>
+    struct apply : Super
+    {
+        apply() {}
+        apply(Base b) : m_base(b) {}
+    
+        Base base() const { return m_base; }
+        Base& base() { return m_base; }
+     private:
+        Base m_base;
+    };
+};
+
+template <>
+struct base_wrapper_impl<unspecified>
+{
+    template <class Super>
+    struct apply : Super
+    {
+    };
+};
+#endif
 
 template <class Final
           , class V, class R, class P, class C, class D
@@ -107,7 +138,7 @@ template <class Final
              iterator_comparisons<
         downcastable<repository<Final, V, R, P, C, D> > > >
          >
-struct iterator_adaptor : B
+struct iterator_adaptor : B 
 {
     typedef V value_type;
     typedef R reference;
@@ -117,7 +148,12 @@ struct iterator_adaptor : B
 
     reference operator*() const
     { return self().dereference(); }
+
+    // Needs eventual help for input iterators
+    P operator->() const { return &self().dereference(); }
+    
     //operator->() const { return detail::operator_arrow(*this, iterator_category()); }
+    
     reference operator[](difference_type n) const
     { return *(*this + n); }
     Final& operator++()
@@ -154,10 +190,10 @@ struct iterator_adaptor : B
     difference_type
     distance_to(const iterator_adaptor<Final2,V2,R2,P2,C,D,B2>& y) const
     {
-        return self().base() - y.self().base();//?
+        return y.self().base() - self().base();//?
     }
-    
- private:
+
+    // Can't be private, or const/non-const interactions don't work
     using B::self;
 };
 
@@ -240,6 +276,60 @@ struct transform_iterator
 private:
   Base m_base;
   AdaptableUnaryFunction m_f;
+};
+
+// This macro definition is only temporary in this file
+# if !defined(BOOST_MSVC) || BOOST_MSVC > 1300
+#  define BOOST_ARG_DEPENDENT_TYPENAME typename
+# else
+#  define BOOST_ARG_DEPENDENT_TYPENAME
+# endif
+
+namespace detail
+{
+  template <class T>
+  struct traits_of_value_type
+      : detail::iterator_traits<typename detail::iterator_traits<T>::value_type>
+  {
+  };
+}
+
+template <class Base,      // Mutable or Immutable, does not matter
+          class Value
+                = BOOST_ARG_DEPENDENT_TYPENAME detail::traits_of_value_type<
+                        Base>::value_type
+          , class Reference
+                = BOOST_ARG_DEPENDENT_TYPENAME detail::traits_of_value_type<
+                        Base>::reference
+          , class Category = BOOST_ARG_DEPENDENT_TYPENAME boost::detail::iterator_traits<
+                        Base>::iterator_category
+          , class Pointer
+                = BOOST_ARG_DEPENDENT_TYPENAME detail::traits_of_value_type<
+                        Base>::pointer
+         >
+struct indirect_iterator
+    : iterator_adaptor<
+       indirect_iterator<Base,Value,Reference,Category,Pointer>
+        , Value, Reference, Pointer, Category
+        , typename detail::iterator_traits<Base>::difference_type
+      >
+{
+    Reference dereference() const { return **this->m_base; }
+
+    indirect_iterator() {}
+
+    indirect_iterator(Base iter)
+        : m_base(iter) {}
+
+    template <class Base2, class Reference2, class Pointer2>
+    indirect_iterator(const indirect_iterator<Base2,Value,Reference2,Category,Pointer2>& y)
+        : m_base(y.base())
+    {}
+    
+    Base& base() { return m_base; }
+    Base const& base() const { return m_base; }
+ private:
+    Base m_base;
 };
 
 } // namespace boost
