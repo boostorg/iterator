@@ -27,6 +27,8 @@
 # include <boost/iterator/is_readable_iterator.hpp>
 # include <boost/iterator/is_lvalue_iterator.hpp>
 
+# include <boost/iterator/detail/config_def.hpp>
+
 namespace boost {
 
 // Preconditions: *i == v
@@ -75,7 +77,7 @@ void constant_lvalue_iterator_test(Iterator i, T v1)
   BOOST_STATIC_ASSERT((is_same<const value_type&, reference>::value));
   const T& v2 = *i2;
   assert(v1 == v2);
-# if !BOOST_WORKAROUND(__MWERKS__, <= 0x2407)
+# ifndef BOOST_NO_LVALUE_RETURN_DETECTION
   BOOST_STATIC_ASSERT(is_lvalue_iterator<Iterator>::value);
   BOOST_STATIC_ASSERT(!is_non_const_lvalue_iterator<Iterator>::value);
 # endif 
@@ -90,10 +92,14 @@ void non_const_lvalue_iterator_test(Iterator i, T v1, T v2)
   BOOST_STATIC_ASSERT((is_same<value_type&, reference>::value));
   T& v3 = *i2;
   assert(v1 == v3);
-  // *i = v2;            -- A non-const lvalue iterator is not neccessarily writable
+  
+  // A non-const lvalue iterator is not neccessarily writable, but we
+  // are assuming the value_type is assignable here
+  *i = v2;
+  
   T& v4 = *i2;
   assert(v2 == v4);
-# if !BOOST_WORKAROUND(__MWERKS__, <= 0x2407)
+# ifndef BOOST_NO_LVALUE_RETURN_DETECTION
   BOOST_STATIC_ASSERT(is_lvalue_iterator<Iterator>::value);
   BOOST_STATIC_ASSERT(is_non_const_lvalue_iterator<Iterator>::value);
 # endif 
@@ -201,8 +207,8 @@ void random_access_readable_iterator_test(Iterator i, int N, TrueVals vals)
   }
 }
 
-// #if 0'd code snipped; see CVS v 1.4 if you need it back
-
 } // namespace boost
+
+# include <boost/iterator/detail/config_undef.hpp>
 
 #endif // BOOST_NEW_ITERATOR_TESTS_HPP
