@@ -45,7 +45,8 @@ void readable_iterator_test(const Iterator i1, T v)
   T v2 = r2;
   assert(v1 == v);
   assert(v2 == v);
-  is_readable(typename return_category<Iterator>::type());
+  typedef typename return_category<Iterator>::type result_category;
+  is_readable(result_category());
 }
 
 template <class Iterator, class T>
@@ -60,11 +61,12 @@ template <class Iterator>
 void swappable_iterator_test(Iterator i, Iterator j)
 {
   Iterator i2(i), j2(j);
-  typename detail::iterator_traits<Iterator>::value_type bi = *i; bj = *j;
+  typename detail::iterator_traits<Iterator>::value_type bi = *i, bj = *j;
   iter_swap(i2, j2);
-  typename detail::iterator_traits<Iterator>::value_type ai = *i; aj = *j;
+  typename detail::iterator_traits<Iterator>::value_type ai = *i, aj = *j;
   assert(bi == aj && bj == ai);
-  is_swappable(typename return_category<Iterator>::type());
+  typedef typename return_category<Iterator>::type result_category;
+  is_swappable(result_category());
 }
 
 template <class Iterator, class T>
@@ -76,7 +78,8 @@ void constant_lvalue_iterator_test(Iterator i, T v1)
   BOOST_STATIC_ASSERT((is_same<const value_type&, reference>::value));
   const T& v2 = *i2;
   assert(v1 == v2);
-  is_constant_lvalue(typename return_category<Iterator>::type());
+  typedef typename return_category<Iterator>::type result_category;
+  is_constant_lvalue(result_category());
 }
 
 template <class Iterator, class T>
@@ -91,7 +94,8 @@ void mutable_lvalue_iterator_test(Iterator i, T v1, T v2)
   *i = v2;
   T& v4 = *i2;
   assert(v2 == v4);
-  is_mutable_lvalue(typename return_category<Iterator>::type());
+  typedef typename return_category<Iterator>::type result_category;
+  is_mutable_lvalue(result_category());
 }
 
 template <class Iterator, class T>
