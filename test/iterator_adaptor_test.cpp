@@ -30,6 +30,8 @@
 
 #include "static_assert_same.hpp"
 
+#include <boost/iterator/detail/config_def.hpp>
+
 using boost::dummyT;
 
 struct mult_functor {
@@ -198,6 +200,16 @@ struct traversal3
 template <class Cat>
 typename traversal3<Cat>::type traversal(Cat);
 
+template <class Iter, class Trav>
+int static_assert_traversal(Iter* = 0, Trav* = 0)
+{
+    typedef typename boost::iterator_category_to_traversal<
+        BOOST_DEDUCED_TYPENAME Iter::iterator_category
+        >::type t2;
+
+    return static_assert_same<Trav,t2>::value;
+}
+
 int
 main()
 {
@@ -238,11 +250,17 @@ main()
     typedef ptr_iterator<int const> Iter1;
     test = static_assert_same<Iter1::value_type, int>::value;
     test = static_assert_same<Iter1::reference, const int&>::value;
+    
 #if !BOOST_WORKAROUND(__MWERKS__, <= 0x2407)
     BOOST_STATIC_ASSERT(boost::is_readable_iterator<Iter1>::value);
+# ifndef BOOST_NO_LVALUE_RETURN_DETECTION
     BOOST_STATIC_ASSERT(boost::is_lvalue_iterator<Iter1>::value);
+# endif 
+#endif
+
+#if !BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x564)) // borland drops constness
+    test = static_assert_same<Iter1::pointer, int const*>::value;
 #endif 
-    test = static_assert_same<Iter1::pointer, const int*>::value;
   }
 
   {
@@ -252,28 +270,19 @@ main()
 
     test = static_assert_same<Iter::value_type, int>::value;
     test = static_assert_same<Iter::reference, int const&>::value;
+#if !BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x564)) // borland drops constness
     test = static_assert_same<Iter::pointer, int const*>::value;
+#endif 
 
-#if !BOOST_WORKAROUND(__MWERKS__, <= 0x2407)
+#ifndef BOOST_NO_LVALUE_RETURN_DETECTION
     BOOST_STATIC_ASSERT(boost::is_non_const_lvalue_iterator<BaseIter>::value);
     BOOST_STATIC_ASSERT(boost::is_lvalue_iterator<Iter>::value);
 #endif 
     
     typedef modify_traversal<BaseIter, boost::incrementable_traversal_tag> IncrementableIter;
 
-    BaseIter::iterator_category base_cat;
-    boost::random_access_traversal_tag random_traversal;
-    BOOST_STATIC_ASSERT(
-        sizeof(traversal(base_cat))
-        == sizeof(traversal(random_traversal))
-    );
-
-    IncrementableIter::iterator_category incr_cat;
-    boost::incrementable_traversal_tag incrementable_traversal;
-    BOOST_STATIC_ASSERT(
-        sizeof(traversal(incr_cat))
-        == sizeof(traversal(incrementable_traversal))
-    );
+    static_assert_traversal<BaseIter,boost::random_access_traversal_tag>();
+    static_assert_traversal<IncrementableIter,boost::incrementable_traversal_tag>();
   }
   
   // Test the iterator_adaptor
