@@ -11,7 +11,9 @@
 // to its suitability for any purpose.
 //
 // Revision History:
-
+//
+// 27 June 2001  Jeremy Siek
+//      Simplified named template parameters.
 // 08 Mar 2001   Jeremy Siek
 //      Added support for optional named template parameters.
 // 19 Feb 2001   David Abrahams
@@ -440,105 +442,155 @@ namespace detail {
   // Specify the defaults for iterator_adaptor's template parameters
   
   struct default_value_type {
-    template <class Base, class Traits>
-    struct bind {
+    template <class Info>
+    class bind {
+      typedef typename Info::base_type Base;
+    public:
       typedef typename boost::detail::iterator_traits<Base>::value_type type;
     };
   };
   struct default_difference_type {
-    template <class Base, class Traits>
-    struct bind {
+    template <class Info>
+    class bind {
+      typedef typename Info::base_type Base;
+    public:
       typedef typename boost::detail::iterator_traits<Base>::difference_type type;
     };
   };
   struct default_iterator_category {
-    template <class Base, class Traits>
-    struct bind {
+    template <class Info>
+    class bind {
+      typedef typename Info::base_type Base;
+    public:
       typedef typename boost::detail::iterator_traits<Base>::iterator_category type;
     };
   };
   struct default_pointer {
-    template <class Base, class Traits>
-    struct bind {
+    template <class Info>
+    class bind {
+      typedef typename Info::base_type Base;
+      typedef typename Info::traits_type Traits;
+    public:
       typedef typename Traits::value_type Value;
       typedef typename boost::detail::iterator_defaults<Base,Value>::pointer 
 	type;
     };
   };
   struct default_reference {
-    template <class Base, class Traits>
-    struct bind {
+    template <class Info>
+    class bind {
+      typedef typename Info::base_type Base;
+      typedef typename Info::traits_type Traits;
+    public:
       typedef typename Traits::value_type Value;
       typedef typename boost::detail::iterator_defaults<Base,Value>::reference 
 	type;
     };
   };
 
+#ifdef BOOST_MSVC
+  // Using the default generator such as default_value_type 
+  // directly inside of resolve_default causes problems, but
+  // going through this default_generator solves the problem
+  // on MSVC.
+  template <> struct default_generator<default_value_type> {
+    typedef default_value_type type;  };
+  template <> struct default_generator<default_difference_type> {
+    typedef default_difference_type type;  };
+  template <> struct default_generator<default_pointer> {
+    typedef default_pointer type;  };
+  template <> struct default_generator<default_reference> {
+    typedef default_reference type;  };
+  template <> struct default_generator<default_iterator_category> {
+    typedef default_iterator_category type;  };
+#endif
+
   //===========================================================================
   // Support for named template parameters
 
-#if !defined(__BORLANDC__)
-  // Borland C++ thinks the nested recursive inheritance here is illegal.
+  struct value_type_tag { };
+  struct reference_tag { };
+  struct pointer_tag { };
+  struct iterator_category_tag { };
+  struct difference_type_tag { };
 
-  template <class V = default_argument, 
-            class R = default_argument, 
-            class P = default_argument,
-            class C = default_argument,
-            class D = default_argument>
-  struct iter_traits_gen : public named_template_param_base {
-    template <class T>
-    struct value_type : public iter_traits_gen<T,R,P,C,D> { };
-    template <class T>
-    struct reference : public iter_traits_gen<V,T,P,C,D> { };
-    template <class T>
-    struct pointer : public iter_traits_gen<V,R,T,C,D> { };
-    template <class T>
-    struct iterator_category : public iter_traits_gen<V,R,P,T,D>{};
-    template <class T>
-    struct difference_type : public iter_traits_gen<V,R,P,C,T> { };
-
-    typedef boost::iterator<C, V, D, P, R> traits;
-  };
-#endif
-
-  BOOST_NAMED_TEMPLATE_PARAM(value_type);
-  BOOST_NAMED_TEMPLATE_PARAM(reference);
-  BOOST_NAMED_TEMPLATE_PARAM(pointer);
-  BOOST_NAMED_TEMPLATE_PARAM(iterator_category);
-  BOOST_NAMED_TEMPLATE_PARAM(difference_type);
-
-  template <class Base, class Value, class Reference, class Pointer,
-            class Category, class Distance>
-  class iterator_adaptor_traits_gen
+  template <class Base, class Value, class Reference, class Pointer, class Category, class Distance>
+  class iter_adaptor_traits_gen
   {
-    typedef boost::iterator<Category, Value, Distance, Pointer, Reference>
-      Traits0;
+    typedef std::pair<typename wrap_param<Value, value_type_tag>::type, 
+      std::pair<typename wrap_param<Reference, reference_tag>::type, 
+	std::pair<typename wrap_param<Pointer, pointer_tag>::type, 
+	  std::pair<typename wrap_param<Category, iterator_category_tag>::type, 
+	    std::pair<typename wrap_param<Distance, difference_type_tag>::type,
+	      list_end_type> > > > > NamedParamList;
 
-    typedef typename get_value_type<Base, 
-        typename boost::remove_const<Value>::type, Traits0
-        >::type value_type;
-    typedef typename get_difference_type<Base, Distance, Traits0>::type
-      difference_type;
-    typedef typename get_iterator_category<Base, Category, Traits0>::type
-      iterator_category;
+    // Figure out the value_type
+    typedef typename find_param<NamedParamList, value_type_tag>::type Val;
+    struct default_info {
+      typedef Base base_type;
+      typedef void traits_type;
+    };
+    typedef typename resolve_default<Val, default_value_type, default_info>::type value_type;
 
-    typedef boost::iterator<iterator_category, value_type, difference_type,
-      Pointer, Reference> Traits1;
-    
-    typedef typename get_pointer<Base, Pointer, Traits1>::type pointer;
-    typedef typename get_reference<Base, Reference, Traits1>::type reference;
+    // Compute the difference_type
+    typedef typename find_param<NamedParamList, difference_type_tag>::type 
+      Diff;
+    typedef typename resolve_default<Diff, default_difference_type, 
+      default_info>::type difference_type;
+
+    // Determine the iterator_category
+    typedef typename find_param<NamedParamList, iterator_category_tag>::type 
+      Cat;
+    typedef typename resolve_default<Cat, default_iterator_category, 
+      default_info>::type iterator_category;
+
+    typedef boost::iterator<iterator_category, value_type, difference_type> 
+      Traits;
+    struct default_info2 {
+      typedef Base base_type;
+      typedef Traits traits_type;
+    };
+
+    // Extract the pointer type
+    typedef typename find_param<NamedParamList, pointer_tag>::type Ptr;
+    typedef typename resolve_default<Ptr, default_pointer, default_info2>::type
+      pointer;
+
+    // Calculate the reference type
+    typedef typename find_param<NamedParamList, reference_tag>::type Ref;
+    typedef typename resolve_default<Ref, default_reference, 
+      default_info2>::type reference;
   public:
     typedef boost::iterator<iterator_category, value_type, difference_type,
       pointer, reference> type;
   };
-  
 } // namespace detail
 
-
-#if !defined(__BORLANDC__)
-struct iterator_traits_generator
-  : public detail::iter_traits_gen<> { };
-#endif
+  struct default_argument : public named_template_param_base {
+    typedef void type;
+    typedef void tag;
+  };
+  template <class T> struct value_type_is : public named_template_param_base {
+    typedef T type; 
+    typedef detail::value_type_tag tag; 
+  };
+  template <class T> struct reference_is : public named_template_param_base {
+    typedef T type;
+    typedef detail::reference_tag tag;
+  };
+  template <class T> struct pointer_is : public named_template_param_base {
+    typedef T type;
+    typedef detail::pointer_tag tag;
+  };
+  template <class T> struct iterator_category_is : public named_template_param_base {
+    typedef T type;
+    typedef detail::iterator_category_tag tag;
+  };
+  template <class T> struct difference_type_is : public named_template_param_base
+  { 
+    typedef T type; 
+    typedef detail::difference_type_tag tag; 
+  };
 
 // This macro definition is only temporary in this file
 # if !defined(BOOST_MSVC)
@@ -578,26 +630,25 @@ template <class T> struct undefined;
 //   Distance - the difference_type of the resulting iterator. If not
 //      supplied, iterator_traits<Base>::difference_type is used.
 template <class Base, class Policies, 
-    class Value = detail::default_argument,
-    class Reference = BOOST_ARG_DEPENDENT_TYPENAME detail::choose_default_argument<Value>::type,
-    class Pointer = BOOST_ARG_DEPENDENT_TYPENAME detail::choose_default_argument<Reference>::type,
-    class Category = BOOST_ARG_DEPENDENT_TYPENAME detail::choose_default_argument<Pointer>::type,
-    class Distance = BOOST_ARG_DEPENDENT_TYPENAME detail::choose_default_argument<Category>::type
+    class Value = default_argument,
+    class Reference = default_argument,
+    class Pointer = default_argument,
+    class Category = default_argument,
+    class Distance = default_argument
          >
 struct iterator_adaptor :
 #ifdef BOOST_RELOPS_AMBIGUITY_BUG
     iterator_comparisons<
           iterator_adaptor<Base,Policies,Value,Reference,Pointer,Category,Distance>,
-    typename detail::iterator_adaptor_traits_gen<Base,Value,Reference,Pointer,Category, Distance>::type
+    typename detail::iter_adaptor_traits_gen<Base,Value,Reference,Pointer,Category, Distance>::type
  >
 #else
-    detail::iterator_adaptor_traits_gen<Base,Value,Reference,Pointer,Category,Distance>::type
+    detail::iter_adaptor_traits_gen<Base,Value,Reference,Pointer,Category, Distance>::type
 #endif
 {
     typedef iterator_adaptor<Base,Policies,Value,Reference,Pointer,Category,Distance> self;
+    typedef typename detail::iter_adaptor_traits_gen<Base,Value,Reference,Pointer,Category, Distance>::type Traits;
  public:
-    typedef typename detail::iterator_adaptor_traits_gen<Base,Value,Reference,Pointer,Category,Distance>::type Traits;
-
     typedef typename Traits::difference_type difference_type;
     typedef typename Traits::value_type value_type;
     typedef typename Traits::pointer pointer;
@@ -1139,7 +1190,7 @@ namespace detail {
       >::type type;
 # endif
   };
-}
+} // namespace detail
 
 template <class Predicate, class Iterator, 
     class Value = BOOST_ARG_DEPENDENT_TYPENAME boost::detail::iterator_traits<Iterator>::value_type,
