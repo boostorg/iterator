@@ -91,7 +91,7 @@ struct ptr_iterator
       , V
       , std::random_access_iterator_tag
 #if BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x551))
-      , V&, V*
+      , V&
 #endif 
    >
 {
@@ -102,7 +102,7 @@ private:
       , V
       , std::random_access_iterator_tag
 #if BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x551))
-      , V&, V*
+      , V&
 #endif 
     > super_t;
     
@@ -184,7 +184,7 @@ main()
     BOOST_STATIC_ASSERT((boost::is_same<Iter1::reference, int&>::value));
     BOOST_STATIC_ASSERT((boost::is_same<Iter1::pointer, int*>::value));
     BOOST_STATIC_ASSERT((boost::is_same<Iter1::difference_type, std::ptrdiff_t>::value));
-    BOOST_STATIC_ASSERT((boost::is_same<Iter1::iterator_category, std::random_access_iterator_tag>::value));
+    BOOST_STATIC_ASSERT((boost::is_convertible<Iter1::iterator_category, std::random_access_iterator_tag>::value));
   }
   {  
     // Test computation of default when the Value is const
