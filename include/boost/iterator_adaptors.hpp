@@ -13,11 +13,10 @@
 #ifndef BOOST_ITERATOR_ADAPTOR_DWA053000_HPP_
 # define BOOST_ITERATOR_ADAPTOR_DWA053000_HPP_
 
-// MSVC complains about the wrong stuff unless you disable this. We should add
-// this to config.hpp
-
-#include <boost/operators.hpp>
 #include <iterator>
+#include <boost/utility.hpp>
+#include <boost/operators.hpp>
+#include <boost/compressed_pair.hpp>
 
 namespace boost {
 
@@ -59,6 +58,66 @@ struct default_iterator_policies
         { return x < y; }
 };
 
+// putting the comparisons in a base class avoids the g++ 
+// ambiguous overload bug due to the relops operators
+
+template <class Derived, class NonconstIterator, class Base>
+struct iterator_comparisons : public Base { };
+
+template <class D1, class D2, class NcIter, class Base1, class Base2>
+inline bool operator==(const iterator_comparisons<D1,NcIter,Base1>& xb, 
+                       const iterator_comparisons<D2,NcIter,Base2>& yb)
+{
+        const D1& x = static_cast<const D1&>(xb);
+    const D2& y = static_cast<const D2&>(yb);
+    return x.policies().equal(x.iter(), y.iter());
+}
+
+template <class D1, class D2, class NcIter, class Base1, class Base2>
+inline bool operator!=(const iterator_comparisons<D1,NcIter,Base1>& xb, 
+                       const iterator_comparisons<D2,NcIter,Base2>& yb)
+{
+    const D1& x = static_cast<const D1&>(xb);
+    const D2& y = static_cast<const D2&>(yb);
+    return !x.policies().equal(x.iter(), y.iter());
+}
+
+template <class D1, class D2, class NcIter, class Base1, class Base2>
+inline bool operator<(const iterator_comparisons<D1,NcIter,Base1>& xb, 
+                      const iterator_comparisons<D2,NcIter,Base2>& yb)
+{
+    const D1& x = static_cast<const D1&>(xb);
+    const D2& y = static_cast<const D2&>(yb);
+    return x.policies().less(x.iter(), y.iter());
+}
+
+template <class D1, class D2, class NcIter, class Base1, class Base2>
+inline bool operator>(const iterator_comparisons<D1,NcIter,Base1>& xb, 
+                      const iterator_comparisons<D2,NcIter,Base2>& yb)
+{ 
+    const D1& x = static_cast<const D1&>(xb);
+    const D2& y = static_cast<const D2&>(yb);
+    return x.policies().less(y.iter(), x.iter());
+}
+
+template <class D1, class D2, class NcIter, class Base1, class Base2>
+inline bool operator>=(const iterator_comparisons<D1,NcIter,Base1>& xb, 
+                       const iterator_comparisons<D2,NcIter,Base2>& yb)
+{
+    const D1& x = static_cast<const D1&>(xb);
+    const D2& y = static_cast<const D2&>(yb);
+    return !x.policies().less(x.iter(), y.iter());
+}
+
+template <class D1, class D2, class NcIter, class Base1, class Base2>
+inline bool operator<=(const iterator_comparisons<D1,NcIter,Base1>& xb, 
+                       const iterator_comparisons<D2,NcIter,Base2>& yb)
+{
+    const D1& x = static_cast<const D1&>(xb);
+    const D2& y = static_cast<const D2&>(yb);
+    return !x.policies().less(y.iter(), x.iter());
+}
+
 //=============================================================================
 // iterator_adaptor - A generalized adaptor around an existing
 //   iterator, which is itself an iterator
@@ -84,9 +143,14 @@ template <class Iterator, class Policies,
           class NonconstIterator = Iterator
          >
 struct iterator_adaptor
-    : boost::iterator<typename Traits::iterator_category, typename Traits::value_type, typename Traits::difference_type, typename Traits::pointer, typename Traits::reference>
+    : iterator_comparisons<
+          iterator_adaptor<Iterator,Policies,Traits,NonconstIterator>,
+          NonconstIterator,
+          boost::iterator<typename Traits::iterator_category, 
+              typename Traits::value_type, typename Traits::difference_type,
+              typename Traits::pointer, typename Traits::reference> >
 {
-    typedef iterator_adaptor<Iterator, Policies, Traits, NonconstIterator> Self;
+    typedef iterator_adaptor<Iterator, Policies, Traits,NonconstIterator> Self;
 public:
     typedef typename Traits::difference_type difference_type;
     typedef typename Traits::value_type value_type;
@@ -94,19 +158,25 @@ public:
     typedef typename Traits::reference reference;
     typedef typename Traits::iterator_category iterator_category;
 
-    iterator_adaptor(const Iterator& impl)
-        : m_impl(impl) {}
+    iterator_adaptor() { }
+
+    iterator_adaptor(const Iterator& iter, const Policies& p = Policies())
+        : m_iter_p(iter, p) {}
 
     template <class OtherTraits>
     iterator_adaptor(const iterator_adaptor<NonconstIterator, Policies, OtherTraits, NonconstIterator>& rhs)
-        : m_impl(rhs.m_impl) {}
+        : m_iter_p(rhs.iter(), rhs.policies()) {}
 
     template <class OtherTraits>
     Self& operator=(const iterator_adaptor<NonconstIterator, Policies, OtherTraits, NonconstIterator>& rhs)
-        { m_impl = rhs.m_impl; return *this; }
+    { 
+      iter() = rhs.iter(); 
+      policies() = rhs.policies();
+      return *this; 
+    }
     
     reference operator*() const {
-        return Policies::dereference(type<reference>(), m_impl);
+        return policies().dereference(type<reference>(), iter());
     }
 
 #ifdef _MSC_VER
@@ -125,33 +195,37 @@ public:
         { return *(*this + n); }
     
     Self& operator++() {
-        Policies::increment(m_impl);
+        policies().increment(iter());
         return *this;
     }
 
-    Self& operator++(int) { Self tmp(*this); ++*this; return tmp; }
+    Self operator++(int) { Self tmp(*this); ++*this; return tmp; }
     
     Self& operator--() {
-        Policies::decrement(m_impl);
+        policies().decrement(iter());
         return *this;
     }
     
-    Self& operator--(int) { Self tmp(*this); --*this; return tmp; }
+    Self operator--(int) { Self tmp(*this); --*this; return tmp; }
 
     Self& operator+=(difference_type n) {
-        Policies::advance(m_impl, n);
+        policies().advance(iter(), n);
         return *this;
     }
   
     Self& operator-=(difference_type n) {
-        Policies::advance(m_impl, -n);
+        policies().advance(iter(), -n);
         return *this;
     }
 
 private:
     typedef Policies policies_type;
-public: // too many compilers have trouble when this is private.
-    Iterator m_impl;
+    compressed_pair<Iterator,Policies> m_iter_p;
+public: // too many compilers have trouble when these are private.
+    Policies& policies() { return m_iter_p.second(); }
+    const Policies& policies() const { return m_iter_p.second(); }
+    Iterator& iter() { return m_iter_p.first(); }
+    const Iterator& iter() const { return m_iter_p.first(); }
 };
 
 template <class Iterator, class Policies, class Traits, class NonconstIterator>
@@ -181,47 +255,49 @@ typename Traits1::difference_type operator-(
     const iterator_adaptor<Iterator2,Policies,Traits2,NonconstIterator>& y )
 {
     typedef typename Traits1::difference_type difference_type;
-    return Policies::distance(type<difference_type>(), y.m_impl, x.m_impl);
+    return x.policies().distance(type<difference_type>(), y.iter(), x.iter());
 }
 
+#if 0
 template <class Iterator1, class Iterator2, class Policies, class Traits1, class Traits2, class NonconstIterator>
 inline bool 
 operator==(const iterator_adaptor<Iterator1,Policies,Traits1,NonconstIterator>& x, const iterator_adaptor<Iterator2,Policies,Traits2,NonconstIterator>& y) {
-    return Policies::equal(x.m_impl, y.m_impl);
+    return x.policies().equal(x.iter(), y.iter());
 }
 
 template <class Iterator1, class Iterator2, class Policies, class Traits1, class Traits2, class NonconstIterator>
 inline bool 
 operator<(const iterator_adaptor<Iterator1,Policies,Traits1,NonconstIterator>& x, const iterator_adaptor<Iterator2,Policies,Traits2,NonconstIterator>& y) {
-    return Policies::less(x.m_impl, y.m_impl);
+    return x.policies().less(x.iter(), y.iter());
 }
 
 template <class Iterator1, class Iterator2, class Policies, class Traits1, class Traits2, class NonconstIterator>
 inline bool 
 operator>(const iterator_adaptor<Iterator1,Policies,Traits1,NonconstIterator>& x,
           const iterator_adaptor<Iterator2,Policies,Traits2,NonconstIterator>& y) { 
-    return Policies::less(y.m_impl, x.m_impl);
+    return x.policies().less(y.iter(), x.iter());
 }
 
 template <class Iterator1, class Iterator2, class Policies, class Traits1, class Traits2, class NonconstIterator>
 inline bool 
 operator>=(const iterator_adaptor<Iterator1,Policies,Traits1,NonconstIterator>& x, const iterator_adaptor<Iterator2,Policies,Traits2,NonconstIterator>& y) {
-    return !Policies::less(x.m_impl, y.m_impl);
+    return !x.policies().less(x.iter(), y.iter());
 }
 
 template <class Iterator1, class Iterator2, class Policies, class Traits1, class Traits2, class NonconstIterator>
 inline bool 
 operator<=(const iterator_adaptor<Iterator1,Policies,Traits1,NonconstIterator>& x,
            const iterator_adaptor<Iterator2,Policies,Traits2,NonconstIterator>& y) {
-    return !Policies::less(y.m_impl, x.m_impl);
+    return !x.policies().less(y.iter(), x.iter());
 }
 
 template <class Iterator1, class Iterator2, class Policies, class Traits1, class Traits2, class NonconstIterator>
 inline bool 
 operator!=(const iterator_adaptor<Iterator1,Policies,Traits1,NonconstIterator>& x, 
            const iterator_adaptor<Iterator2,Policies,Traits2,NonconstIterator>& y) {
-    return !Policies::equal(x.m_impl, y.m_impl);
+    return !x.policies().equal(x.iter(), y.iter());
 }
+#endif
 
 //=============================================================================
 // iterator_adaptors - A type generator that simplifies creating
