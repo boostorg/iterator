@@ -34,7 +34,7 @@ namespace boost_concepts {
   template <class Target, class Source>
   struct static_assert_base_and_derived
   {
-      static_assert_base_and_derived(Target* x = (Source*)0) {}
+      static_assert_base_and_derived(Target* = (Source*)0) {}
   };
 
   //===========================================================================
