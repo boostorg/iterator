@@ -268,13 +268,14 @@ derived class only needs to grant friendship to
 ``iterator_core_access`` to make his core member functions available
 to the library.
 
-``iterator_core_access`` will be typically implemented as an empty
-class containing only private static member functions which invoke the
-iterator core member functions. There is, however, no need to
-standardize the gateway protocol.  Note that even if
-``iterator_core_access`` used public member functions it would not
-open a safety loophole, as every core member function preserves the
-invariants of the iterator.
+ .. This is no long uptodate -thw 
+    ``iterator_core_access`` will be typically implemented as an empty
+   class containing only private static member functions which invoke the
+   iterator core member functions. There is, however, no need to
+   standardize the gateway protocol.  Note that even if
+   ``iterator_core_access`` used public member functions it would not
+   open a safety loophole, as every core member function preserves the
+   invariants of the iterator.
 
 ``operator[]``
 ================
@@ -411,7 +412,8 @@ Header ``<iterator_helper>`` synopsis    [lib.iterator.helper.synopsis]
   template <
       class Derived
     , class Value
-    , class Category
+    , class AccessCategory
+    , class TraversalCategory
     , class Reference  = Value&
     , class Difference = ptrdiff_t
   >
@@ -475,7 +477,8 @@ Class template ``iterator_facade``
   template <
       class Derived
     , class Value
-    , class Category
+    , class AccessCategory
+    , class TraversalCategory
     , class Reference  = /* see below */
     , class Difference = ptrdiff_t
   >
@@ -485,7 +488,7 @@ Class template ``iterator_facade``
       typedef Reference reference;
       typedef /* see description of operator-> */ pointer;
       typedef Difference difference_type;
-      typedef Category iterator_category;
+      typedef iterator_tag<AccessCategory, TraversalCategory> iterator_category;
 
       reference operator*() const;
       /* see below */ operator->() const;
@@ -500,58 +503,58 @@ Class template ``iterator_facade``
   };
 
   // Comparison operators
-  template <class Dr1, class V1, class C1, class R1, class P1, class D1,
-            class Dr2, class V2, class C2, class R2, class P2, class D2>
+  template <class Dr1, class V1, class AC1, class TC1, class R1, class D1,
+            class Dr2, class V2, class AC2, class TC2, class R2, class D2>
   typename enable_if_interoperable<Dr1, Dr2, bool>::type // exposition
-  operator ==(iterator_facade<Dr1, V1, C1, R1, P1, D1> const& lhs,
-              iterator_facade<Dr2, V2, C2, R2, P2, D2> const& rhs);
+  operator ==(iterator_facade<Dr1, V1, AC1, TC1, R1, D1> const& lhs,
+              iterator_facade<Dr2, V2, AC2, TC2, R2, D2> const& rhs);
 
-  template <class Dr1, class V1, class C1, class R1, class P1, class D1,
-            class Dr2, class V2, class C2, class R2, class P2, class D2>
+  template <class Dr1, class V1, class AC1, class TC1, class R1, class D1,
+            class Dr2, class V2, class AC2, class TC2, class R2, class D2>
   typename enable_if_interoperable<Dr1, Dr2, bool>::type
-  operator !=(iterator_facade<Dr1, V1, C1, R1, P1, D1> const& lhs,
-              iterator_facade<Dr2, V2, C2, R2, P2, D2> const& rhs);
+  operator !=(iterator_facade<Dr1, V1, AC1, TC1, R1, D1> const& lhs,
+              iterator_facade<Dr2, V2, AC2, TC2, R2, D2> const& rhs);
 
-  template <class Dr1, class V1, class C1, class R1, class P1, class D1,
-            class Dr2, class V2, class C2, class R2, class P2, class D2>
+  template <class Dr1, class V1, class AC1, class TC1, class R1, class D1,
+            class Dr2, class V2, class AC2, class TC2, class R2, class D2>
   typename enable_if_interoperable<Dr1, Dr2, bool>::type
-  operator <(iterator_facade<Dr1, V1, C1, R1, P1, D1> const& lhs,
-             iterator_facade<Dr2, V2, C2, R2, P2, D2> const& rhs);
+  operator <(iterator_facade<Dr1, V1, AC1, TC1, R1, D1> const& lhs,
+             iterator_facade<Dr2, V2, AC2, TC2, R2, D2> const& rhs);
 
-  template <class Dr1, class V1, class C1, class R1, class P1, class D1,
-            class Dr2, class V2, class C2, class R2, class P2, class D2>
+  template <class Dr1, class V1, class AC1, class TC1, class R1, class D1,
+            class Dr2, class V2, class AC2, class TC2, class R2, class D2>
   typename enable_if_interoperable<Dr1, Dr2, bool>::type
-  operator <=(iterator_facade<Dr1, V1, C1, R1, P1, D1> const& lhs,
-              iterator_facade<Dr2, V2, C2, R2, P2, D2> const& rhs);
+  operator <=(iterator_facade<Dr1, V1, AC1, TC1, R1, D1> const& lhs,
+              iterator_facade<Dr2, V2, AC2, TC2, R2, D2> const& rhs);
 
-  template <class Dr1, class V1, class C1, class R1, class P1, class D1,
-            class Dr2, class V2, class C2, class R2, class P2, class D2>
+  template <class Dr1, class V1, class AC1, class TC1, class R1, class D1,
+            class Dr2, class V2, class AC2, class TC2, class R2, class D2>
   typename enable_if_interoperable<Dr1, Dr2, bool>::type
-  operator >(iterator_facade<Dr1, V1, C1, R1, P1, D1> const& lhs,
-             iterator_facade<Dr2, V2, C2, R2, P2, D2> const& rhs);
+  operator >(iterator_facade<Dr1, V1, AC1, TC1, R1, D1> const& lhs,
+             iterator_facade<Dr2, V2, AC2, TC2, R2, D2> const& rhs);
 
-  template <class Dr1, class V1, class C1, class R1, class P1, class D1,
-            class Dr2, class V2, class C2, class R2, class P2, class D2>
+  template <class Dr1, class V1, class AC1, class TC1, class R1, class D1,
+            class Dr2, class V2, class AC2, class TC2, class R2, class D2>
   typename enable_if_interoperable<Dr1, Dr2, bool>::type
-  operator >=(iterator_facade<Dr1, V1, C1, R1, P1, D1> const& lhs,
-              iterator_facade<Dr2, V2, C2, R2, P2, D2> const& rhs);
+  operator >=(iterator_facade<Dr1, V1, AC1, TC1, R1, D1> const& lhs,
+              iterator_facade<Dr2, V2, AC2, TC2, R2, D2> const& rhs);
 
-  template <class Dr1, class V1, class C1, class R1, class P1, class D1,
-            class Dr2, class V2, class C2, class R2, class P2, class D2>
+  template <class Dr1, class V1, class AC1, class TC1, class R1, class D1,
+            class Dr2, class V2, class AC2, class TC2, class R2, class D2>
   typename enable_if_interoperable<Dr1, Dr2, bool>::type
-  operator >=(iterator_facade<Dr1, V1, C1, R1, P1, D1> const& lhs,
-              iterator_facade<Dr2, V2, C2, R2, P2, D2> const& rhs);
+  operator >=(iterator_facade<Dr1, V1, AC1, TC1, R1, D1> const& lhs,
+              iterator_facade<Dr2, V2, AC2, TC2, R2, D2> const& rhs);
 
   // Iterator difference
-  template <class Dr1, class V1, class C1, class R1, class P1, class D1,
-            class Dr2, class V2, class C2, class R2, class P2, class D2>
+  template <class Dr1, class V1, class AC1, class TC1, class R1, class D1,
+            class Dr2, class V2, class AC2, class TC2, class R2, class D2>
   typename enable_if_interoperable<Dr1, Dr2, bool>::type
-  operator -(iterator_facade<Dr1, V1, C1, R1, P1, D1> const& lhs,
-             iterator_facade<Dr2, V2, C2, R2, P2, D2> const& rhs);
+  operator -(iterator_facade<Dr1, V1, AC1, TC1, R1, D1> const& lhs,
+             iterator_facade<Dr2, V2, AC2, TC2, R2, D2> const& rhs);
 
   // Iterator addition
-  template <class Derived, class V, class C, class R, class P, class D>
-  Derived operator+ (iterator_facade<Derived, V, C, R, P, D> const&,
+  template <class Derived, class V, class AC, class TC, class R, class D>
+  Derived operator+ (iterator_facade<Derived, V, AC, TC, R, D> const&,
                      typename Derived::difference_type n)
 
 
@@ -877,15 +880,34 @@ following pseudo-code specifies the traits types for
     } else
 	reference = Reference;
 
-    if (Category == use_default)
-	iterator_category = iterator_traits<Base>::iterator_category;
-    else
-	iterator_category = Category;
-
     if (Distance == use_default)
 	difference_type = iterator_traits<Base>::difference_type;
     else
 	difference_type = Distance;
+
+    if (Category == use_default)
+	iterator_category = iterator_tag< 
+                                access_category< 
+                                    iterator< iterator_traits<Base>::iterator_category,
+                                              Value,
+                                              Distance,
+                                              Value*,
+                                              Reference > >,
+                                traversal_category<
+                                    iterator< iterator_traits<Base>::iterator_category,
+                                              Value,
+                                              Distance,
+                                              Value*,
+                                              Reference > >
+    else
+	iterator_category = Category;
+
+
+..  Replaced with new semantics --thw
+    if (Category == use_default)
+	iterator_category = iterator_traits<Base>::iterator_category;
+    else
+	iterator_category = Category;
 
 
 
