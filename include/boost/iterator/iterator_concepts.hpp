@@ -15,16 +15,19 @@
 
 #include <boost/concept_check.hpp>
 #include <boost/iterator/iterator_categories.hpp>
+
+// Use boost::detail::iterator_traits to work around some MSVC/Dinkumware problems.
+#include <boost/detail/iterator.hpp>
+
 #include <boost/type_traits/is_same.hpp>
 #include <boost/type_traits/is_integral.hpp>
+
 #include <boost/mpl/bool.hpp>
 #include <boost/mpl/if.hpp>
 #include <boost/mpl/and.hpp>
 #include <boost/mpl/or.hpp>
-#include <boost/static_assert.hpp>
 
-// Use boost::detail::iterator_traits to work around some MSVC/Dinkumware problems.
-#include <boost/detail/iterator.hpp>
+#include <boost/static_assert.hpp>
 
 // Use boost/limits to work around missing limits headers on some compilers
 #include <boost/limits.hpp>
@@ -71,7 +74,10 @@ namespace boost_concepts {
     Iterator i;
   };
   
-  template <typename Iterator, typename ValueType>
+  template <
+      typename Iterator
+    , typename ValueType = typename boost::detail::iterator_traits<Iterator>::value_type
+  >
   class WritableIteratorConcept {
   public:
       
