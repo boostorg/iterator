@@ -169,15 +169,14 @@ namespace boost {
 
 
     template <class T>
-    type_traits::yes_type is_new_iter_cat(T*, typename T::traversal* = 0) { }
+    type_traits::yes_type is_new_iter_cat(T*, BOOST_DEDUCED_TYPENAME T::traversal* = 0);
 
-    type_traits::no_type is_new_iter_cat(...) { }
+    type_traits::no_type is_new_iter_cat(...);
 
     template <class Tag>
     struct is_new_iterator_tag
     {
-      static Tag* t;
-      enum { value = sizeof(is_new_iter_cat(t)) == sizeof(type_traits::yes_type) };
+      enum { value = (sizeof(is_new_iter_cat((Tag*)0)) == sizeof(type_traits::yes_type)) };
     };
 #endif
     
@@ -209,23 +208,22 @@ namespace boost {
 
     template <class CategoryTag, class Value>
     struct return_category_tag
+        : mpl::apply_if< 
+           is_new_iterator_tag<CategoryTag>
+           , get_return_category<CategoryTag>
+           , iter_category_to_return<CategoryTag, Value>
+    >
     {
-      typedef typename 
-	mpl::apply_if< 
-	  is_new_iterator_tag<CategoryTag>
-	  , get_return_category<CategoryTag>
-	  , iter_category_to_return<CategoryTag, Value>
-	>::type type;
     };
+  
     template <class CategoryTag, class Value>
     struct traversal_category_tag
-    {
-      typedef typename 
-	mpl::apply_if< 
+        : mpl::apply_if< 
 	  is_new_iterator_tag<CategoryTag>
 	  , get_traversal_category<CategoryTag>
 	  , iter_category_to_return<CategoryTag, Value>
-	>::type type;
+	>
+    {
     };
 
   } // namespace detail

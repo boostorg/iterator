@@ -12,11 +12,26 @@
 #include <boost/type_traits/conversion_traits.hpp>
 #include <boost/static_assert.hpp>
 
+// Use boost::detail::iterator_traits to work around some MSVC/Dinkumware problems.
+#include <boost/detail/iterator.hpp>
+
 namespace boost_concepts {
   // Used a different namespace here (instead of "boost") so that the
   // concept descriptions do not take for granted the names in
   // namespace boost.
 
+  // We use this in place of STATIC_ASSERT((is_convertible<...>))
+  // because some compilers (CWPro7.x) can't detect convertibility.
+  //
+  // Of course, that just gets us a different error at the moment with
+  // some tests, since new iterator category deduction still depends
+  // on convertibility detection. We might need some specializations
+  // to support this compiler.
+  template <class Target, class Source>
+  struct static_assert_base_and_derived
+  {
+      static_assert_base_and_derived(Target* x = (Source*)0) {}
+  };
 
   //===========================================================================
   // Iterator Access Concepts
@@ -24,8 +39,8 @@ namespace boost_concepts {
   template <typename Iterator>
   class ReadableIteratorConcept {
   public:
-    typedef typename std::iterator_traits<Iterator>::value_type value_type;
-    typedef typename std::iterator_traits<Iterator>::reference reference;
+    typedef typename boost::detail::iterator_traits<Iterator>::value_type value_type;
+    typedef typename boost::detail::iterator_traits<Iterator>::reference reference;
     typedef typename boost::return_category<Iterator>::type return_category;
 
     void constraints() {
@@ -33,9 +48,8 @@ namespace boost_concepts {
       boost::function_requires< boost::EqualityComparableConcept<Iterator> >();
       boost::function_requires< 
         boost::DefaultConstructibleConcept<Iterator> >();
-      
-      BOOST_STATIC_ASSERT((boost::is_convertible<return_category*,
-                           boost::readable_iterator_tag*>::value));
+
+      static_assert_base_and_derived<boost::readable_iterator_tag, return_category>();
                           
       reference r = *i; // or perhaps read(x)
       value_type v(r);
@@ -55,8 +69,7 @@ namespace boost_concepts {
       boost::function_requires< 
         boost::DefaultConstructibleConcept<Iterator> >();
       
-      BOOST_STATIC_ASSERT((boost::is_convertible<return_category*,
-                           boost::writable_iterator_tag*>::value));
+      static_assert_base_and_derived<boost::writable_iterator_tag, return_category>();
 
       *i = v; // a good alternative could be something like write(x, v)
     }
@@ -67,15 +80,14 @@ namespace boost_concepts {
   template <typename Iterator>
   class ConstantLvalueIteratorConcept {
   public:
-    typedef typename std::iterator_traits<Iterator>::value_type value_type;
-    typedef typename std::iterator_traits<Iterator>::reference reference;
+    typedef typename boost::detail::iterator_traits<Iterator>::value_type value_type;
+    typedef typename boost::detail::iterator_traits<Iterator>::reference reference;
     typedef typename boost::return_category<Iterator>::type return_category;
 
     void constraints() {
       boost::function_requires< ReadableIteratorConcept<Iterator> >();
 
-      BOOST_STATIC_ASSERT((boost::is_convertible<return_category*, 
-                           boost::constant_lvalue_iterator_tag*>::value));
+      static_assert_base_and_derived<boost::constant_lvalue_iterator_tag, return_category>();
 
       BOOST_STATIC_ASSERT((boost::is_same<reference, 
                            const value_type&>::value));
@@ -89,8 +101,8 @@ namespace boost_concepts {
   template <typename Iterator>
   class MutableLvalueIteratorConcept {
   public:
-    typedef typename std::iterator_traits<Iterator>::value_type value_type;
-    typedef typename std::iterator_traits<Iterator>::reference reference;
+    typedef typename boost::detail::iterator_traits<Iterator>::value_type value_type;
+    typedef typename boost::detail::iterator_traits<Iterator>::reference reference;
     typedef typename boost::return_category<Iterator>::type return_category;
 
     void constraints() {
@@ -98,8 +110,7 @@ namespace boost_concepts {
       boost::function_requires< 
         WritableIteratorConcept<Iterator, value_type> >();
       
-      BOOST_STATIC_ASSERT((boost::is_convertible<return_category*, 
-                           boost::mutable_lvalue_iterator_tag*>::value));
+      static_assert_base_and_derived<boost::mutable_lvalue_iterator_tag, return_category>();
 
       BOOST_STATIC_ASSERT((boost::is_same<reference, value_type&>::value));
 
@@ -123,8 +134,8 @@ namespace boost_concepts {
       boost::function_requires< 
         boost::DefaultConstructibleConcept<Iterator> >();
 
-      BOOST_STATIC_ASSERT((boost::is_convertible<traversal_category*, 
-                           boost::forward_traversal_tag*>::value));
+      static_assert_base_and_derived<boost::forward_traversal_tag, traversal_category>();
+
       ++i;
       (void)i++;
     }
@@ -139,8 +150,7 @@ namespace boost_concepts {
     void constraints() {
       boost::function_requires< ForwardTraversalConcept<Iterator> >();
       
-      BOOST_STATIC_ASSERT((boost::is_convertible<traversal_category*, 
-                           boost::bidirectional_traversal_tag*>::value));
+      static_assert_base_and_derived<boost::bidirectional_traversal_tag, traversal_category>();
 
       --i;
       (void)i--;
@@ -152,14 +162,14 @@ namespace boost_concepts {
   class RandomAccessTraversalConcept {
   public:
     typedef typename boost::traversal_category<Iterator>::type traversal_category;
-    typedef typename std::iterator_traits<Iterator>::difference_type
+    typedef typename boost::detail::iterator_traits<Iterator>::difference_type
       difference_type;
 
     void constraints() {
       boost::function_requires< BidirectionalTraversalConcept<Iterator> >();
 
-      BOOST_STATIC_ASSERT((boost::is_convertible<traversal_category*, 
-                           boost::random_access_traversal_tag*>::value));
+      static_assert_base_and_derived<boost::random_access_traversal_tag, traversal_category>();
+
       
       i += n;
       i = i + n;
