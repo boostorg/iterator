@@ -118,6 +118,29 @@ Iterator Concepts.
  Design
 ========
 
+Interoperability
+================
+
+The question of iterator interoperability is poorly adressed in the current standard.
+There are currently two defect reports that are concerned with interoperability
+issues.
+
+Issue `179`_ adresses the question that the standard currently only requires mutable
+container iterator types to be convertible the corresponding constant iterator
+types. This is tedious in praxis and out of line with the way built in types work.
+This proposal implements the proposed resolution to issue `179`_, as most
+standard library implementations do nowadays. I.e. if an iterator type A has an
+implicit or user defined conversion to an iterator typ B the iterator types
+are interoperable and the usual set of operators is supplied.
+
+Issue `280`_ is about the current lack of interoperability between reverse iterator
+types. The proposed new reverse_iterator template fixes the issues raised in
+280. It provides the desired interoperability without introducing unwanted overloads.
+
+.. _`179`: http://anubis.dkuug.dk/jtc1/sc22/wg21/docs/lwg-defects.html#179
+.. _`280`: http://anubis.dkuug.dk/jtc1/sc22/wg21/docs/lwg-active.html#280
+
+
 Iterator Facade
 ===============
 
@@ -136,6 +159,16 @@ In addition to the behaviors listed above, the core interface elements
 include the associated types exposed through iterator traits:
 ``value_type``, ``reference``, ``pointer``, and ``iterator_category``.
 
+Iterator facade uses the ``Curiously Recurring Template`` technique so that
+the user can specifiy the behaviour of ``iterator_facade`` in a derived class.
+Former designs used policy objects to specifiy the behaviour. 
+The proposal does not use policy objects for two reasons. First the creation
+and eventual copying of the policy object may create overhead that can be
+avoided with the current approach. Second the policy object approach
+does not allow for custom constructors on the created iterator types.
+The latter is an essential feature if ``iterator_facade`` should be used
+in other library implementations.  
+
 The user of ``iterator_facade`` derives his iterator class from an
 instantiation of ``iterator_facade`` and defines member functions
 implementing the core behaviors.  The following table describes
@@ -144,8 +177,8 @@ of the derived iterator type.
 
 In the table below, ``X`` is the derived iterator type, ``a`` is an
 object of type ``X``, ``b`` and ``c`` are objects of type ``const X``,
-``y`` is a constant object of an arbitrary iterator type, and ``n`` is
-an object of ``X::difference_type``
+``y`` is a constant object of an arbitrary interoperable iterator type,
+and ``n`` is an object of ``X::difference_type``
 
 +----------------------------------------+----------------------------------------+-------------------------------------------------+-------------------------------------------+
 | Expression                             | Return Type                            |    Assertion/Note/Precondition/Postcondition    | Required to implement Iterator Concept(s) |
@@ -171,6 +204,41 @@ an object of ``X::difference_type``
 |                                        |                                        |>= c``.                                          |                                           |
 +----------------------------------------+----------------------------------------+-------------------------------------------------+-------------------------------------------+
 
+.. Should we add a comment that a zero  overhead implementation of iterator_facade
+   is possible with proper inlining?
+
+Iterator Core Access
+====================
+
+``iterator_facade`` and the operator implementations need to be able to access the core
+interface member functions in the derived class. Making the core interface
+member funtions public would expose an implementation detail to the user. 
+This proposal frees the public interface of the derived iterator type from
+any implementation detail.
+
+This has two advantages. First there is no possibility for the user to accidently
+use a member function of the iterator when a member of the value_type was
+intended. This has been an issue with smart pointer implementations in
+the past. The second and main advantage is that library implementers
+can freely swap between ``iterator_facade`` based and custom iterator
+implementations. If the iterator core interface is public users
+will probably start using it.
+
+In order to make the core interface public the derived class needs to grant
+friendship to ``iterator_facade`` and to the seven operators. In order to
+simplify this the proposal provides a type ``iterator_core_access`` that acts
+as a gateway to the core interface in the derived iterator class.
+The author of the derived class only needs to grant friendship to
+``iterator_core_access``. 
+
+``iterator_core_access`` would be typically implemented as an empty
+class containing only static member functions that forward to the
+iterator core interface. There is no need to standardize the gateway
+protocoll.
+
+It is important to note that ``iterator_core_access`` does not open a
+loophole, as every function in the core interface preserves the invariants
+of the iterator. 
 
 Iterator Adaptor
 ================
@@ -249,6 +317,8 @@ Standard compliant iterators).
 
   struct not_specified { };
 
+  struct iterator_core_access { /* implementation detail */ };
+  
   template <
       class Derived
     , class Value      = not_specified
