@@ -53,6 +53,27 @@ old_iterator operator+(std::ptrdiff_t, old_iterator x) { return x; }
 int
 main()
 {
+  BOOST_STATIC_ASSERT( boost::detail::is_random_access_traversal_iterator<boost::random_access_traversal_tag>::value );
+
+  typedef boost::iterator_tag< boost::mutable_lvalue_iterator_tag, boost::random_access_traversal_tag > tag;
+
+  // BOOST_STATIC_ASSERT((boost::detail::is_random_access_iterator<tag>::value));
+  BOOST_STATIC_ASSERT((boost::is_same<tag::returns, boost::mutable_lvalue_iterator_tag>::value));
+  BOOST_STATIC_ASSERT((boost::is_same<tag::traversal, boost::random_access_traversal_tag>::value));
+
+  // BOOST_STATIC_ASSERT((boost::detail::is_random_access_iterator<new_iterator::iterator_category>::value));
+  BOOST_STATIC_ASSERT((boost::is_same<new_iterator::iterator_category::returns, boost::mutable_lvalue_iterator_tag>::value));
+  BOOST_STATIC_ASSERT((boost::is_same<new_iterator::iterator_category::traversal, boost::random_access_traversal_tag>::value));
+
+  typedef boost::traversal_category<new_iterator>::type traversal_category;
+
+  //  BOOST_STATIC_ASSERT(boost::detail::has_traversal<new_iterator::iterator_category>::value);
+  BOOST_STATIC_ASSERT(boost::detail::is_new_iterator_tag<new_iterator::iterator_category>::value);
+
+
+  BOOST_STATIC_ASSERT((boost::is_same<traversal_category, boost::random_access_traversal_tag>::value));
+
+
 #if !defined(BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION)
   boost::function_requires<
     boost_concepts::MutableLvalueIteratorConcept<int*> >();
