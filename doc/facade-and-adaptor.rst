@@ -257,13 +257,12 @@ derived class only needs to grant friendship to
 ``iterator_core_access`` to make his core member functions available
 to the library.
 
-``iterator_core_access`` would be typically implemented as an empty
-class containing only static member functions which invoke the
+``iterator_core_access`` will be typically implemented as an empty
+class containing only private static member functions which invoke the
 iterator core member functions. There is, however, no need to
-standardize the gateway protocol.
-
-It is important to note that ``iterator_core_access`` does not open a
-safety loophole, as every core member function preserves the
+standardize the gateway protocol.  Note that even if
+``iterator_core_access`` used public member functions it would not
+open a safety loophole, as every core member function preserves the
 invariants of the iterator.
 
 ``operator[]``
@@ -481,7 +480,7 @@ Class template ``iterator_facade``
       Derived operator--(int);
       Derived& operator+=(difference_type n);
       Derived& operator-=(difference_type n);
-      Derived operator-(difference_type x) const;
+      Derived operator-(difference_type n) const;
   };
 
   // Comparison operators
@@ -550,12 +549,13 @@ Class template ``iterator_facade``
 --------------------------------
 
 The ``Derived`` template parameter must be a class derived from
-``iterator_facade``. 
+``iterator_facade``.
 
-The following table describes the requirements on the ``Derived``
-parameter.  Depending on the resulting iterator's
+The following table describes the other requirements on the
+``Derived`` parameter.  Depending on the resulting iterator's
 ``iterator_category``, a subset of the expressions listed in the table
-are required to be valid .
+are required to be valid.  The operations in the first column must be
+accessible to member functions of class ``iterator_core_access``.
 
 In the table below, ``X`` is the derived iterator type, ``a`` is an
 object of type ``X``, ``b`` and ``c`` are objects of type ``const X``,
@@ -597,6 +597,10 @@ interoperable with ``X``.
 ``iterator_facade`` operations
 ------------------------------
 
+The operations in this section are described in terms of operations on
+the core interface of ``Derived`` which may be inaccessible
+(i.e. private).  The implementation should access these operations
+through member functions of class ``iterator_core_access``.
 
 ``reference operator*() const;``
 
@@ -653,9 +657,21 @@ interoperable with ``X``.
 ``Derived& operator++();``
 
 :Requires: 
-:Effects: Invokes the ``increment`` core interface function. 
+:Effects: 
+
+  ::
+
+    static_cast<Derived*>(this)->increment();
+    return *this;
+
+.. I realize that the committee is moving away from specifying things
+   like this in terms of code, but I worried about the imprecision of
+   saying that a core interface function is invoked without describing
+   the downcast.  An alternative to what I did would be to mention it
+   above where we talk about accessibility.
+
 :Postconditions: 
-:Returns: ``*this``
+:Returns:
 :Throws: 
 :Complexity: 
 
@@ -663,53 +679,89 @@ interoperable with ``X``.
 
 :Requires: 
 :Effects:
+
+  ::
+
+    Derived tmp(static_cast<Derived const*>(this));
+    ++*this;
+    return tmp;
+
 :Postconditions: 
-:Returns: A copy of ``*this``, incremented once.
+:Returns:
 :Throws: 
 :Complexity: 
 
 ``Derived& operator--();``
 
 :Requires: 
-:Effects: Invokes the ``decrement`` core interface function. 
+:Effects:
+
+   ::
+
+      static_cast<Derived*>(this)->decrement();
+      return *this;
+
 :Postconditions: 
-:Returns: ``*this``
+:Returns: 
 :Throws: 
 :Complexity: 
 
 ``Derived operator--(int);``
 
 :Requires: 
-:Effects: 
+:Effects:
+
+  ::
+
+    Derived tmp(static_cast<Derived const*>(this));
+    --*this;
+    return tmp;
+
 :Postconditions: 
-:Returns: A copy of ``*this``, decremented once.
+:Returns:
 :Throws: 
 :Complexity: 
 
 ``Derived& operator+=(difference_type n);``
 
 :Requires: 
-:Effects: Invokes ``advance(n)``.
+:Effects:
+
+  ::
+
+      static_cast<Derived*>(this)->advance(n);
+      return *this;
+
 :Postconditions: 
-:Returns: ``*this``
+:Returns:
 :Throws: 
 :Complexity: 
 
 ``Derived& operator-=(difference_type n);``
 
 :Requires: 
-:Effects: Invokes ``advance(-n)``.
+:Effects:
+
+   ::
+
+      static_cast<Derived*>(this)->advance(-n);
+      return *this;
+
 :Postconditions: 
-:Returns: ``*this``
+:Returns:
 :Throws: 
-:Complexity: 
+:Complexity:
 
 ``Derived operator-(difference_type n) const;``
 
 :Requires: 
 :Effects: 
+
+   Derived tmp(static_cast<Derived const*>(this));
+   return tmp -= n;
+
 :Postconditions: 
-:Returns: A copy of ``*this`` advanced by ``-n``.
+:Returns: ``static_cast<Derived const*>(this)->advance(-n);``
 :Throws: 
 :Complexity: 
 
