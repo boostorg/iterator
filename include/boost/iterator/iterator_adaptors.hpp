@@ -10,6 +10,7 @@
 
 #include <boost/mpl/aux_/has_xxx.hpp>
 #include <boost/mpl/logical/or.hpp>
+#include <boost/mpl/logical/and.hpp>
 #include <boost/mpl/identity.hpp>
 
 #include <boost/type_traits/is_same.hpp>
@@ -52,10 +53,11 @@
 #endif 
 
 
-namespace boost {
+namespace boost
+{
 
-  namespace detail {
-
+  namespace detail
+  {
     //
     // Base machinery for all kinds of enable if
     //
@@ -151,6 +153,30 @@ namespace boost {
     // void* is just to easy.
     //
     struct enable_type;
+
+    // traits_iterator<It> has two important properties:
+    //
+    //   1. It is derived from boost::iterator<...>, which is
+    //      important for standard library interoperability of
+    //      iterator types on some (broken) implementations.
+    //
+    //   2. The associated types are taken from iterator_traits<It>.
+    //
+    // It might arguably be better to arrange for
+    // boost::detail::iterator_traits<It> to be derived from
+    // boost::iterator<...>, then we could use
+    // boost::detail::iterator_traits directly.
+    template <class Iterator>
+    struct traits_iterator
+         : iterator<
+             typename iterator_traits<Iterator>::iterator_category
+           , typename iterator_traits<Iterator>::value_type
+           , typename iterator_traits<Iterator>::difference_type
+           , typename iterator_traits<Iterator>::pointer
+           , typename iterator_traits<Iterator>::reference
+        >
+    {
+    };
 
   } // namespace detail
 
@@ -256,41 +282,37 @@ namespace boost {
     {
       return f1.distance_to(f2);
     }
-
   };
 
-  template <class Derived,
-            class V,
-            class R,
-            class P,
-            class C,
-            class D>
-  class repository :
-    public iterator<C, V, D, P, R>
+  namespace detail
   {
-  public:
-    typedef Derived derived_t;
+    struct empty_base {};
+  }
+  
+  // Encapsulates the "Curiously Recursive Template" pattern.
+  // Derived should be a class derived from this instantiation, and
+  // Base will be inserted as a base class.
+  template <class Derived, class Base = detail::empty_base>
+  class downcastable
+      : public Base
+  {
+   public:
+      typedef Derived derived_t;
+      
+      Derived& derived()
+      {
+          return static_cast<Derived&>(*this);
+      }
+
+      Derived const& derived() const 
+      {
+          return static_cast<Derived const&>(*this);
+      }
   };
 
   template <class Base>
-  class downcastable :
-    public Base
-  {
-  public:
-    typename Base::derived_t& derived()
-    {
-      return static_cast<typename Base::derived_t&>(*this);
-    }
-
-    typename Base::derived_t const& derived() const 
-    {
-      return static_cast<typename Base::derived_t const&>(*this);
-    }
-  };
-
-  template <class Base>
-  class iterator_comparisons :
-    public Base
+  class iterator_comparisons
+      : public Base
   {
   };
 
@@ -496,9 +518,11 @@ namespace boost {
   template <class Base1,
             class Base2>
   inline
-  typename detail::enable_if_interoperable<typename Base1::derived_t,
-                                           typename Base2::derived_t,
-                                           typename Base1::difference_type>::type
+  typename detail::enable_if_interoperable<
+      typename Base1::derived_t
+      , typename Base2::derived_t
+      , typename Base1::difference_type
+      >::type
   operator-(iterator_arith<Base1> const& lhs,
             iterator_arith<Base2> const& rhs)
   {
@@ -514,33 +538,27 @@ namespace boost {
                                              lhs.derived());
   }
 
-  template <class Derived,
-            class V,
-            class R,
-            class P,
-            class C, 
-            class D,
-            // We do not use the name base here, as base is used in
-            // reverse iterator.
-            class Super = iterator_arith<
-    iterator_comparisons<
-    downcastable<
-    repository< Derived, V, R, P, C, D > > > >
+  template <
+        class Derived
+      , class Traits
+      , class Super = iterator_arith<  
+                        iterator_comparisons<
+                            downcastable<Derived, Traits> > >
   >
-  class iterator_facade : 
-    public Super
+  class iterator_facade
+      : public Super
   {
-    typedef Super super_t;
-
-  public:
+      typedef Super super_t;
+   public:
     typedef typename super_t::reference       reference;
     typedef typename super_t::difference_type difference_type;
+    typedef typename super_t::pointer pointer;
 
     reference operator*() const
     { return iterator_core_access::dereference(this->derived()); }
 
     // Needs eventual help for input iterators
-    P operator->() const { return &iterator_core_access::dereference(this->derived()); }
+    pointer operator->() const { return &iterator_core_access::dereference(this->derived()); }
         
     reference operator[](difference_type n) const
     { return *(*this + n); }
@@ -567,24 +585,34 @@ namespace boost {
     { Derived result(this->derived()); return result -= x; }
   };
 
+  namespace detail
+  {
+      template <class Traits, class Other>
+      struct same_category_and_difference
+          : mpl::logical_and<
+              is_same<
+                 typename Traits::iterator_category
+               , typename Other::iterator_category
+              >
+            , is_same<
+                 typename Traits::iterator_category
+               , typename Other::iterator_category
+              >
+            >
+      {};
+  }
+  
   //
   // TODO Handle default arguments the same way as
   // in former ia lib
   //
-  template <class Derived,
-            class Iterator,
-            class Value     = typename detail::iterator_traits<Iterator>::value_type,
-            class Reference = typename detail::iterator_traits<Iterator>::reference,
-            class Pointer   = typename detail::iterator_traits<Iterator>::pointer,
-            class Category  = typename detail::iterator_traits<Iterator>::iterator_category,
-            class Distance  = typename detail::iterator_traits<Iterator>::difference_type>
-  class iterator_adaptor :
-    public iterator_facade<Derived,
-                           Value,
-                           Reference,
-                           Pointer,
-                           Category,
-                           Distance>
+  template <
+      class Derived
+      , class Iterator
+      , class Traits = detail::traits_iterator<Iterator>
+  >
+  class iterator_adaptor
+      : public iterator_facade<Derived,Traits>
   {
     friend class iterator_core_access;
 
@@ -601,50 +629,39 @@ namespace boost {
   protected:
     // Core iterator interface for iterator_facade
     // 
-    Reference dereference() const { return *m_iterator; }
+    typename Traits::reference dereference() const { return *m_iterator; }
 
-    template <class OtherDerived,
-              class OtherIterator,
-              class OtherValue,     
-              class OtherReference, 
-              class OtherPointer >   
-    bool equal(iterator_adaptor<OtherDerived,
-                                OtherIterator,
-                                OtherValue,
-                                OtherReference,
-                                OtherPointer,
-                                Category,
-                                Distance> const& x) const
+    template <
+        class OtherDerived, class OtherIterator, class OtherTraits
+    >   
+    bool equal(iterator_adaptor<OtherDerived,OtherIterator,OtherTraits> const& x) const
     {
-      return m_iterator == x.base();
+        BOOST_STATIC_ASSERT(
+            (detail::same_category_and_difference<Traits,OtherTraits>::value)
+            );
+        return m_iterator == x.base();
     }
   
-    void advance(Distance n)
+    void advance(typename Traits::difference_type n)
     {
-      m_iterator += n;
+        m_iterator += n;
     }
   
     void increment() { ++m_iterator; }
     void decrement() { --m_iterator; }
 
-    template <class OtherDerived,
-              class OtherIterator,
-              class OtherValue,     
-              class OtherReference, 
-              class OtherPointer >   
-    Distance distance_to(iterator_adaptor<OtherDerived,
-                                          OtherIterator,
-                                          OtherValue,
-                                          OtherReference,
-                                          OtherPointer,
-                                          Category,
-                                          Distance> const& y) const
+    template <class OtherDerived, class OtherIterator, class OtherTraits>   
+    typename Traits::difference_type distance_to(
+        iterator_adaptor<OtherDerived, OtherIterator, OtherTraits> const& y) const
     {
-      return y.base() - m_iterator;
+        BOOST_STATIC_ASSERT(
+            (detail::same_category_and_difference<Traits,OtherTraits>::value)
+            );
+        return y.base() - m_iterator;
     }
 
-  private:
-    Iterator m_iterator;
+   private: // data members
+      Iterator m_iterator;
 
   };
 
@@ -699,23 +716,35 @@ namespace boost {
       return reverse_iterator<BidirectionalIterator>(x);
   }
 
+  // Given the transform iterator's transformation and iterator, this
+  // is the type used as its traits.
+  template <class AdaptableUnaryFunction, class Iterator>
+  struct transform_iterator_traits
+      : iterator<
+              typename detail::iterator_traits<Iterator>::iterator_category
+            , typename AdaptableUnaryFunction::result_type
+            , typename detail::iterator_traits<Iterator>::difference_type
+            , typename AdaptableUnaryFunction::result_type*
+            , typename AdaptableUnaryFunction::result_type
+      >
+  {};
+   
   //
   // TODO fix category
   //
   template <class AdaptableUnaryFunction, class Iterator>
-  class transform_iterator :
-    public iterator_adaptor< transform_iterator<AdaptableUnaryFunction, Iterator>,
-                             Iterator,
-                             typename AdaptableUnaryFunction::result_type,
-                             typename AdaptableUnaryFunction::result_type, 
-                             typename AdaptableUnaryFunction::result_type*
-                             >
+  class transform_iterator
+    : public iterator_adaptor<
+          transform_iterator<AdaptableUnaryFunction, Iterator>
+        , Iterator
+        , transform_iterator_traits<AdaptableUnaryFunction,Iterator>
+      >
   {
-    typedef iterator_adaptor< transform_iterator<AdaptableUnaryFunction, Iterator>,
-                              Iterator,
-                              typename AdaptableUnaryFunction::result_type,
-                              typename AdaptableUnaryFunction::result_type, 
-                              typename AdaptableUnaryFunction::result_type* > super_t;
+    typedef iterator_adaptor<
+        transform_iterator<AdaptableUnaryFunction, Iterator>
+        , Iterator
+        , transform_iterator_traits<AdaptableUnaryFunction,Iterator>
+    > super_t;
 
     friend class iterator_core_access;
 
@@ -816,30 +845,34 @@ namespace boost {
       typedef typename iterator_traits<Iter>::difference_type difference_type;
     };
 
+    // The traits to use for indirect iterator, by default.  Whatever
+    // is supplied gets passed through traits_iterator<...> so that it
+    // is ultimately derived from boost::iterator<...>
     template <class Base, class Traits>
     struct indirect_traits
-      : mpl::if_<is_same<Traits,unspecified>, indirect_defaults<Base>, Traits>::type
+      : traits_iterator<
+           typename mpl::if_<
+              is_same<Traits,unspecified>
+            , indirect_defaults<Base>
+            , Traits
+           >::type
+        >
     {
     };
   } // namespace detail
 
   template <class Iterator, class Traits = unspecified>
   class indirect_iterator :
-    public iterator_adaptor< indirect_iterator<Iterator, Traits>,
-                             Iterator,
-                             typename detail::indirect_traits<Iterator, Traits>::value_type,
-                             typename detail::indirect_traits<Iterator, Traits>::reference,
-                             typename detail::indirect_traits<Iterator, Traits>::pointer,
-                             typename detail::indirect_traits<Iterator, Traits>::iterator_category,
-                             typename detail::indirect_traits<Iterator, Traits>::difference_type >
+    public iterator_adaptor<
+        indirect_iterator<Iterator, Traits>
+      , Iterator
+      , detail::indirect_traits<Iterator,Traits> >
   {
-    typedef iterator_adaptor< indirect_iterator<Iterator, Traits>,
-                              Iterator,
-                              typename detail::indirect_traits<Iterator, Traits>::value_type,
-                              typename detail::indirect_traits<Iterator, Traits>::reference,
-                              typename detail::indirect_traits<Iterator, Traits>::pointer,
-                              typename detail::indirect_traits<Iterator, Traits>::iterator_category,
-                              typename detail::indirect_traits<Iterator, Traits>::difference_type > super_t;
+    typedef iterator_adaptor<
+          indirect_iterator<Iterator, Traits>
+        , Iterator
+        , detail::indirect_traits<Iterator,Traits>
+    > super_t;
 
     friend class iterator_core_access;
 
@@ -892,21 +925,14 @@ namespace boost {
   template <class Predicate, class Iterator>
   class filter_iterator
       : public iterator_adaptor<
-           filter_iterator<Predicate, Iterator>, Iterator,
-           typename filter_iterator_traits<Iterator>::value_type,
-           typename filter_iterator_traits<Iterator>::reference,
-           typename filter_iterator_traits<Iterator>::pointer,
-           typename filter_iterator_traits<Iterator>::iterator_category,
-           typename filter_iterator_traits<Iterator>::difference_type
+           filter_iterator<Predicate, Iterator>, Iterator
+           , detail::traits_iterator<filter_iterator_traits<Iterator> >
         >
   {
       typedef iterator_adaptor<
-           filter_iterator<Predicate, Iterator>, Iterator,
-           typename filter_iterator_traits<Iterator>::value_type,
-           typename filter_iterator_traits<Iterator>::reference,
-           typename filter_iterator_traits<Iterator>::pointer,
-           typename filter_iterator_traits<Iterator>::iterator_category,
-           typename filter_iterator_traits<Iterator>::difference_type > super_t;
+           filter_iterator<Predicate, Iterator>, Iterator
+          , detail::traits_iterator<filter_iterator_traits<Iterator> >
+      > super_t;
 
       friend class iterator_core_access;
 
