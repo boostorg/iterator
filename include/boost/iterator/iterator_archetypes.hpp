@@ -10,6 +10,9 @@
 #include <boost/iterator/iterator_categories.hpp>
 #include <boost/operators.hpp>
 #include <boost/static_assert.hpp>
+#include <boost/iterator.hpp>
+
+#include <boost/iterator/detail/facade_iterator_category.hpp>
 
 #include <boost/type_traits/is_const.hpp>
 #include <boost/type_traits/add_const.hpp>
@@ -24,8 +27,6 @@
 #include <boost/mpl/apply_if.hpp>
 #include <boost/mpl/and.hpp>
 #include <boost/mpl/identity.hpp>
-
-#include <boost/iterator/detail/facade_iterator_category.hpp>
 
 #include <cstddef>
 
@@ -117,28 +118,29 @@ namespace detail
 
   template <class Value, class AccessCategory, class TraversalCategory>
   struct operator_brackets
-    : mpl::apply_if<
-          is_convertible<TraversalCategory, random_access_traversal_tag>
-        , mpl::apply_if<
-              iterator_archetypes::has_access<
-                  AccessCategory
-                , iterator_archetypes::writable_iterator_t
-              >
-            , mpl::identity<writable_operator_brackets<Value> >
-            , mpl::if_<
+    : mpl::aux::msvc_eti_base<
+          typename mpl::apply_if<
+              is_convertible<TraversalCategory, random_access_traversal_tag>
+            , mpl::apply_if<
                   iterator_archetypes::has_access<
                       AccessCategory
-                    , iterator_archetypes::readable_iterator_t
+                    , iterator_archetypes::writable_iterator_t
                   >
-                , readable_operator_brackets<Value>
-                , no_operator_brackets
+                , mpl::identity<writable_operator_brackets<Value> >
+                , mpl::if_<
+                      iterator_archetypes::has_access<
+                          AccessCategory
+                        , iterator_archetypes::readable_iterator_t
+                      >
+                    , readable_operator_brackets<Value>
+                    , no_operator_brackets
+                  >
               >
-          >
-        , mpl::identity<no_operator_brackets>
+            , mpl::identity<no_operator_brackets>
+          >::type
       >::type
-  {
-  };
-
+  {};
+  
   template <class TraversalCategory>
   struct traversal_archetype_impl
   {
@@ -376,53 +378,70 @@ struct traversal_archetype_base
 {
 };
 
+namespace detail
+{
+  template <class Value, class AccessCategory, class TraversalCategory>
+  struct iterator_archetype_base
+    : iterator_access_archetype<Value, AccessCategory>
+    , traversal_archetype_base<Value, AccessCategory, TraversalCategory>
+  {
+      typedef iterator_access_archetype<Value, AccessCategory> access;
+      
+      typedef typename detail::facade_iterator_category<
+          TraversalCategory
+        , typename mpl::apply_if<
+              iterator_archetypes::has_access<
+                  AccessCategory, iterator_archetypes::writable_iterator_t
+              >
+            , remove_const<Value>
+            , add_const<Value>
+          >::type
+        , typename access::reference
+      >::type iterator_category;
+
+      // Needed for some broken libraries (see below)
+      typedef boost::iterator<
+          iterator_category
+        , Value
+        , typename traversal_archetype_base<
+              Value, AccessCategory, TraversalCategory
+          >::difference_type
+        , typename access::pointer
+        , typename access::reference
+      > workaround_iterator_base;
+  };
+}
+
 template <class Value, class AccessCategory, class TraversalCategory>
 struct iterator_archetype
-  : public traversal_archetype_base<Value, AccessCategory, TraversalCategory>
-  , public iterator_access_archetype<Value, AccessCategory>
+  : public detail::iterator_archetype_base<Value, AccessCategory, TraversalCategory>
 
     // These broken libraries require derivation from std::iterator
     // (or related magic) in order to handle iter_swap and other
     // iterator operations
 # if BOOST_WORKAROUND(BOOST_DINKUMWARE_STDLIB, < 310)           \
     || BOOST_WORKAROUND(_RWSTD_VER, BOOST_TESTED_AT(0x20101))
-    
-  , public std::iterator<
-        iterator_tag<AccessCategory,TraversalCategory>
-      , typename iterator_access_archetype<Value, AccessCategory>::value_type
-      , typename traversal_archetype_base<
-            Value, AccessCategory, TraversalCategory
-        >::difference_type
-    >
+  , public detail::iterator_archetype_base<
+        Value, AccessCategory, TraversalCategory
+    >::workaround_iterator_base
 # endif 
 {
-    // Derivation from std::iterator above caused ambiguity, so now
-    // we have to declare all the types here.
+    // Derivation from std::iterator above caused references to nested
+    // types to be ambiguous, so now we have to redeclare them all
+    // here.
 # if BOOST_WORKAROUND(BOOST_DINKUMWARE_STDLIB, < 310)           \
     || BOOST_WORKAROUND(_RWSTD_VER, BOOST_TESTED_AT(0x20101))
     
-    typedef typename iterator_access_archetype<Value, AccessCategory>::value_type value_type;
-      
-    typedef typename iterator_access_archetype<Value, AccessCategory>::pointer pointer;
-      
-    typedef typename traversal_archetype_base<
-        Value, AccessCategory, TraversalCategory
-    >::difference_type difference_type;
+    typedef detail::iterator_archetype_base<
+        Value,AccessCategory,TraversalCategory
+    > base;
+    
+    typedef typename base::value_type value_type;
+    typedef typename base::reference reference;
+    typedef typename base::pointer pointer;
+    typedef typename base::difference_type difference_type;
+    typedef typename base::iterator_category iterator_category;
 # endif
-
-    typedef typename iterator_access_archetype<Value, AccessCategory>::reference reference;
-      
-    typedef typename detail::facade_iterator_category<
-        TraversalCategory
-      , typename mpl::apply_if<
-            iterator_archetypes::has_access<
-                AccessCategory, iterator_archetypes::writable_iterator_t
-            >
-          , remove_const<Value>
-          , add_const<Value>
-        >::type
-      , reference
-    >::type iterator_category; 
 
     iterator_archetype();
     iterator_archetype(iterator_archetype const&);
