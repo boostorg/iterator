@@ -7,14 +7,19 @@
 #include <boost/iterator.hpp>
 #include <boost/detail/workaround.hpp>
 #include <boost/iterator/iterator_categories.hpp>
+
 #include <boost/mpl/aux_/has_xxx.hpp>
 #include <boost/mpl/logical/or.hpp>
+#include <boost/mpl/identity.hpp>
+
 #include <boost/type_traits/is_same.hpp>
 #include <boost/type_traits/is_convertible.hpp>
 
 #include "boost/type_traits/detail/bool_trait_def.hpp"
 
-#if BOOST_WORKAROUND(BOOST_MSVC, <= 1301) || BOOST_WORKAROUND(__GNUC__, <= 2 && __GNUC_MINOR__ <= 95) || BOOST_WORKAROUND(__MWERKS__, <= 0x3000)
+#if BOOST_WORKAROUND(BOOST_MSVC, <= 1301)                       \
+ || BOOST_WORKAROUND(__GNUC__, <= 2 && __GNUC_MINOR__ <= 95)    \
+ || BOOST_WORKAROUND(__MWERKS__, <= 0x3000)
 #  define BOOST_NO_SFINAE // "Substitution Failure Is Not An Error not implemented"
 #endif 
 
@@ -25,8 +30,20 @@
 #endif
 
 #if BOOST_WORKAROUND(__MWERKS__, <=0x2407)
-#  define BOOST_NO_IS_CONVERTIBLE // "Convertible does not provide enough/is not working"
+#  define BOOST_NO_IS_CONVERTIBLE // "is_convertible doesn't work"
 #endif
+
+#if BOOST_WORKAROUND(__GNUC__, == 2 && __GNUC_MINOR__ == 95) \
+  || BOOST_WORKAROUND(__MWERKS__, <= 0x2407)
+# define BOOST_NO_MPL_AUX_HAS_XXX  // "MPL's has_xxx facility doesn't work"
+#endif 
+
+#ifdef BOOST_NO_MPL_AUX_HAS_XXX
+# include <boost/shared_ptr.hpp>
+# include <boost/scoped_ptr.hpp>
+# include <memory>
+#endif 
+
 
 namespace boost {
 
@@ -86,12 +103,12 @@ namespace boost {
     // on operator implementation for consequences.
     //
     template <typename A, typename B>
-    struct is_interoperable :
+    struct is_interoperable
 #ifdef BOOST_NO_IS_CONVERTIBLE
-      mpl::true_c
+      : mpl::true_c
 #else
-      mpl::logical_or< is_convertible< A, B >,
-                       is_convertible< B, A > >
+      : mpl::logical_or< is_convertible< A, B >,
+                         is_convertible< B, A > >
 #endif
     {
     };
@@ -105,12 +122,16 @@ namespace boost {
     template <class Facade1,
               class Facade2,
               class Return>
-    struct enable_if_interoperable :
-      enabled< is_interoperable<Facade1, Facade2>::value >::template base<Return>
+    struct enable_if_interoperable
+# if !defined(BOOST_NO_SFINAE) && !defined(BOOST_NO_IS_CONVERTIBLE)
+      : enabled< is_interoperable<Facade1, Facade2>::value >::template base<Return>
+# else
+      : mpl::identity<Return>
+# endif 
     {
-#if BOOST_WORKAROUND(BOOST_MSVC, <=1200)
-      typedef typename enabled< is_interoperable<Facade1, Facade2>::value >::template base<Return>::type type;
-#endif
+# if BOOST_WORKAROUND(BOOST_MSVC, <= 1200)
+        typedef Return type;
+# endif 
     };
 
     // 
@@ -161,24 +182,19 @@ namespace boost {
   // false positives for user/library defined iterator types. See comments
   // on operator implementation for consequences.
   //
-#ifdef BOOST_NO_IS_CONVERTIBLE
   template<typename From,
            typename To>
-  struct enable_if_convertible 
-  {
-    typedef detail::enable_type type;
-  };
+  struct enable_if_convertible
+#if !defined(BOOST_NO_IS_CONVERTIBLE) && !defined(BOOST_NO_SFINAE)
+      : detail::enabled< is_convertible<From, To>::value >::template base<detail::enable_type>
 #else
-  template<typename From,
-           typename To>
-  struct enable_if_convertible :
-    detail::enabled< is_convertible<From, To>::value >::template base<detail::enable_type>
+      : mpl::identity<detail::enable_type>
+#endif 
   {
-#if BOOST_WORKAROUND(BOOST_MSVC, <=1200)
-    typedef typename detail::enabled< is_convertible<From, To>::value >::template base<detail::enable_type>::type type;
-#endif
+# if BOOST_WORKAROUND(BOOST_MSVC, <= 1200)
+        typedef detail::enable_type type;
+# endif 
   };
-#endif
 
   //
   // Helper class for granting access to the iterator core interface.
@@ -708,31 +724,44 @@ namespace boost {
   {
     //
     // Detection for whether a type has a nested `element_type'
-    // typedef. Used to detect smart pointers. We're having trouble
-    // auto-detecting smart pointers with gcc-2.95 via the nested
-    // element_type member. However, we really ought to have a
-    // specializable is_pointer template which can be used instead with
-    // something like boost/python/pointee.hpp to find the value_type.
+    // typedef. Used to detect smart pointers. For compilers not
+    // supporting mpl's has_xxx, we supply specialzations. However, we
+    // really ought to have a specializable is_pointer template which
+    // can be used instead with something like
+    // boost/python/pointee.hpp to find the value_type.
     //
+# if !defined BOOST_NO_MPL_AUX_HAS_XXX
     namespace aux
     {
       BOOST_MPL_HAS_XXX_TRAIT_DEF(element_type)
-        }
+    }
 
     template <class T>
     struct has_element_type
       : mpl::if_<
-      is_class<T>
-// gcc 2.95 doesn't seem to be able to detect element_type without barfing    
-# if BOOST_WORKAROUND(__GNUC__, == 2 && __GNUC_MINOR__ == 95)
-      , mpl::bool_c<false>
-# else 
-      , aux::has_element_type<T>
-# endif 
-      , mpl::bool_c<false>
-    >::type
+          is_class<T>
+        , aux::has_element_type<T>
+        , mpl::false_c
+      >::type
     {
     };
+# else
+    template <class T>
+    struct has_element_type
+        : mpl::false_c {};
+    
+    template <class T>
+    struct has_element_type<boost::shared_ptr<T> >
+        : mpl::true_c {};
+    
+    template <class T>
+    struct has_element_type<boost::scoped_ptr<T> >
+        : mpl::true_c {};
+    
+    template <class T>
+    struct has_element_type<std::auto_ptr<T> >
+        : mpl::true_c {};
+# endif 
   
     // Metafunction returning the nested element_type typedef
     template <class T>
@@ -750,11 +779,11 @@ namespace boost {
     // to deduce the default types
     template <class Iter>
     struct indirect_defaults
-      : mpl::if_c<
-      has_element_type<typename iterator_traits<Iter>::value_type>::value
-      , smart_pointer_traits<typename iterator_traits<Iter>::value_type>
-      , iterator_traits<typename iterator_traits<Iter>::value_type>
-    >::type
+      : mpl::if_<
+            has_element_type<typename iterator_traits<Iter>::value_type>
+          , smart_pointer_traits<typename iterator_traits<Iter>::value_type>
+          , iterator_traits<typename iterator_traits<Iter>::value_type>
+        >::type
     {
       typedef typename iterator_traits<Iter>::iterator_category iterator_category;
       typedef typename iterator_traits<Iter>::difference_type difference_type;
@@ -824,14 +853,9 @@ namespace boost {
 // clean up local workaround macros
 //
 
-#ifdef BOOST_NO_SFINAE
-#  undef BOOST_NO_SFINAE
-#endif
-
+#undef BOOST_NO_SFINAE
 #undef BOOST_ARG_DEP_TYPENAME
-
-#ifdef BOOST_NO_IS_CONVERTIBLE
-#  undef BOOST_NO_IS_CONVERTIBLE
-#endif
+#undef BOOST_NO_IS_CONVERTIBLE
+#undef BOOST_NO_MPL_AUX_HAS_XXX
 
 #endif // BOOST_ITERATOR_ADAPTORS_HPP
