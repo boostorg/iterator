@@ -26,6 +26,8 @@ namespace boost {
     virtual public readable_iterator_tag { };
 
   // Traversal Categories
+  struct input_traversal_tag { };
+  struct output_traversal_tag { };
   struct forward_traversal_tag { };
   struct bidirectional_traversal_tag : public forward_traversal_tag { };
   struct random_access_traversal_tag : public bidirectional_traversal_tag { };
@@ -102,7 +104,15 @@ namespace boost {
         typename ct_if<
           is_convertible<Category*, std::bidirectional_iterator_tag*>::value,
           bidirectional_traversal_tag,
-          forward_traversal_tag
+          typename ct_if<
+            is_convertible<Category*, std::forward_iterator_tag*>::value,
+	    forward_traversal_tag,
+            typename ct_if<
+              is_convertible<Category*, std::input_iterator_tag*>::value,
+	      input_traversal_tag,
+              output_traversal_tag
+              >::type
+            >::type
           >::type
         >::type type;
     };
