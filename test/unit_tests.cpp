@@ -5,9 +5,12 @@
 // to its suitability for any purpose.
 #include <boost/iterator/iterator_adaptor.hpp>
 #include <boost/static_assert.hpp>
+
 #include "static_assert_same.hpp"
+
 #include <boost/type_traits/broken_compiler_spec.hpp>
 
+#include <boost/iterator/detail/minimum_category.hpp>
 
 struct X { int a; };
 
