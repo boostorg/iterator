@@ -345,7 +345,7 @@ namespace boost
       super_t;
 
       //
-      // CRT interface.
+      // Curiously Recursive Template interface.
       //
       typedef Derived derived_t;
       
