@@ -196,8 +196,7 @@ namespace boost_concepts {
     template <>
     struct Operations<boost::input_traversal_tag>
     {
-      template <typename Iterator1,
-                typename Iterator2>
+      template <typename Iterator1, typename Iterator2>
       static void constraints(Iterator1 const& i1, Iterator2 const& i2)
       {
         i1 == i2;
@@ -211,8 +210,7 @@ namespace boost_concepts {
     template <>
     struct Operations<boost::output_traversal_tag>
     {
-      template <typename Iterator1,
-                typename Iterator2>
+      template <typename Iterator1, typename Iterator2>
       static void constraints(Iterator1 const& i1, Iterator2 const& i2)
       {
         Operations<boost::input_traversal_tag>::constraints(i1, i2);
@@ -222,8 +220,7 @@ namespace boost_concepts {
     template <>
     struct Operations<boost::forward_traversal_tag>
     {
-      template <typename Iterator1,
-                typename Iterator2>
+      template <typename Iterator1, typename Iterator2>
       static void constraints(Iterator1 const& i1, Iterator2 const& i2)
       {
         Operations<boost::input_traversal_tag>::constraints(i1, i2);
@@ -233,8 +230,7 @@ namespace boost_concepts {
     template <>
     struct Operations<boost::bidirectional_traversal_tag>
     {
-      template <typename Iterator1,
-                typename Iterator2>
+      template <typename Iterator1, typename Iterator2>
       static void constraints(Iterator1 const& i1, Iterator2 const& i2)
       {
         Operations<boost::forward_traversal_tag>::constraints(i1, i2);
@@ -244,8 +240,7 @@ namespace boost_concepts {
     template <>
     struct Operations<boost::random_access_traversal_tag>
     {
-      template <typename Iterator1,
-                typename Iterator2>
+      template <typename Iterator1, typename Iterator2>
       static void constraints(Iterator1 const& i1, Iterator2 const& i2)
       {
         Operations<boost::bidirectional_traversal_tag>::constraints(i1, i2);
@@ -266,8 +261,7 @@ namespace boost_concepts {
 
   } // namespace detail
 
-  template <typename Iterator,
-            typename ConstIterator>
+  template <typename Iterator, typename ConstIterator>
   class InteroperableConcept
   {
   public:

@@ -71,8 +71,9 @@ namespace boost
   //   ...
   //
   //   template <class OtherIterator>
-  //   adapted_iterator(OtherIterator const& it,
-  //                    typename enable_if_convertible<OtherIterator, Iterator>::type* = 0);
+  //   adapted_iterator(
+  //       OtherIterator const& it
+  //     , typename enable_if_convertible<OtherIterator, Iterator>::type* = 0);
   //
   //   ...
   // };

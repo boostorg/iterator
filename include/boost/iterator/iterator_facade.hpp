@@ -99,7 +99,7 @@ namespace boost
     }
 
     template <class Facade1, class Facade2>
-    static bool equal(Facade1 const& f1, Facade2 const& f2, Facade1* = 0, Facade2* = 0)
+    static bool equal(Facade1 const& f1, Facade2 const& f2)
     {
       return f1.equal(f2);
     }
@@ -111,10 +111,8 @@ namespace boost
     }
 
     template <class Facade1, class Facade2>
-    static typename Facade1::difference_type distance_to(Facade1 const& f1,
-                                                         Facade2 const& f2,
-                                                         Facade1* = 0,
-                                                         Facade2* = 0)
+    static typename Facade1::difference_type distance_to(
+        Facade1 const& f1, Facade2 const& f2)
     {
       return f1.distance_to(f2);
     }
