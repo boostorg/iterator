@@ -76,14 +76,14 @@ namespace boost
    private:
       void increment()
       {
-          super_t::increment();
+          ++(this->base_reference());
           satisfy_predicate();
       }
 
       void satisfy_predicate()
       {
           while (this->base() != this->m_end && !this->m_predicate(*this->base()))
-              super_t::increment();
+              ++(this->base_reference());
       }
 
       // Probably should be the initial base class so it can be

@@ -240,9 +240,22 @@ namespace boost
         { return m_iterator; }
 
    protected:
-      // Core iterator interface for iterator_facade
-      // 
+      //
+      // lvalue access to the Base object for Derived
+      //
+      Base const& base_reference() const
+        { return m_iterator; }
 
+      Base& base_reference()
+        { return m_iterator; }
+
+   private:
+      //
+      // Core iterator interface for iterator_facade.  This is private
+      // to prevent temptation for Derived classes to use it, which
+      // will often result in an error.  Derived classes should use
+      // base_reference(), above, to get direct access to m_iterator.
+      // 
       typename super_t::reference dereference() const
         { return *m_iterator; }
 
@@ -276,10 +289,6 @@ namespace boost
               );
           return y.base() - m_iterator;
       }
-
-      // Needed for counting iterator
-      Base const& base_reference() const
-        { return m_iterator; }
 
    private: // data members
       Base m_iterator;
