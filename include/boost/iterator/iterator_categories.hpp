@@ -302,7 +302,7 @@ namespace boost {
     : detail::minimum_category<
           typename ReturnTag::max_category
         , typename TraversalTag::max_category
-      >
+      >::type
   {
     typedef ReturnTag returns;
     typedef TraversalTag traversal;
