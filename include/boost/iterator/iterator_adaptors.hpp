@@ -107,7 +107,7 @@ template <class Final
              iterator_comparisons<
         downcastable<repository<Final, V, R, P, C, D> > > >
          >
-struct iterator_adaptor : B, new_iterator_base
+struct iterator_adaptor : B
 {
     typedef V value_type;
     typedef R reference;
@@ -144,6 +144,8 @@ struct iterator_adaptor : B, new_iterator_base
     {
         this->downcast().base() += n;
     }
+
+    reference dereference() const { return *this->downcast().base(); }  
     
     void increment() { ++this->downcast().base(); }
     void decrement() { --this->downcast().base(); }
