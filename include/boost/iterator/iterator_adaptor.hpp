@@ -120,54 +120,24 @@ namespace boost
 # endif
   
   //
-  // iterator_traits_adaptor can be used to create new iterator traits by adapting
-  // the traits of a given iterator type. Together with iterator_adaptor it simplifies
-  // the creation of adapted iterator types. Therefore the ordering the template
-  // argument ordering is different from the std::iterator template, so that default 
-  // arguments can be used effectivly.
-  //
-  // The ordering changed slightly with respect to former versions of iterator_adaptor
-  // The idea is that when the user needs to fiddle with the reference type
-  // it is highly likely that the iterator category has to be adjusted as well
-  //
-  //   Value - if supplied, the value_type of the resulting iterator, unless
-  //      const. If const, a conforming compiler strips constness for the
-  //      value_type. If not supplied, iterator_traits<Base>::value_type is used
-  //
-  //   Reference - the reference type of the resulting iterator, and in
-  //      particular, the result type of operator*(). If not supplied but
-  //      Value is supplied, Value& is used. Otherwise
-  //      iterator_traits<Base>::reference is used.
-  //
-  //   Pointer - the pointer type of the resulting iterator, and in
-  //      particular, the result type of operator->(). If not
-  //      supplied but Value is supplied, Value* is used. Otherwise
-  //      iterator_traits<Base>::pointer is used.
-  //
-  //   Category - the iterator_category of the resulting iterator. If not
-  //      supplied, iterator_traits<Base>::iterator_category is used.
-  //
-  //   Distance - the difference_type of the resulting iterator. If not
-  //      supplied, iterator_traits<Base>::difference_type is used.
-  //
-  // TODO
-  // ? Automatic adjustment of category ?
+  // Default template argument handling for iterator_adaptor
   //
   namespace detail
   {
-    template <class T, class Condition, class DefaultNullaryFn>
+    // If T is use_default, return the result of invoking
+    // DefaultNullaryFn, otherwise return T.
+    template <class T, class DefaultNullaryFn>
     struct ia_dflt_help
       : mpl::apply_if<
-            mpl::and_<
-                is_same<T, use_default>
-              , Condition
-            >
+            is_same<T, use_default>
           , DefaultNullaryFn
           , mpl::identity<T>
         >
     {
     };
 
+    // A metafunction which computes an iterator_adaptor's base class,
+    // a specialization of iterator_facade.
     template <
         class Derived
       , class Base
@@ -178,42 +148,66 @@ namespace boost
     >
     struct iterator_adaptor_base
     {
-     private:
+     private: // intermediate results
         typedef typename detail::ia_dflt_help<
-           Category, mpl::true_, BOOST_ITERATOR_CATEGORY<Base>
+           Category, BOOST_ITERATOR_CATEGORY<Base>
         >::type category;
-        
+
         typedef typename detail::ia_dflt_help<
-            Reference, is_same<Value, use_default>, iterator_reference<Base>
+            Reference
+          , mpl::apply_if<
+                is_same<Value, use_default>
+              , iterator_reference<Base>
+              , mpl::identity<Value&>
+            >
         >::type reference;
 
-     public:
+     public: // return type
         typedef iterator_facade<
             Derived
          
           , typename detail::ia_dflt_help<
-                Value, mpl::true_, iterator_value<Base>
+                Value, iterator_value<Base>
             >::type
                 
           , typename access_category_tag<category, reference>::type
                 
           , typename traversal_category_tag<category>::type
                 
-          , typename detail::ia_dflt_help<
-                Reference, is_same<Value, use_default>, iterator_reference<Base>
-            >::type
+          , reference
                 
           , typename detail::ia_dflt_help<
-                Difference, mpl::true_, iterator_difference<Base>
+                Difference, iterator_difference<Base>
             >::type
         >
         type;
     };
-    
   }
   
   //
+  // Iterator Adaptor
   //
+  // The parameter ordering changed slightly with respect to former
+  // versions of iterator_adaptor The idea is that when the user needs
+  // to fiddle with the reference type it is highly likely that the
+  // iterator category has to be adjusted as well.  Any of the
+  // following four template arguments may be ommitted or explicitly
+  // replaced by use_default.
+  //
+  //   Value - if supplied, the value_type of the resulting iterator, unless
+  //      const. If const, a conforming compiler strips constness for the
+  //      value_type. If not supplied, iterator_traits<Base>::value_type is used
+  //
+  //   Category - the iterator_category of the resulting iterator. If not
+  //      supplied, iterator_traits<Base>::iterator_category is used.
+  //
+  //   Reference - the reference type of the resulting iterator, and in
+  //      particular, the result type of operator*(). If not supplied but
+  //      Value is supplied, Value& is used. Otherwise
+  //      iterator_traits<Base>::reference is used.
+  //
+  //   Difference - the difference_type of the resulting iterator. If not
+  //      supplied, iterator_traits<Base>::difference_type is used.
   //
   template <
       class Derived
