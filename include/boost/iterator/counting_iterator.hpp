@@ -15,7 +15,7 @@
 
 namespace boost {
 
-template <class Incrementable, class Category, class Difference> class counting_iterator;
+template <class Incrementable, class Traversal, class Difference> class counting_iterator;
 
 namespace detail
 {
@@ -67,35 +67,37 @@ namespace detail
   };
 
   BOOST_STATIC_ASSERT(is_numeric<int>::value);
-  template <class Incrementable, class Category, class Difference>
+  template <class Incrementable, class Traversal, class Difference>
   struct counting_iterator_base
   {
-      typedef typename mpl::apply_if<
-          is_same<Category, use_default>
+      typedef typename detail::ia_dflt_help<
+          Traversal
         , mpl::apply_if<
               is_numeric<Incrementable>
-            , mpl::identity<std::random_access_iterator_tag>
-            , BOOST_ITERATOR_CATEGORY<Incrementable>
+            , mpl::identity<random_access_traversal_tag>
+            , iterator_traversal<Incrementable>
           >
-        , mpl::identity<Category>
-      >::type category;
+      >::type traversal;
       
-      typedef typename mpl::apply_if<
-          is_same<Difference, use_default>
+      typedef typename detail::ia_dflt_help<
+          Difference
         , mpl::apply_if<
               is_numeric<Incrementable>
             , numeric_difference<Incrementable>
             , iterator_difference<Incrementable>
           >
-        , mpl::identity<Difference>
       >::type difference;
       
       typedef iterator_adaptor<
-          counting_iterator<Incrementable, Category, Difference> // self
-        , Incrementable                                          // Base
-        , Incrementable                                          // value_type
-        , category
-        , Incrementable const&                                   // reference
+          counting_iterator<Incrementable, Traversal, Difference> // self
+        , Incrementable                                           // Base
+        , Incrementable                                           // Value
+# ifndef BOOST_ITERATOR_REF_CONSTNESS_KILLS_WRITABILITY
+          const  // MSVC won't strip this.  Instead we enable Thomas'
+                 // criterion (see boost/iterator/detail/facade_iterator_category.hpp)
+# endif 
+        , traversal
+        , Incrementable const&                                    // reference
         , difference
       > type;
   };
@@ -128,11 +130,11 @@ namespace detail
   };
 }
 
-template <class Incrementable, class Category = use_default, class Difference = use_default>
+template <class Incrementable, class Traversal = use_default, class Difference = use_default>
 class counting_iterator
-  : public detail::counting_iterator_base<Incrementable, Category, Difference>::type
+  : public detail::counting_iterator_base<Incrementable, Traversal, Difference>::type
 {
-    typedef typename detail::counting_iterator_base<Incrementable, Category, Difference>::type super_t;
+    typedef typename detail::counting_iterator_base<Incrementable, Traversal, Difference>::type super_t;
     friend class iterator_core_access;
 
  public:

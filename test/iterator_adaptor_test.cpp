@@ -181,11 +181,22 @@ struct constant_iterator
     : base_t(it) {}
 };
 
-char (& traversal(boost::incrementable_traversal_tag) )[1];
-char (& traversal(boost::single_pass_traversal_tag  ) )[2];
-char (& traversal(boost::forward_traversal_tag      ) )[3];
-char (& traversal(boost::bidirectional_traversal_tag) )[4];
-char (& traversal(boost::random_access_traversal_tag) )[5];
+char (& traversal2(boost::incrementable_traversal_tag) )[1];
+char (& traversal2(boost::single_pass_traversal_tag  ) )[2];
+char (& traversal2(boost::forward_traversal_tag      ) )[3];
+char (& traversal2(boost::bidirectional_traversal_tag) )[4];
+char (& traversal2(boost::random_access_traversal_tag) )[5];
+
+template <class Cat>
+struct traversal3
+{
+    static typename boost::iterator_category_to_traversal<Cat>::type x;
+    BOOST_STATIC_CONSTANT(std::size_t, value = sizeof(traversal2(x)));
+    typedef char (&type)[value];
+};
+
+template <class Cat>
+typename traversal3<Cat>::type traversal(Cat);
 
 int
 main()
@@ -244,7 +255,7 @@ main()
     test = static_assert_same<Iter::pointer, int const*>::value;
 
 #if !BOOST_WORKAROUND(__MWERKS__, <= 0x2407)
-    BOOST_STATIC_ASSERT(boost::is_mutable_lvalue_iterator<BaseIter>::value);
+    BOOST_STATIC_ASSERT(boost::is_non_const_lvalue_iterator<BaseIter>::value);
     BOOST_STATIC_ASSERT(boost::is_lvalue_iterator<Iter>::value);
 #endif 
     

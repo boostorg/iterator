@@ -14,6 +14,8 @@
 // should be the last #include
 #include <boost/iterator/detail/config_def.hpp>
 
+#ifndef BOOST_NO_IS_CONVERTIBLE
+
 namespace boost {
  
 namespace detail
@@ -122,7 +124,7 @@ namespace detail
   {};
 
   template <class It>
-  struct is_mutable_lvalue_iterator_impl
+  struct is_non_const_lvalue_iterator_impl
     : is_lvalue_iterator_impl<
           BOOST_DEDUCED_TYPENAME boost::detail::iterator_traits<It>::value_type
       >::template rebind<It>
@@ -135,9 +137,11 @@ BOOST_TT_AUX_BOOL_TRAIT_DEF1(
     is_lvalue_iterator,T,::boost::detail::is_readable_lvalue_iterator_impl<T>::value)
     
 BOOST_TT_AUX_BOOL_TRAIT_DEF1(
-    is_mutable_lvalue_iterator,T,::boost::detail::is_mutable_lvalue_iterator_impl<T>::value)
+    is_non_const_lvalue_iterator,T,::boost::detail::is_non_const_lvalue_iterator_impl<T>::value)
     
 } // namespace boost
+
+#endif
 
 #include <boost/iterator/detail/config_undef.hpp>
 

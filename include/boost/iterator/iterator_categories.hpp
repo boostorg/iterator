@@ -13,16 +13,12 @@
 
 # include <boost/detail/workaround.hpp>
 
-# include <boost/mpl/if.hpp>
-# include <boost/mpl/and.hpp>
 # include <boost/mpl/apply_if.hpp>
 # include <boost/mpl/identity.hpp>
 # include <boost/mpl/placeholders.hpp>
 # include <boost/mpl/aux_/lambda_support.hpp>
 
-# include <boost/type_traits/is_reference.hpp>
 # include <boost/type_traits/is_convertible.hpp>
-# include <boost/type_traits/is_const.hpp>
 
 # ifdef BOOST_ITERATOR_REFERENCE_PRIMACY
 #  ifdef BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
@@ -54,70 +50,7 @@ struct random_access_traversal_tag
 
 namespace detail
 {
-  struct input_output_iterator_tag
-    : std::input_iterator_tag, std::output_iterator_tag {};
-
-  //
-  // Helper for iterator_tag and iterator_facade.  True iff the user
-  // has explicitly disabled writability of this iterator.
-  //
-  template <class Value, class Reference>
-  struct iterator_writability_disabled
-# ifdef BOOST_ITERATOR_REFERENCE_PRIMACY
-#  ifdef BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
-    : mpl::or_<is_const<Reference>,python::detail::is_reference_to_const<Reference> >
-#  else 
-    : is_const<typename remove_reference<Reference>::type>
-#  endif 
-# else 
-    : is_const<Value>
-# endif 
-  {};
   
-  template <class Value, class Reference, class Traversal>
-  struct old_iterator_category
-  {
-      typedef typename mpl::
-# if BOOST_WORKAROUND(BOOST_MSVC, == 1200)
-      if_
-# else
-      apply_if
-# endif 
-      <
-          mpl::and_<
-              is_reference<Reference>
-            , is_convertible<Traversal,forward_traversal_tag>
-          >
-        , mpl::apply_if<
-              is_convertible<Traversal,random_access_traversal_tag>
-            , mpl::identity<std::random_access_iterator_tag>
-            , mpl::if_<
-                  is_convertible<Traversal,bidirectional_traversal_tag>
-                , std::bidirectional_iterator_tag
-                , std::forward_iterator_tag
-              >
-          >
-# if BOOST_WORKAROUND(BOOST_MSVC, == 1200)
-           ::type
-# endif 
-        , typename mpl::apply_if<
-              mpl::and_<
-                  is_convertible<Traversal, single_pass_traversal_tag>
-                , is_convertible<Reference, Value>
-              >
-            , mpl::if_<
-                  iterator_writability_disabled<Value,Reference>
-                , std::input_iterator_tag
-                , input_output_iterator_tag
-              >
-            , mpl::identity<std::output_iterator_tag>
-          >
-# if BOOST_WORKAROUND(BOOST_MSVC, == 1200)
-           ::type
-# endif 
-      >::type type;
-  };
-
   //
   // Convert a "strictly old-style" iterator category to a traversal
   // tag.  This is broken out into a separate metafunction to reduce
@@ -125,7 +58,7 @@ namespace detail
   // for new-style types.
   //
   template <class Cat>
-  struct old_style_category_to_traversal
+  struct category_to_traversal
     : mpl::apply_if<
           is_convertible<Cat,std::random_access_iterator_tag>
         , mpl::identity<random_access_traversal_tag>
@@ -151,7 +84,7 @@ namespace detail
 
 # if BOOST_WORKAROUND(BOOST_MSVC, == 1200)
   template <>
-  struct old_style_category_to_traversal<int>
+  struct category_to_traversal<int>
   {
       typedef int type;
   };
@@ -167,37 +100,9 @@ struct iterator_category_to_traversal
   : mpl::apply_if< // if already convertible to a traversal tag, we're done.
         is_convertible<Cat,incrementable_traversal_tag>
       , mpl::identity<Cat>
-      , detail::old_style_category_to_traversal<Cat>
+      , detail::category_to_traversal<Cat>
     >
 {};
-
-//
-// To be used for a new-style iterator's iterator_category; provides
-// implicit conversion to the appropriate old-style iterator category.
-//
-// If Value is const the result will not be convertible to
-// output_iterator_tag.
-//
-// Otherwise, if Traversal == single_pass_traversal_tag, the following
-// conditions will result in a tag that is convertible both to
-// input_iterator_tag and output_iterator_tag:
-//
-//    1. Reference is a reference to non-const
-//    2. Reference is not a reference and is convertible to Value
-//
-template <class Value, class Reference, class Traversal>
-struct iterator_tag
-  : detail::old_iterator_category<Value, Reference, Traversal>::type
-{
-    operator Traversal() { return Traversal(); }
-# if 0
-    typedef typename detail::old_iterator_category<
-        Value, Reference, Traversal
-    >::type old_category;
-    
-    operator old_category() const { return old_category(); }
-# endif 
-};
 
 // Trait to get an iterator's traversal category
 template <class Iterator = mpl::_1>
@@ -225,7 +130,6 @@ struct iterator_traversal<mpl::_>
   : iterator_traversal<mpl::_1>
 {};
 # endif
-
 
 } // namespace boost
 

@@ -26,7 +26,7 @@
 #include <boost/type_traits/is_same.hpp>
 #include <boost/type_traits/is_convertible.hpp>
 
-#ifdef BOOST_ITERATOR_REFERENCE_PRIMACY
+#ifdef BOOST_ITERATOR_REF_CONSTNESS_KILLS_WRITABILITY
 # include <boost/type_traits/remove_reference.hpp>
 #else 
 # include <boost/type_traits/add_reference.hpp>
@@ -38,6 +38,20 @@
 
 namespace boost
 {
+  // Used as a default template argument internally, merely to
+  // indicate "use the default", this can also be passed by users
+  // explicitly in order to specify that the default should be used.
+  struct use_default;
+  
+# ifndef BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
+  // the incompleteness of use_default causes massive problems for
+  // is_convertible (naturally).  This workaround is fortunately not
+  // needed for vc6/vc7.
+  template<class To>
+  struct is_convertible<use_default,To>
+    : mpl::false_ {};
+# endif 
+  
   namespace detail
   {
 
@@ -157,7 +171,7 @@ namespace boost
         typedef iterator_facade<
             Derived
             
-# ifdef BOOST_ITERATOR_REFERENCE_PRIMACY
+# ifdef BOOST_ITERATOR_REF_CONSTNESS_KILLS_WRITABILITY
           , typename detail::ia_dflt_help<
                 Value
               , mpl::apply_if<
@@ -177,7 +191,7 @@ namespace boost
               , iterator_traversal<Base>
             >::type
 
-# ifdef BOOST_ITERATOR_REFERENCE_PRIMACY
+# ifdef BOOST_ITERATOR_REF_CONSTNESS_KILLS_WRITABILITY
           , typename detail::ia_dflt_help<
                 Reference
               , iterator_reference<Base>
@@ -199,6 +213,7 @@ namespace boost
         >
         type;
     };
+    template <class T> int static_assert_convertible_to(T);
   }
   
   //
@@ -287,17 +302,18 @@ namespace boost
         //               );
           return m_iterator == x.base();
       }
-  
+
+      typedef typename iterator_category_to_traversal<
+          typename super_t::iterator_category
+      >::type my_traversal;
+
+# define BOOST_ITERATOR_ADAPTOR_ASSERT_TRAVERSAL(cat) \
+      typedef int assertion[sizeof(detail::static_assert_convertible_to<cat>(my_traversal()))];
+//      BOOST_STATIC_ASSERT((is_convertible<my_traversal,cat>::value));
+
       void advance(typename super_t::difference_type n)
       {
-# if !BOOST_WORKAROUND(__MWERKS__, BOOST_TESTED_AT(0x3003)) // seems to get instantiated incorrectly
-          BOOST_STATIC_ASSERT(
-              (is_convertible< 
-                   BOOST_DEDUCED_TYPENAME super_t::iterator_category
-                 , random_access_traversal_tag
-               >::value)
-              );
-# endif 
+          BOOST_ITERATOR_ADAPTOR_ASSERT_TRAVERSAL(random_access_traversal_tag)
           m_iterator += n;
       }
   
@@ -305,14 +321,7 @@ namespace boost
 
       void decrement() 
       {
-# if !BOOST_WORKAROUND(__MWERKS__, BOOST_TESTED_AT(0x3003)) // seems to get instantiated incorrectly
-           BOOST_STATIC_ASSERT(
-              (is_convertible< 
-                   BOOST_DEDUCED_TYPENAME super_t::iterator_category
-                 , bidirectional_traversal_tag
-               >::value)
-              );
-# endif 
+          BOOST_ITERATOR_ADAPTOR_ASSERT_TRAVERSAL(bidirectional_traversal_tag)
            --m_iterator;
       }
 
@@ -322,12 +331,7 @@ namespace boost
       typename super_t::difference_type distance_to(
           iterator_adaptor<OtherDerived, OtherIterator, V, C, R, D> const& y) const
       {
-          BOOST_STATIC_ASSERT(
-              (is_convertible< 
-                   BOOST_DEDUCED_TYPENAME super_t::iterator_category
-                 , random_access_traversal_tag
-               >::value)
-              );
+          BOOST_ITERATOR_ADAPTOR_ASSERT_TRAVERSAL(random_access_traversal_tag)
           // Maybe readd with same_distance
           //           BOOST_STATIC_ASSERT(
           //               (detail::same_category_and_difference<Derived,OtherDerived>::value)
@@ -335,6 +339,8 @@ namespace boost
           return y.base() - m_iterator;
       }
 
+# undef BOOST_ITERATOR_ADAPTOR_ASSERT_TRAVERSAL
+      
    private: // data members
       Base m_iterator;
   };
