@@ -41,14 +41,19 @@
 //
 /////////////////////////////////////////////////////////////////////////////
 
-#include <boost/iterator/zip_iterator.hpp>
+#define FUSION_MAX_TUPLE_SIZE 13
+
 #include <boost/iterator/zip_iterator.hpp> // 2nd #include tests #include guard.
 #include <iostream>
 #include <vector>
 #include <list>
 #include <set>
 #include <functional>
-#include <boost/tuple/tuple.hpp>
+#include <boost/spirit/fusion/sequence/tuple.hpp>
+#include <boost/spirit/fusion/sequence/tuple20.hpp>
+#include <boost/spirit/fusion/sequence/make_tuple.hpp>
+#include <boost/spirit/fusion/algorithm/push_front.hpp>
+#include <boost/spirit/fusion/sequence/get.hpp>
 #include <boost/iterator/transform_iterator.hpp>
 #include <boost/iterator/is_readable_iterator.hpp>
 #include <boost/type_traits/is_same.hpp>
@@ -105,32 +110,32 @@ int main( void )
 
   typedef
   boost::zip_iterator<
-      boost::tuples::tuple<
+      boost::fusion::tuple<
           std::set<int>::iterator
         , std::vector<double>::iterator
       >
   > zit_mixed;
 
   zit_mixed zip_it_mixed = zit_mixed(
-    boost::make_tuple(
+    boost::fusion::make_tuple(
         intset.begin()
       , vect1.begin()
     )
   );
 
-  boost::tuples::tuple<int, double> val_tuple( 
+  boost::fusion::tuple<int, double> val_tuple( 
       *zip_it_mixed);
   
-  boost::tuples::tuple<const int&, double&> ref_tuple(
+  boost::fusion::tuple<const int&, double&> ref_tuple(
       *zip_it_mixed);
 
-  double dblOldVal = boost::tuples::get<1>(ref_tuple);
-  boost::tuples::get<1>(ref_tuple) -= 41.;
+  double dblOldVal = boost::fusion::get<1>(ref_tuple);
+  boost::fusion::get<1>(ref_tuple) -= 41.;
 
-  if( 52 == boost::tuples::get<0>(val_tuple) &&
-      42. == boost::tuples::get<1>(val_tuple) &&
-      52 == boost::tuples::get<0>(ref_tuple)  &&
-      1. == boost::tuples::get<1>(ref_tuple)  &&
+  if( 52 == boost::fusion::get<0>(val_tuple) &&
+      42. == boost::fusion::get<1>(val_tuple) &&
+      52 == boost::fusion::get<0>(ref_tuple)  &&
+      1. == boost::fusion::get<1>(ref_tuple)  &&
       1. == *vect1.begin()
     )
   {
@@ -144,7 +149,7 @@ int main( void )
   }
 
   // Undo change to vect1
-  boost::tuples::get<1>(ref_tuple) = dblOldVal;
+  boost::fusion::get<1>(ref_tuple) = dblOldVal;
 
   /////////////////////////////////////////////////////////////////////////////
   //
@@ -186,9 +191,8 @@ int main( void )
   ve4.push_back(12);
 
   // typedefs for cons lists of iterators.
-  typedef boost::tuples::cons<
+  typedef boost::fusion::tuple11<
     std::set<int>::iterator, 
-    boost::tuples::tuple<
       std::vector<int>::iterator,
       std::list<int>::iterator, 
       std::set<int>::iterator, 
@@ -199,19 +203,20 @@ int main( void )
       std::list<int>::iterator, 
       std::set<int>::iterator, 
       std::vector<int>::const_iterator
-      >::inherited
     > cons_11_its_type;
+  
   //
-  typedef boost::tuples::cons<
-    std::list<int>::const_iterator, 
-    cons_11_its_type
-    > cons_12_its_type;
+  typedef boost::fusion::meta::generate<
+      boost::fusion::meta::push_front<
+          cons_11_its_type,
+          std::list<int>::const_iterator
+      >::type
+  >::type cons_12_its_type;
 
   // typedefs for cons lists for dereferencing the zip iterator
   // made from the cons list above.
-  typedef boost::tuples::cons<
+  typedef boost::fusion::tuple11<
     const int&, 
-    boost::tuples::tuple<
       int&,
       int&,
       const int&,
@@ -222,13 +227,14 @@ int main( void )
       int&,
       const int&,
       const int&
-      >::inherited
     > cons_11_refs_type;
   //
-  typedef boost::tuples::cons<
-    const int&, 
-    cons_11_refs_type
-    > cons_12_refs_type;
+  typedef boost::fusion::meta::generate<
+      boost::fusion::meta::push_front<
+          cons_11_refs_type,
+          const int&
+      >::type
+  >::type cons_12_refs_type;
 
   // typedef for zip iterator with 12 elements
   typedef boost::zip_iterator<cons_12_its_type> zip_it_12_type;
@@ -237,9 +243,7 @@ int main( void )
   zip_it_12_type zip_it_12(
     cons_12_its_type(
       li1.begin(), 
-      cons_11_its_type(
         se1.begin(),
-        boost::make_tuple(
           ve1.begin(),
           li2.begin(), 
           se2.begin(), 
@@ -250,23 +254,21 @@ int main( void )
           li4.begin(), 
           se4.begin(), 
           ve4.begin()
-          )
-        )
       )
     );
 
   // Dereference, mess with the result a little.
   cons_12_refs_type zip_it_12_dereferenced(*zip_it_12);
-  boost::tuples::get<9>(zip_it_12_dereferenced) = 42;
+  boost::fusion::get<9>(zip_it_12_dereferenced) = 42;
   
   // Make a copy and move it a little to force some instantiations.
   zip_it_12_type zip_it_12_copy(zip_it_12);
   ++zip_it_12_copy;
 
-  if( boost::tuples::get<11>(zip_it_12.get_iterator_tuple()) == ve4.begin() &&
-      boost::tuples::get<11>(zip_it_12_copy.get_iterator_tuple()) == ve4.end() &&
-      1 == boost::tuples::get<0>(zip_it_12_dereferenced) &&
-      12 == boost::tuples::get<11>(zip_it_12_dereferenced) &&
+  if( boost::fusion::get<11>(zip_it_12.get_iterator_tuple()) == ve4.begin() &&
+      boost::fusion::get<11>(zip_it_12_copy.get_iterator_tuple()) == ve4.end() &&
+      1 == boost::fusion::get<0>(zip_it_12_dereferenced) &&
+      12 == boost::fusion::get<11>(zip_it_12_dereferenced) &&
       42 == *(li4.begin())
     )
   {
@@ -294,51 +296,51 @@ int main( void )
   vect2[2] = 4.4;
   
   boost::zip_iterator<
-    boost::tuples::tuple<
+    boost::fusion::tuple<
       std::vector<double>::const_iterator, 
       std::vector<double>::const_iterator
       > 
     >
   zip_it_begin(
-    boost::make_tuple(
+    boost::fusion::make_tuple(
      vect1.begin(),
      vect2.begin()
      )
   );
 
   boost::zip_iterator<
-    boost::tuples::tuple<
+    boost::fusion::tuple<
       std::vector<double>::const_iterator, 
       std::vector<double>::const_iterator
       > 
     >
   zip_it_run(
-    boost::make_tuple(
+    boost::fusion::make_tuple(
      vect1.begin(),
      vect2.begin()
      )
   );
 
   boost::zip_iterator<
-    boost::tuples::tuple<
+    boost::fusion::tuple<
       std::vector<double>::const_iterator, 
       std::vector<double>::const_iterator
       > 
     >
   zip_it_end(
-    boost::make_tuple(
+    boost::fusion::make_tuple(
      vect1.end(),
      vect2.end()
      )
   );
 
   if( zip_it_run == zip_it_begin &&
-      42. == boost::tuples::get<0>(*zip_it_run) &&
-      2.2 == boost::tuples::get<1>(*zip_it_run) &&
-      43. == boost::tuples::get<0>(*(++zip_it_run)) &&
-      3.3 == boost::tuples::get<1>(*zip_it_run) &&
-      44. == boost::tuples::get<0>(*(++zip_it_run)) &&
-      4.4 == boost::tuples::get<1>(*zip_it_run) &&
+      42. == boost::fusion::get<0>(*zip_it_run) &&
+      2.2 == boost::fusion::get<1>(*zip_it_run) &&
+      43. == boost::fusion::get<0>(*(++zip_it_run)) &&
+      3.3 == boost::fusion::get<1>(*zip_it_run) &&
+      44. == boost::fusion::get<0>(*(++zip_it_run)) &&
+      4.4 == boost::fusion::get<1>(*zip_it_run) &&
       zip_it_end == ++zip_it_run
     )
   {
@@ -362,12 +364,12 @@ int main( void )
 
   if( zip_it_run == zip_it_end &&
       zip_it_end == zip_it_run-- &&
-      44. == boost::tuples::get<0>(*zip_it_run) &&
-      4.4 == boost::tuples::get<1>(*zip_it_run) &&
-      43. == boost::tuples::get<0>(*(--zip_it_run)) &&
-      3.3 == boost::tuples::get<1>(*zip_it_run) &&
-      42. == boost::tuples::get<0>(*(--zip_it_run)) &&
-      2.2 == boost::tuples::get<1>(*zip_it_run) &&
+      44. == boost::fusion::get<0>(*zip_it_run) &&
+      4.4 == boost::fusion::get<1>(*zip_it_run) &&
+      43. == boost::fusion::get<0>(*(--zip_it_run)) &&
+      3.3 == boost::fusion::get<1>(*zip_it_run) &&
+      42. == boost::fusion::get<0>(*(--zip_it_run)) &&
+      2.2 == boost::fusion::get<1>(*zip_it_run) &&
       zip_it_begin == zip_it_run
     )
   {
@@ -390,7 +392,7 @@ int main( void )
             << std::flush;
 
   boost::zip_iterator<
-    boost::tuples::tuple<
+    boost::fusion::tuple<
       std::vector<double>::const_iterator, 
       std::vector<double>::const_iterator
       >
@@ -643,8 +645,8 @@ int main( void )
   // Note: zip_it_run and zip_it_run_copy are both at
   // begin plus one.
   // 
-  if( boost::tuples::get<0>(zip_it_run.get_iterator_tuple()) == vect1.begin() + 1 &&
-      boost::tuples::get<1>(zip_it_run.get_iterator_tuple()) == vect2.begin() + 1
+  if( boost::fusion::get<0>(zip_it_run.get_iterator_tuple()) == vect1.begin() + 1 &&
+      boost::fusion::get<1>(zip_it_run.get_iterator_tuple()) == vect2.begin() + 1
     )
   {
     ++num_successful_tests;
@@ -665,18 +667,18 @@ int main( void )
   std::cout << "Making zip iterators:                        "
             << std::flush;
 
-  std::vector<boost::tuples::tuple<double, double> >
+  std::vector<boost::fusion::tuple<double, double> >
     vect_of_tuples(3);
 
   std::copy(
     boost::make_zip_iterator(
-    boost::make_tuple(
+    boost::fusion::make_tuple(
       vect1.begin(), 
       vect2.begin()
       )
     ),
     boost::make_zip_iterator(
-    boost::make_tuple(
+    boost::fusion::make_tuple(
       vect1.end(), 
       vect2.end()
       )
@@ -684,12 +686,12 @@ int main( void )
     vect_of_tuples.begin()
   );
 
-  if( 42. == boost::tuples::get<0>(*vect_of_tuples.begin()) &&
-      2.2 == boost::tuples::get<1>(*vect_of_tuples.begin()) &&
-      43. == boost::tuples::get<0>(*(vect_of_tuples.begin() + 1)) &&
-      3.3 == boost::tuples::get<1>(*(vect_of_tuples.begin() + 1)) &&
-      44. == boost::tuples::get<0>(*(vect_of_tuples.begin() + 2)) &&
-      4.4 == boost::tuples::get<1>(*(vect_of_tuples.begin() + 2))
+  if( 42. == boost::fusion::get<0>(*vect_of_tuples.begin()) &&
+      2.2 == boost::fusion::get<1>(*vect_of_tuples.begin()) &&
+      43. == boost::fusion::get<0>(*(vect_of_tuples.begin() + 1)) &&
+      3.3 == boost::fusion::get<1>(*(vect_of_tuples.begin() + 1)) &&
+      44. == boost::fusion::get<0>(*(vect_of_tuples.begin() + 2)) &&
+      4.4 == boost::fusion::get<1>(*(vect_of_tuples.begin() + 2))
     )
   {
     ++num_successful_tests;
@@ -711,39 +713,39 @@ int main( void )
             << std::flush;
   
   boost::zip_iterator<
-    boost::tuples::tuple<
+    boost::fusion::tuple<
       std::set<int>::const_iterator,
       std::vector<double>::const_iterator
       >
     > 
   zip_it_const(
-    boost::make_tuple(
+    boost::fusion::make_tuple(
       intset.begin(), 
       vect2.begin()
     )
   );
   //
   boost::zip_iterator<
-    boost::tuples::tuple<
+    boost::fusion::tuple<
       std::set<int>::iterator,
       std::vector<double>::const_iterator
       >
     > 
   zip_it_half_const(
-    boost::make_tuple(
+    boost::fusion::make_tuple(
       intset.begin(), 
       vect2.begin()
     )
   );
   //
   boost::zip_iterator<
-    boost::tuples::tuple<
+    boost::fusion::tuple<
       std::set<int>::iterator,
       std::vector<double>::iterator
       >
     > 
   zip_it_non_const(
-    boost::make_tuple(
+    boost::fusion::make_tuple(
       intset.begin(), 
       vect2.begin()
     )
@@ -754,10 +756,10 @@ int main( void )
   ++zip_it_const;
 //  zip_it_non_const = ++zip_it_const;  // Error: can't convert from const to non-const
   
-  if( 54 == boost::tuples::get<0>(*zip_it_const) &&
-      4.4 == boost::tuples::get<1>(*zip_it_const)  &&
-      53 == boost::tuples::get<0>(*zip_it_half_const)  &&
-      3.3 == boost::tuples::get<1>(*zip_it_half_const)
+  if( 54 == boost::fusion::get<0>(*zip_it_const) &&
+      4.4 == boost::fusion::get<1>(*zip_it_const)  &&
+      53 == boost::fusion::get<0>(*zip_it_half_const)  &&
+      3.3 == boost::fusion::get<1>(*zip_it_half_const)
     )
   {
     ++num_successful_tests;
@@ -795,7 +797,7 @@ int main( void )
   // traversal.
   //
   typedef boost::zip_iterator<
-    boost::tuples::tuple<
+    boost::fusion::tuple<
       std::vector<double>::const_iterator, 
       std::vector<double>::const_iterator
       >
