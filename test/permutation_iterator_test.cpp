@@ -10,7 +10,7 @@
 #include <boost/iterator/permutation_iterator.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/iterator/iterator_concepts.hpp>
-#include <boost/concept/assert.hpp>
+#include <boost/concept_check.hpp>
 
 #include <vector>
 #include <list>
@@ -44,11 +44,11 @@ void permutation_test()
 
   typedef boost::permutation_iterator< element_range_type::const_iterator, index_type::iterator > permutation_const_type;
   
-  BOOST_CONCEPT_ASSERT((
+  boost::function_requires<
       boost_concepts::InteroperableIteratorConcept<
            permutation_type
          , permutation_const_type
-      >));
+               > >();
   
   BOOST_CHECK( it == begin );
   BOOST_CHECK( it != end );
