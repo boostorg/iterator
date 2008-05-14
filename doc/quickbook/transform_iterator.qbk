@@ -44,7 +44,7 @@ The output is:
 
 
 The source code for this example can be found 
-[@../example/transform_iterator_example.cpp here].
+[@/libs/iterator/example/transform_iterator_example.cpp here].
 
 [h2 Reference]
 

@@ -84,7 +84,7 @@ The output is:
 
 
 The source code for this example can be found
-[@../example/permutation_iter_example.cpp here].
+[@/libs/iterator/example/permutation_iter_example.cpp here].
 
 [h2 Reference]
 

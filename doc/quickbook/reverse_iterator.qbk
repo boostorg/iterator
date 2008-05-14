@@ -41,7 +41,7 @@ The output is:
 
 
 The source code for this example can be found
-[@../example/reverse_iterator_example.cpp here].
+[@/libs/iterator/example/reverse_iterator_example.cpp here].
 
 [h2 Reference]
 

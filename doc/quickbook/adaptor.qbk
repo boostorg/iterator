@@ -288,7 +288,7 @@ Metrowerks CodeWarrior versions prior to 9.0]
 
 You can see an example program that exercises this version of the
 node iterators 
-[@../example/node_iterator3.cpp `here`].
+[@/libs/iterator/example/node_iterator3.cpp `here`].
 
 
 In the case of `node_iter`, it's not very compelling to pass

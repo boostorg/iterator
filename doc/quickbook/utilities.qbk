@@ -122,7 +122,7 @@ template.
 
 For an introduction to using concept checking classes, see
 the documentation for the 
-[@../../concept_check/index.html `boost::concept_check`] library.
+[@/libs/concept_check/index.html `boost::concept_check`] library.
 
 
 [h2 Reference]

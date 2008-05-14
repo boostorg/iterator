@@ -75,7 +75,7 @@ The output is:
     0 -1 4 5 8 
 
 
-The source code for this example can be found [@../example/filter_iterator_example.cpp here].
+The source code for this example can be found [@/libs/iterator/example/filter_iterator_example.cpp here].
 
 [h2 Reference]
 
