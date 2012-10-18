@@ -18,6 +18,7 @@
 
 #include <boost/iterator/detail/minimum_category.hpp>
 
+#include <utility> // for std::pair
 #include <boost/fusion/adapted/boost_tuple.hpp> // for backward compatibility
 
 #include <boost/type_traits/remove_reference.hpp>
@@ -130,6 +131,16 @@ namespace boost {
     {
     };
 
+    // Specialization for std::pair
+    template<typename Iterator1, typename Iterator2>
+    struct tuple_of_references<std::pair<Iterator1, Iterator2> >
+    {
+        typedef std::pair<
+            typename iterator_reference<Iterator1>::type
+          , typename iterator_reference<Iterator2>::type
+        > type;
+    };
+
     // Metafunction to obtain the minimal traversal tag in a tuple
     // of iterators.
     //
@@ -146,6 +157,25 @@ namespace boost {
         , random_access_traversal_tag
         , minimum_category<>
       >::type type;
+    };
+
+    template<typename Iterator1, typename Iterator2>
+    struct minimum_traversal_category_in_iterator_tuple<std::pair<Iterator1, Iterator2> >
+    {
+        typedef typename pure_traversal_tag<
+            typename iterator_traversal<Iterator1>::type
+        >::type iterator1_traversal;
+        typedef typename pure_traversal_tag<
+            typename iterator_traversal<Iterator2>::type
+        >::type iterator2_traversal;
+
+        typedef typename minimum_category<
+            iterator1_traversal
+          , typename minimum_category<
+                iterator2_traversal
+              , random_access_traversal_tag
+            >::type
+        >::type type;
     };
 
     ///////////////////////////////////////////////////////////////////
@@ -195,6 +225,30 @@ namespace boost {
     struct zip_iterator_base<int>
     {
         typedef int type;
+    };
+
+    template <typename reference>
+    struct converter
+    {
+        template <typename Seq>
+        static reference call(Seq seq)
+        {
+            typedef typename fusion::traits::tag_of<reference>::type tag;
+            return fusion::convert<tag>(seq);
+        }
+    };
+
+    template <typename Reference1, typename Reference2>
+    struct converter<std::pair<Reference1, Reference2> >
+    {
+        typedef std::pair<Reference1, Reference2> reference;
+        template <typename Seq>
+        static reference call(Seq seq)
+        {
+            return reference(
+                fusion::at_c<0>(seq)
+              , fusion::at_c<1>(seq));
+        }
     };
   }
 
@@ -252,8 +306,8 @@ namespace boost {
     typename super_t::reference dereference() const
     {
         typedef typename super_t::reference reference;
-        typedef typename fusion::traits::tag_of<reference>::type tag;
-        return fusion::convert<tag>(fusion::transform(
+        typedef detail::converter<reference> gen;
+        return gen::call(fusion::transform(
           get_iterator_tuple(),
           detail::dereference_iterator()));
     }
