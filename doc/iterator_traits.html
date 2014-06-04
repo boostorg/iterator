@@ -98,21 +98,6 @@ struct iterator_category
 };
 </pre>
 </div>
-<div class="section" id="broken-compiler-notes">
-<h1>Broken Compiler Notes</h1>
-<p>Because of workarounds in Boost, you may find that these
-<a class="reference external" href="../../mpl/doc/index.html#metafunctions">metafunctions</a> actually work better than the facilities provided by
-your compiler's standard library.</p>
-<p>On compilers that don't support partial specialization, such as
-Microsoft Visual C++ 6.0 or 7.0, you may need to manually invoke
-<a class="reference external" href="../../type_traits/index.html#transformations">BOOST_BROKEN_COMPILER_TYPE_TRAITS_SPECIALIZATION</a> on the
-<tt class="docutils literal">value_type</tt> of pointers that are passed to these metafunctions.</p>
-<p>Because of bugs in the implementation of GCC-2.9x, the name of
-<tt class="docutils literal">iterator_category</tt> is changed to <tt class="docutils literal">iterator_category_</tt> on that
-compiler.  A macro, <tt class="docutils literal">BOOST_ITERATOR_CATEGORY</tt>, that expands to
-either <tt class="docutils literal">iterator_category</tt> or <tt class="docutils literal">iterator_category_</tt>, as
-appropriate to the platform, is provided for portability.</p>
-</div>
 </div>
 <div class="footer">
 <hr class="footer" />
