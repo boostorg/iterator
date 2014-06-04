@@ -10,7 +10,8 @@
 
 namespace boost { 
 
-// Obsolete. Remove.
+// Macro for supporting old compilers, no longer needed but kept
+// for backwards compatibility (it was documented).
 #define BOOST_ITERATOR_CATEGORY iterator_category
 
 
