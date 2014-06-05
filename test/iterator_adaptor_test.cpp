@@ -19,6 +19,8 @@
 #endif 
 #include <boost/pending/iterator_tests.hpp>
 
+# include <boost/type_traits/broken_compiler_spec.hpp>
+
 # include <boost/detail/lightweight_test.hpp>
 
 #include <stdlib.h>
