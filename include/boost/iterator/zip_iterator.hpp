@@ -14,7 +14,6 @@
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/iterator/iterator_adaptor.hpp> // for enable_if_convertible
 #include <boost/iterator/iterator_categories.hpp>
-#include <boost/detail/iterator.hpp>
 
 #include <boost/iterator/detail/minimum_category.hpp>
 
@@ -28,7 +27,6 @@
 #include <boost/mpl/fold.hpp>
 #include <boost/mpl/transform.hpp>
 #include <boost/mpl/placeholders.hpp>
-#include <boost/mpl/aux_/lambda_support.hpp>
 
 #include <boost/fusion/algorithm/iteration/for_each.hpp>
 #include <boost/fusion/algorithm/transformation/transform.hpp>
@@ -88,9 +86,7 @@ namespace boost {
           remove_reference<typename remove_cv<Iterator>::type>::type
         iterator;
 
-        typedef typename
-          iterator_traits<iterator>::reference
-        type;
+        typedef typename iterator_reference<iterator>::type type;
       };
 
       template<typename Iterator>
@@ -98,26 +94,6 @@ namespace boost {
         operator()(Iterator const& it) const
       { return *it; }
     };
-
-    template<typename Iterator>
-    struct iterator_reference
-    {
-        typedef typename iterator_traits<Iterator>::reference type;
-    };
-
-#ifdef BOOST_MPL_CFG_NO_FULL_LAMBDA_SUPPORT
-    // Hack because BOOST_MPL_AUX_LAMBDA_SUPPORT doesn't seem to work
-    // out well.  Instantiating the nested apply template also
-    // requires instantiating iterator_traits on the
-    // placeholder. Instead we just specialize it as a metafunction
-    // class.
-    template<>
-    struct iterator_reference<mpl::_1>
-    {
-        template <class T>
-        struct apply : iterator_reference<T> {};
-    };
-#endif
 
     // Metafunction to obtain the type of the tuple whose element types
     // are the reference types of an iterator tuple.
@@ -198,9 +174,9 @@ namespace boost {
         typedef reference value_type;
 
         // Difference type is the first iterator's difference type
-        typedef typename iterator_traits<
+        typedef typename iterator_difference<
             typename mpl::at_c<IteratorTuple, 0>::type
-            >::difference_type difference_type;
+        >::type difference_type;
 
         // Traversal catetgory is the minimum traversal category in the
         // iterator tuple.
