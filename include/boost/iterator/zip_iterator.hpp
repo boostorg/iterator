@@ -377,7 +377,7 @@ namespace boost {
   // Make function for zip iterator
   //
   template<typename IteratorTuple>
-  zip_iterator<IteratorTuple>
+  inline zip_iterator<IteratorTuple>
   make_zip_iterator(IteratorTuple t)
   { return zip_iterator<IteratorTuple>(t); }
 
