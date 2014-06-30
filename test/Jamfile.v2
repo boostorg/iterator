@@ -45,4 +45,5 @@ test-suite iterator
     ]
     [ run function_input_iterator_test.cpp ]
       
+    [ run generator_iterator_test.cpp ]
 ;
