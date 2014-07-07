@@ -89,6 +89,15 @@ struct minimum_category<mpl::_1,mpl::_2>
     BOOST_MPL_AUX_LAMBDA_SUPPORT_SPEC(2,minimum_category,(mpl::_1,mpl::_2))
 };
 
-}}} // namespace boost::iterators::detail
+} // namespace detail
+} // namespace iterators
+
+// This import below is for backward compatibility with boost/token_iterator.hpp.
+// It should be removed as soon as that header is fixed.
+namespace detail {
+using iterators::detail::minimum_category;
+} // namespace detail
+
+} // namespace boost
 
 #endif // MINIMUM_CATEGORY_DWA20031119_HPP
