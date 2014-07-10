@@ -22,6 +22,7 @@
 # include <boost/static_assert.hpp>
 
 namespace boost {
+namespace iterators {
 
 //
 // Traversal Categories
@@ -29,34 +30,34 @@ namespace boost {
 
 struct no_traversal_tag {};
 
-struct incrementable_traversal_tag 
+struct incrementable_traversal_tag
   : no_traversal_tag
 {
 //     incrementable_traversal_tag() {}
 //     incrementable_traversal_tag(std::output_iterator_tag const&) {};
 };
-  
+
 struct single_pass_traversal_tag
   : incrementable_traversal_tag
 {
 //     single_pass_traversal_tag() {}
 //     single_pass_traversal_tag(std::input_iterator_tag const&) {};
 };
-  
+
 struct forward_traversal_tag
   : single_pass_traversal_tag
 {
 //     forward_traversal_tag() {}
 //     forward_traversal_tag(std::forward_iterator_tag const&) {};
 };
-  
+
 struct bidirectional_traversal_tag
   : forward_traversal_tag
 {
 //     bidirectional_traversal_tag() {};
 //     bidirectional_traversal_tag(std::bidirectional_iterator_tag const&) {};
 };
-  
+
 struct random_access_traversal_tag
   : bidirectional_traversal_tag
 {
@@ -65,7 +66,7 @@ struct random_access_traversal_tag
 };
 
 namespace detail
-{  
+{
   //
   // Convert a "strictly old-style" iterator category to a traversal
   // tag.  This is broken out into a separate metafunction to reduce
@@ -122,7 +123,7 @@ namespace detail
       >
   {
   };
-  
+
 } // namespace detail
 
 
@@ -134,7 +135,7 @@ struct iterator_category_to_traversal
   : mpl::eval_if< // if already convertible to a traversal tag, we're done.
         is_convertible<Cat,incrementable_traversal_tag>
       , mpl::identity<Cat>
-      , boost::detail::old_category_to_traversal<Cat>
+      , boost::iterators::detail::old_category_to_traversal<Cat>
     >
 {};
 
@@ -164,6 +165,17 @@ struct iterator_traversal<mpl::_>
   : iterator_traversal<mpl::_1>
 {};
 # endif
+
+} // namespace iterators
+
+using iterators::no_traversal_tag;
+using iterators::incrementable_traversal_tag;
+using iterators::single_pass_traversal_tag;
+using iterators::forward_traversal_tag;
+using iterators::bidirectional_traversal_tag;
+using iterators::random_access_traversal_tag;
+using iterators::iterator_category_to_traversal;
+using iterators::iterator_traversal;
 
 } // namespace boost
 

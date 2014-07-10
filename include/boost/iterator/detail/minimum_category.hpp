@@ -9,7 +9,9 @@
 
 # include <boost/mpl/aux_/lambda_support.hpp>
 
-namespace boost { namespace detail { 
+namespace boost {
+namespace iterators {
+namespace detail {
 //
 // Returns the minimum category type or error_type
 // if T1 and T2 are unrelated.
@@ -17,7 +19,7 @@ namespace boost { namespace detail {
 // For compilers not supporting is_convertible this only
 // works with the new boost return and traversal category
 // types. The exact boost _types_ are required. No derived types
-// will work. 
+// will work.
 //
 //
 template <bool GreaterEqual, bool LessEqual>
@@ -25,7 +27,7 @@ struct minimum_category_impl;
 
 template <class T1, class T2>
 struct error_not_related_by_convertibility;
-  
+
 template <>
 struct minimum_category_impl<true,false>
 {
@@ -66,17 +68,17 @@ struct minimum_category_impl<false,false>
 template <class T1 = mpl::_1, class T2 = mpl::_2>
 struct minimum_category
 {
-    typedef minimum_category_impl< 
+    typedef minimum_category_impl<
         ::boost::is_convertible<T1,T2>::value
       , ::boost::is_convertible<T2,T1>::value
     > outer;
 
     typedef typename outer::template apply<T1,T2> inner;
     typedef typename inner::type type;
-      
+
     BOOST_MPL_AUX_LAMBDA_SUPPORT(2,minimum_category,(T1,T2))
 };
-    
+
 template <>
 struct minimum_category<mpl::_1,mpl::_2>
 {
@@ -86,7 +88,16 @@ struct minimum_category<mpl::_1,mpl::_2>
 
     BOOST_MPL_AUX_LAMBDA_SUPPORT_SPEC(2,minimum_category,(mpl::_1,mpl::_2))
 };
-    
-}} // namespace boost::detail
+
+} // namespace detail
+} // namespace iterators
+
+// This import below is for backward compatibility with boost/token_iterator.hpp.
+// It should be removed as soon as that header is fixed.
+namespace detail {
+using iterators::detail::minimum_category;
+} // namespace detail
+
+} // namespace boost
 
 #endif // MINIMUM_CATEGORY_DWA20031119_HPP
