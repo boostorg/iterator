@@ -36,6 +36,7 @@
 #include <boost/fusion/support/tag_of_fwd.hpp>
 
 namespace boost {
+namespace iterators {
 
   // Zip iterator forward declaration for zip_iterator_base
   template<typename IteratorTuple>
@@ -357,6 +358,11 @@ namespace boost {
   make_zip_iterator(IteratorTuple t)
   { return zip_iterator<IteratorTuple>(t); }
 
-}
+} // namespace iterators
+
+using iterators::zip_iterator;
+using iterators::make_zip_iterator;
+
+} // namespace boost
 
 #endif

@@ -38,8 +38,9 @@
 
 #include <boost/iterator/detail/config_def.hpp> // this goes last
 
-namespace boost
-{
+namespace boost {
+namespace iterators {
+
   // This forward declaration is required for the friend declaration
   // in iterator_core_access
   template <class I, class V, class TC, class R, class D> class iterator_facade;
@@ -118,7 +119,7 @@ namespace boost
 
         // Not the real associated pointer type
         typedef typename mpl::eval_if<
-            boost::detail::iterator_writability_disabled<ValueParam,Reference>
+            boost::iterators::detail::iterator_writability_disabled<ValueParam,Reference>
           , add_pointer<const value_type>
           , add_pointer<value_type>
         >::type pointer;
@@ -462,15 +463,15 @@ namespace boost
 # endif
 
 #  define BOOST_ITERATOR_FACADE_INTEROP_HEAD(prefix, op, result_type)       \
-    BOOST_ITERATOR_FACADE_INTEROP_HEAD_IMPL(prefix, op, result_type, boost::detail::enable_if_interoperable)
+    BOOST_ITERATOR_FACADE_INTEROP_HEAD_IMPL(prefix, op, result_type, boost::iterators::detail::enable_if_interoperable)
 
 #  define BOOST_ITERATOR_FACADE_INTEROP_RANDOM_ACCESS_HEAD(prefix, op, result_type)       \
-    BOOST_ITERATOR_FACADE_INTEROP_HEAD_IMPL(prefix, op, result_type, boost::detail::enable_if_interoperable_and_random_access_traversal)
+    BOOST_ITERATOR_FACADE_INTEROP_HEAD_IMPL(prefix, op, result_type, boost::iterators::detail::enable_if_interoperable_and_random_access_traversal)
 
 #  define BOOST_ITERATOR_FACADE_PLUS_HEAD(prefix,args)              \
     template <class Derived, class V, class TC, class R, class D>   \
     prefix typename boost::iterators::enable_if<                    \
-        boost::detail::is_traversal_at_least< TC, boost::random_access_traversal_tag >,  \
+        boost::iterators::detail::is_traversal_at_least< TC, boost::iterators::random_access_traversal_tag >,  \
         Derived                                                     \
     >::type operator+ args
 
@@ -496,7 +497,7 @@ namespace boost
       friend class detail::iterator_facade_base;
 
 #  define BOOST_ITERATOR_FACADE_RELATION(op)                                \
-      BOOST_ITERATOR_FACADE_INTEROP_HEAD(friend,op, boost::detail::always_bool2);
+      BOOST_ITERATOR_FACADE_INTEROP_HEAD(friend,op, boost::iterators::detail::always_bool2);
 
       BOOST_ITERATOR_FACADE_RELATION(==)
       BOOST_ITERATOR_FACADE_RELATION(!=)
@@ -504,7 +505,7 @@ namespace boost
 #  undef BOOST_ITERATOR_FACADE_RELATION
 
 #  define BOOST_ITERATOR_FACADE_RANDOM_ACCESS_RELATION(op)                                \
-      BOOST_ITERATOR_FACADE_INTEROP_RANDOM_ACCESS_HEAD(friend,op, boost::detail::always_bool2);
+      BOOST_ITERATOR_FACADE_INTEROP_RANDOM_ACCESS_HEAD(friend,op, boost::iterators::detail::always_bool2);
 
       BOOST_ITERATOR_FACADE_RANDOM_ACCESS_RELATION(<)
       BOOST_ITERATOR_FACADE_RANDOM_ACCESS_RELATION(>)
@@ -514,7 +515,7 @@ namespace boost
 #  undef BOOST_ITERATOR_FACADE_RANDOM_ACCESS_RELATION
 
       BOOST_ITERATOR_FACADE_INTEROP_RANDOM_ACCESS_HEAD(
-          friend, -, boost::detail::choose_difference_type)
+          friend, -, boost::iterators::detail::choose_difference_type)
       ;
 
       BOOST_ITERATOR_FACADE_PLUS_HEAD(
@@ -614,18 +615,18 @@ namespace boost
     >
     class iterator_facade_base< Derived, Value, CategoryOrTraversal, Reference, Difference, false, false >
 # ifdef BOOST_ITERATOR_FACADE_NEEDS_ITERATOR_BASE
-        : public boost::detail::iterator_facade_types<
+        : public boost::iterators::detail::iterator_facade_types<
              Value, CategoryOrTraversal, Reference, Difference
           >::base
 #  undef BOOST_ITERATOR_FACADE_NEEDS_ITERATOR_BASE
 # endif
     {
     private:
-        typedef boost::detail::iterator_facade_types<
+        typedef boost::iterators::detail::iterator_facade_types<
             Value, CategoryOrTraversal, Reference, Difference
         > associated_types;
 
-        typedef boost::detail::operator_arrow_dispatch<
+        typedef boost::iterators::detail::operator_arrow_dispatch<
             Reference
           , typename associated_types::pointer
         > operator_arrow_dispatch_;
@@ -716,12 +717,12 @@ namespace boost
         typedef typename base_type::difference_type difference_type;
 
     public:
-        typename boost::detail::operator_brackets_result<Derived, Value, reference>::type
+        typename boost::iterators::detail::operator_brackets_result<Derived, Value, reference>::type
         operator[](difference_type n) const
         {
-            typedef boost::detail::use_operator_brackets_proxy<Value, Reference> use_proxy;
+            typedef boost::iterators::detail::use_operator_brackets_proxy<Value, Reference> use_proxy;
 
-            return boost::detail::make_operator_brackets_result<Derived>(
+            return boost::iterators::detail::make_operator_brackets_result<Derived>(
                 this->derived() + n
               , use_proxy()
             );
@@ -776,13 +777,13 @@ namespace boost
   };
 
   template <class I, class V, class TC, class R, class D>
-  inline typename boost::detail::postfix_increment_result<I,V,R,TC>::type
+  inline typename boost::iterators::detail::postfix_increment_result<I,V,R,TC>::type
   operator++(
       iterator_facade<I,V,TC,R,D>& i
     , int
   )
   {
-      typename boost::detail::postfix_increment_result<I,V,R,TC>::type
+      typename boost::iterators::detail::postfix_increment_result<I,V,R,TC>::type
           tmp(*static_cast<I*>(&i));
 
       ++i;
@@ -881,7 +882,7 @@ namespace boost
 # define BOOST_ITERATOR_FACADE_RELATION(op, return_prefix, base_op) \
   BOOST_ITERATOR_FACADE_INTEROP(                                    \
       op                                                            \
-    , boost::detail::always_bool2                                   \
+    , boost::iterators::detail::always_bool2                                   \
     , return_prefix                                                 \
     , base_op                                                       \
   )
@@ -898,8 +899,8 @@ namespace boost
       /* For those compilers that do not support enable_if */                   \
       BOOST_STATIC_ASSERT((                                                     \
           is_interoperable< Derived1, Derived2 >::value &&                      \
-          boost::detail::is_traversal_at_least< typename iterator_category< Derived1 >::type, random_access_traversal_tag >::value && \
-          boost::detail::is_traversal_at_least< typename iterator_category< Derived2 >::type, random_access_traversal_tag >::value \
+          boost::iterators::detail::is_traversal_at_least< typename iterator_category< Derived1 >::type, random_access_traversal_tag >::value && \
+          boost::iterators::detail::is_traversal_at_least< typename iterator_category< Derived2 >::type, random_access_traversal_tag >::value \
       ));                                                                       \
       return_prefix iterator_core_access::base_op(                              \
           *static_cast<Derived1 const*>(&lhs)                                   \
@@ -911,7 +912,7 @@ namespace boost
 # define BOOST_ITERATOR_FACADE_RANDOM_ACCESS_RELATION(op, return_prefix, base_op) \
   BOOST_ITERATOR_FACADE_INTEROP_RANDOM_ACCESS(                                    \
       op                                                            \
-    , boost::detail::always_bool2                                   \
+    , boost::iterators::detail::always_bool2                                   \
     , return_prefix                                                 \
     , base_op                                                       \
   )
@@ -926,7 +927,7 @@ namespace boost
   // operator- requires an additional part in the static assertion
   BOOST_ITERATOR_FACADE_INTEROP_RANDOM_ACCESS(
       -
-    , boost::detail::choose_difference_type
+    , boost::iterators::detail::choose_difference_type
     , return
     , distance_from
   )
@@ -941,15 +942,15 @@ namespace boost
       return tmp += n;                              \
   }
 
-BOOST_ITERATOR_FACADE_PLUS((
-  iterator_facade<Derived, V, TC, R, D> const& i
-  , typename Derived::difference_type n
-))
+  BOOST_ITERATOR_FACADE_PLUS((
+      iterator_facade<Derived, V, TC, R, D> const& i
+    , typename Derived::difference_type n
+  ))
 
-BOOST_ITERATOR_FACADE_PLUS((
-    typename Derived::difference_type n
+  BOOST_ITERATOR_FACADE_PLUS((
+      typename Derived::difference_type n
     , iterator_facade<Derived, V, TC, R, D> const& i
-))
+  ))
 
 # undef BOOST_ITERATOR_FACADE_PLUS
 # undef BOOST_ITERATOR_FACADE_PLUS_HEAD
@@ -957,6 +958,11 @@ BOOST_ITERATOR_FACADE_PLUS((
 # undef BOOST_ITERATOR_FACADE_INTEROP_HEAD
 # undef BOOST_ITERATOR_FACADE_INTEROP_RANDOM_ACCESS_HEAD
 # undef BOOST_ITERATOR_FACADE_INTEROP_HEAD_IMPL
+
+} // namespace iterators
+
+using iterators::iterator_core_access;
+using iterators::iterator_facade;
 
 } // namespace boost
 
