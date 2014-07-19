@@ -1,27 +1,20 @@
 // Copyright David Abrahams 2003. Use, modification and distribution is
 // subject to the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-#ifndef MINIMUM_CATEGORY_DWA20031119_HPP
-# define MINIMUM_CATEGORY_DWA20031119_HPP
+#ifndef BOOST_ITERATOR_MINIMUM_CATEGORY_HPP_INCLUDED_
+# define BOOST_ITERATOR_MINIMUM_CATEGORY_HPP_INCLUDED_
 
+# include <boost/static_assert.hpp>
 # include <boost/type_traits/is_convertible.hpp>
 # include <boost/type_traits/is_same.hpp>
 
+# include <boost/mpl/placeholders.hpp>
 # include <boost/mpl/aux_/lambda_support.hpp>
 
 namespace boost {
 namespace iterators {
 namespace detail {
-//
-// Returns the minimum category type or error_type
-// if T1 and T2 are unrelated.
-//
-// For compilers not supporting is_convertible this only
-// works with the new boost return and traversal category
-// types. The exact boost _types_ are required. No derived types
-// will work.
-//
-//
+
 template <bool GreaterEqual, bool LessEqual>
 struct minimum_category_impl;
 
@@ -60,15 +53,21 @@ template <>
 struct minimum_category_impl<false,false>
 {
     template <class T1, class T2> struct apply
-    : error_not_related_by_convertibility<T1,T2>
+      : error_not_related_by_convertibility<T1,T2>
     {
     };
 };
 
+} // namespace detail
+
+//
+// Returns the minimum category type or fails to compile
+// if T1 and T2 are unrelated.
+//
 template <class T1 = mpl::_1, class T2 = mpl::_2>
 struct minimum_category
 {
-    typedef minimum_category_impl<
+    typedef boost::iterators::detail::minimum_category_impl<
         ::boost::is_convertible<T1,T2>::value
       , ::boost::is_convertible<T2,T1>::value
     > outer;
@@ -89,15 +88,8 @@ struct minimum_category<mpl::_1,mpl::_2>
     BOOST_MPL_AUX_LAMBDA_SUPPORT_SPEC(2,minimum_category,(mpl::_1,mpl::_2))
 };
 
-} // namespace detail
 } // namespace iterators
-
-// This import below is for backward compatibility with boost/token_iterator.hpp.
-// It should be removed as soon as that header is fixed.
-namespace detail {
-using iterators::detail::minimum_category;
-} // namespace detail
 
 } // namespace boost
 
-#endif // MINIMUM_CATEGORY_DWA20031119_HPP
+#endif // BOOST_ITERATOR_MINIMUM_CATEGORY_HPP_INCLUDED_

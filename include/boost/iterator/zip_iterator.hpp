@@ -14,7 +14,7 @@
 #include <boost/iterator/iterator_categories.hpp>
 #include <boost/detail/iterator.hpp>
 
-#include <boost/iterator/detail/minimum_category.hpp>
+#include <boost/iterator/minimum_category.hpp>
 
 #include <boost/tuple/tuple.hpp>
 

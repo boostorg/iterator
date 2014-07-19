@@ -7,7 +7,7 @@
 
 #include "static_assert_same.hpp"
 
-#include <boost/iterator/detail/minimum_category.hpp>
+#include <boost/iterator/minimum_category.hpp>
 
 struct X { int a; };
 
@@ -29,7 +29,7 @@ void operator_arrow_test()
 template <class T, class U, class Min>
 struct static_assert_min_cat
   : static_assert_same<
-       typename boost::iterators::detail::minimum_category<T,U>::type, Min
+       typename boost::iterators::minimum_category<T,U>::type, Min
     >
 {};
 

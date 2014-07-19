@@ -11,7 +11,7 @@ namespace boost {
 // This import below (as well as the whole header) is for backward compatibility
 // with boost/token_iterator.hpp. It should be removed as soon as that header is fixed.
 namespace detail {
-using iterators::detail::minimum_category;
+using iterators::minimum_category;
 } // namespace detail
 
 } // namespace boost
