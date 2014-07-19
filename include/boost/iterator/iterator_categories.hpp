@@ -98,34 +98,7 @@ namespace detail
       >
   {};
 
-  template <class Traversal>
-  struct pure_traversal_tag
-    : mpl::eval_if<
-          is_convertible<Traversal,random_access_traversal_tag>
-        , mpl::identity<random_access_traversal_tag>
-        , mpl::eval_if<
-              is_convertible<Traversal,bidirectional_traversal_tag>
-            , mpl::identity<bidirectional_traversal_tag>
-            , mpl::eval_if<
-                  is_convertible<Traversal,forward_traversal_tag>
-                , mpl::identity<forward_traversal_tag>
-                , mpl::eval_if<
-                      is_convertible<Traversal,single_pass_traversal_tag>
-                    , mpl::identity<single_pass_traversal_tag>
-                    , mpl::eval_if<
-                          is_convertible<Traversal,incrementable_traversal_tag>
-                        , mpl::identity<incrementable_traversal_tag>
-                        , void
-                      >
-                  >
-              >
-          >
-      >
-  {
-  };
-
 } // namespace detail
-
 
 //
 // Convert an iterator category into a traversal tag
@@ -166,6 +139,57 @@ struct iterator_traversal<mpl::_>
 {};
 # endif
 
+//
+// Convert an iterator traversal to one of the traversal tags.
+//
+template <class Traversal>
+struct pure_traversal_tag
+  : mpl::eval_if<
+        is_convertible<Traversal,random_access_traversal_tag>
+      , mpl::identity<random_access_traversal_tag>
+      , mpl::eval_if<
+            is_convertible<Traversal,bidirectional_traversal_tag>
+          , mpl::identity<bidirectional_traversal_tag>
+          , mpl::eval_if<
+                is_convertible<Traversal,forward_traversal_tag>
+              , mpl::identity<forward_traversal_tag>
+              , mpl::eval_if<
+                    is_convertible<Traversal,single_pass_traversal_tag>
+                  , mpl::identity<single_pass_traversal_tag>
+                  , mpl::eval_if<
+                        is_convertible<Traversal,incrementable_traversal_tag>
+                      , mpl::identity<incrementable_traversal_tag>
+                      , void
+                    >
+                >
+            >
+        >
+    >
+{
+};
+
+//
+// Trait to retrieve one of the iterator traversal tags from the iterator category or traversal.
+//
+template <class Iterator = mpl::_1>
+struct pure_iterator_traversal
+  : pure_traversal_tag<typename iterator_traversal<Iterator>::type>
+{};
+
+# ifdef BOOST_MPL_CFG_NO_FULL_LAMBDA_SUPPORT
+template <>
+struct pure_iterator_traversal<mpl::_1>
+{
+    template <class T>
+    struct apply : pure_iterator_traversal<T>
+    {};
+};
+template <>
+struct pure_iterator_traversal<mpl::_>
+  : pure_iterator_traversal<mpl::_1>
+{};
+# endif
+
 } // namespace iterators
 
 using iterators::no_traversal_tag;
@@ -176,6 +200,13 @@ using iterators::bidirectional_traversal_tag;
 using iterators::random_access_traversal_tag;
 using iterators::iterator_category_to_traversal;
 using iterators::iterator_traversal;
+
+// This import is needed for backward compatibility with Boost.Range:
+// boost/range/detail/demote_iterator_traversal_tag.hpp
+// It should be removed when that header is fixed.
+namespace detail {
+using iterators::pure_traversal_tag;
+} // namespace detail
 
 } // namespace boost
 

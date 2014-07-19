@@ -248,19 +248,10 @@ namespace boost_concepts
   BOOST_concept(InteroperableIterator,(Iterator)(ConstIterator))
   {
    private:
-      typedef typename boost::iterators::detail::pure_traversal_tag<
-          typename boost::iterator_traversal<
-              Iterator
-          >::type
-      >::type traversal_category;
+      typedef typename boost::iterators::pure_iterator_traversal<Iterator>::type traversal_category;
+      typedef typename boost::iterators::pure_iterator_traversal<ConstIterator>::type const_traversal_category;
 
-      typedef typename boost::iterators::detail::pure_traversal_tag<
-          typename boost::iterator_traversal<
-              ConstIterator
-          >::type
-      >::type const_traversal_category;
-
-  public:
+   public:
       BOOST_CONCEPT_ASSERT((SinglePassIterator<Iterator>));
       BOOST_CONCEPT_ASSERT((SinglePassIterator<ConstIterator>));
 
