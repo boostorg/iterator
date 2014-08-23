@@ -55,13 +55,6 @@
 #include <boost/detail/workaround.hpp>
 #include <stddef.h>
 
-template <class It>
-struct pure_traversal
-  : boost::iterators::detail::pure_traversal_tag<
-        typename boost::iterator_traversal<It>::type
-    >
-{};
-
 
 /// Tests for https://svn.boost.org/trac/boost/ticket/1517
 int to_value(int const &v)
