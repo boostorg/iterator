@@ -15,7 +15,7 @@
 #include <boost/iterator/iterator_adaptor.hpp> // for enable_if_convertible
 #include <boost/iterator/iterator_categories.hpp>
 
-#include <boost/iterator/detail/minimum_category.hpp>
+#include <boost/iterator/minimum_category.hpp>
 
 #include <utility> // for std::pair
 #include <boost/fusion/adapted/boost_tuple.hpp> // for backward compatibility

@@ -46,5 +46,9 @@ test-suite iterator
     [ run permutation_iterator_test.cpp : : : # <stlport-iostream>on
     ]
     [ run function_input_iterator_test.cpp ]
+
     [ run generator_iterator_test.cpp ]
+
+    [ run minimum_category.cpp ]
+    [ compile-fail minimum_category_compile_fail.cpp ]
 ;
