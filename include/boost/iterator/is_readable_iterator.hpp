@@ -6,6 +6,7 @@
 
 #include <boost/mpl/bool.hpp>
 #include <boost/detail/iterator.hpp>
+#include <boost/type_traits/add_lvalue_reference.hpp>
 
 #include <boost/type_traits/detail/bool_trait_def.hpp>
 #include <boost/iterator/detail/any_conversion_eater.hpp>
@@ -26,7 +27,7 @@ namespace detail
   template <class Value>
   struct is_readable_iterator_impl
   {
-      static char tester(Value&, int);
+      static char tester(typename add_lvalue_reference<Value>::type, int);
       static char (& tester(any_conversion_eater, ...) )[2];
 
       template <class It>
