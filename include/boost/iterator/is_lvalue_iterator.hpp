@@ -9,6 +9,7 @@
 #include <boost/detail/workaround.hpp>
 #include <boost/detail/iterator.hpp>
 
+#include <boost/type_traits/add_lvalue_reference.hpp>
 #include <boost/iterator/detail/any_conversion_eater.hpp>
 
 // should be the last #includes
@@ -52,7 +53,7 @@ namespace detail
       // convertible to Value const&
       struct conversion_eater
       {
-          conversion_eater(Value&);
+          conversion_eater(typename add_lvalue_reference<Value>::type);
       };
 
       static char tester(conversion_eater, int);
