@@ -11,6 +11,7 @@
 
 #include <boost/type_traits/add_lvalue_reference.hpp>
 #include <boost/iterator/detail/any_conversion_eater.hpp>
+#include "boost/mpl/bool.hpp"
 
 // should be the last #includes
 #include <boost/type_traits/detail/bool_trait_def.hpp>
