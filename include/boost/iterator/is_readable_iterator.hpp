@@ -8,10 +8,10 @@
 #include <boost/detail/iterator.hpp>
 #include <boost/type_traits/add_lvalue_reference.hpp>
 
-#include <boost/type_traits/detail/bool_trait_def.hpp>
 #include <boost/iterator/detail/any_conversion_eater.hpp>
 
 // should be the last #include
+#include <boost/type_traits/integral_constant.hpp>
 #include <boost/iterator/detail/config_def.hpp>
 
 #ifndef BOOST_NO_IS_CONVERTIBLE
@@ -97,10 +97,10 @@ namespace detail
   {};
 } // namespace detail
 
-// Define the trait with full mpl lambda capability and various broken
-// compiler workarounds
-BOOST_TT_AUX_BOOL_TRAIT_DEF1(
-    is_readable_iterator,T,::boost::iterators::detail::is_readable_iterator_impl2<T>::value)
+template< typename T > struct is_readable_iterator
+: public ::boost::integral_constant<bool,::boost::iterators::detail::is_readable_iterator_impl2<T>::value>
+{
+};
 
 } // namespace iterators
 
