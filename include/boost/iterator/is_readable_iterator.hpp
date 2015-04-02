@@ -5,6 +5,7 @@
 # define IS_READABLE_ITERATOR_DWA2003112_HPP
 
 #include <boost/mpl/bool.hpp>
+#include <boost/mpl/aux_/lambda_support.hpp>
 #include <boost/detail/iterator.hpp>
 #include <boost/type_traits/add_lvalue_reference.hpp>
 
@@ -100,6 +101,8 @@ namespace detail
 template< typename T > struct is_readable_iterator
 : public ::boost::integral_constant<bool,::boost::iterators::detail::is_readable_iterator_impl2<T>::value>
 {
+public:
+    BOOST_MPL_AUX_LAMBDA_SUPPORT(1,is_readable_iterator,(T))
 };
 
 } // namespace iterators
