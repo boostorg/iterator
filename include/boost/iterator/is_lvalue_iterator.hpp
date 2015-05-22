@@ -161,6 +161,5 @@ using iterators::is_non_const_lvalue_iterator;
 #endif
 
 #include <boost/iterator/detail/config_undef.hpp>
-#include <boost/type_traits/detail/bool_trait_undef.hpp>
 
 #endif // IS_LVALUE_ITERATOR_DWA2003112_HPP
