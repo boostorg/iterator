@@ -32,16 +32,11 @@
 #include <boost/iterator/iterator_traits.hpp>
 
 namespace boost {
-namespace iterators {
 
-  // Used as a default template argument internally, merely to
-  // indicate "use the default", this can also be passed by users
-  // explicitly in order to specify that the default should be used.
-  struct use_default;
-
-} // namespace iterators
-
-using iterators::use_default;
+// Used as a default template argument internally, merely to
+// indicate "use the default", this can also be passed by users
+// explicitly in order to specify that the default should be used.
+struct use_default;
 
 // the incompleteness of use_default causes massive problems for
 // is_convertible (naturally).  This workaround is fortunately not
