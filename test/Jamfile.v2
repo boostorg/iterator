@@ -14,11 +14,13 @@ test-suite iterator
 
     [ run zip_iterator_test.cpp
         : : :
-
         # stlport's debug mode generates long symbols which overwhelm
         # vc6
         #<msvc-stlport><*><runtime-build>release
     ]
+    [ run zip_iterator_test_fusion.cpp ]
+    [ run zip_iterator_test_std_tuple.cpp ]
+    [ run zip_iterator_test_std_pair.cpp ]
 
     # These tests should work for just about everything.
     [ compile is_lvalue_iterator.cpp ]
