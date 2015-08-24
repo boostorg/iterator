@@ -228,7 +228,7 @@ operations.
               , IteratorTuple>::type* = 0     // exposition only
     );
 
-[*Returns:] An instance of `zip_iterator` that is a copy of `other`.\n
+[*Returns:] An instance of `zip_iterator` that is a copy of `other`.[br]
 [*Requires:] `OtherIteratorTuple` is implicitly convertible to `IteratorTuple`.
 
 
@@ -245,13 +245,13 @@ operations.
 
   zip_iterator& operator++();
 
-[*Effects:] Increments each iterator in `m_iterator_tuple`.\n
+[*Effects:] Increments each iterator in `m_iterator_tuple`.[br]
 [*Returns:] `*this`
 
 
   zip_iterator& operator--();
 
-[*Effects:] Decrements each iterator in `m_iterator_tuple`.\n
+[*Effects:] Decrements each iterator in `m_iterator_tuple`.[br]
 [*Returns:] `*this`
 
     template<typename IteratorTuple> 
