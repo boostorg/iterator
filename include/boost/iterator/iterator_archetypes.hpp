@@ -9,6 +9,7 @@
 #include <boost/iterator/iterator_categories.hpp>
 #include <boost/operators.hpp>
 #include <boost/static_assert.hpp>
+#include <boost/iterator.hpp>
 
 #include <boost/iterator/detail/facade_iterator_category.hpp>
 
