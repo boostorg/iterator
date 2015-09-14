@@ -215,7 +215,7 @@ void random_access_iterator_test(Iterator i, int N, TrueVals vals)
   const Iterator j = i;
   int c;
 
-  typedef typename boost::detail::iterator_traits<Iterator>::value_type value_type;
+  typedef typename std::iterator_traits<Iterator>::value_type value_type;
 
   for (c = 0; c < N-1; ++c) {
     assert(i == j + c);
