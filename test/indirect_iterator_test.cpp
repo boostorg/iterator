@@ -32,6 +32,7 @@
 #include <vector>
 #include <stdlib.h>
 #include <set>
+#include <iterator>
 
 #if !defined(__SGI_STL_PORT)                            \
     && (defined(BOOST_MSVC_STD_ITERATOR)                \
@@ -164,7 +165,7 @@ main()
 
     BOOST_STATIC_ASSERT(
         has_element_type<
-            boost::detail::iterator_traits<shared_t::iterator>::value_type
+            std::iterator_traits<shared_t::iterator>::value_type
         >::value
         );
     
