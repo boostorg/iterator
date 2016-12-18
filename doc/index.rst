@@ -115,8 +115,8 @@ __ iterator_facade.pdf
 __ iterator_adaptor.pdf
 
 Both |facade| and |adaptor| as well as many of the `specialized
-adaptors`_ mentioned below have been proposed for standardization,
-and accepted into the first C++ technical report; see our
+adaptors`_ mentioned below have been proposed for standardization;
+see our
 
    `Standard Proposal For Iterator Facade and Adaptor`__ (PDF__)
 
