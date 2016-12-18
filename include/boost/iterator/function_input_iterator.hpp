@@ -9,6 +9,7 @@
 #ifndef BOOST_FUNCTION_INPUT_ITERATOR
 #define BOOST_FUNCTION_INPUT_ITERATOR
 
+#include <boost/config.hpp>
 #include <boost/assert.hpp>
 #include <boost/mpl/if.hpp>
 #include <boost/function_types/is_function_pointer.hpp>

@@ -11,6 +11,7 @@
 #include <iterator>
 #include <vector>
 
+#include <boost/config.hpp>
 #include <boost/iterator/function_input_iterator.hpp>
 
 namespace {
