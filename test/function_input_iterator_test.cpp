@@ -11,6 +11,7 @@
 #include <iterator>
 #include <vector>
 
+#include <boost/config.hpp>
 #include <boost/iterator/function_input_iterator.hpp>
 
 namespace {
@@ -95,6 +96,23 @@ int main(int argc, char * argv[])
     for(std::size_t i = 0; i != 10; ++i)
         assert(generated[i] == 42 + i);
     cout << "function iterator test with stateful function object successful." << endl;
+
+#if !defined(BOOST_NO_CXX11_LAMBDAS) && !defined(BOOST_NO_CXX11_AUTO_DECLARATIONS)
+    // test the iterator with lambda expressions
+    int num = 42;
+    auto lambda_generator = [&num] { return num++; };
+    vector<int>().swap(generated);
+    copy(
+        boost::make_function_input_iterator(lambda_generator, 0),
+        boost::make_function_input_iterator(lambda_generator, 10),
+        back_inserter(generated)
+        );
+
+    assert(generated.size() == 10);
+    for(std::size_t i = 0; i != 10; ++i)
+        assert(generated[i] == 42 + i);
+    cout << "function iterator test with lambda expressions successful." << endl;
+#endif // BOOST_NO_CXX11_LAMBDAS
 
     return 0;
 }
