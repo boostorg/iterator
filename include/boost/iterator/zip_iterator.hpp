@@ -83,7 +83,7 @@ namespace iterators {
       struct result<This(Iterator)>
       {
         typedef typename
-          remove_reference<typename remove_cv<Iterator>::type>::type
+          remove_cv<typename remove_reference<Iterator>::type>::type
         iterator;
 
         typedef typename iterator_reference<iterator>::type type;
