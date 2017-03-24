@@ -31,11 +31,11 @@
 //
 
 namespace boost {
-namespace iterators {
 
 // forward declaration
 struct use_default;
 
+namespace iterators {
 namespace detail {
 
 struct input_output_iterator_tag
