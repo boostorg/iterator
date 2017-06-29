@@ -55,4 +55,7 @@ test-suite iterator
 
     [ run minimum_category.cpp ]
     [ compile-fail minimum_category_compile_fail.cpp ]
+
+    [ run advance_test.cpp ]
+    [ run distance_test.cpp ]
 ;
