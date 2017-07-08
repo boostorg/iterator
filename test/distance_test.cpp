@@ -28,15 +28,7 @@ int main()
     {
         test_distance(ptr1, ptr2,  3);
         test_distance(ptr2, ptr1, -3);
-    }
 
-    {
-        std::vector<int> ints(ptr1, ptr2);
-        test_distance(ints.begin(), ints.end(),  3);
-        test_distance(ints.end(), ints.begin(), -3);
-    }
-
-    {
         test_distance(
             boost::make_transform_iterator(ptr1, twice)
           , boost::make_transform_iterator(ptr2, twice)
@@ -50,13 +42,42 @@ int main()
     }
 
     {
+        std::vector<int> ints(ptr1, ptr2);
+        test_distance(ints.begin(), ints.end(),  3);
+        test_distance(ints.end(), ints.begin(), -3);
+
+        test_distance(
+            boost::make_transform_iterator(ints.begin(), twice)
+          , boost::make_transform_iterator(ints.end(), twice)
+          , 3
+        );
+        test_distance(
+            boost::make_transform_iterator(ints.end(), twice)
+          , boost::make_transform_iterator(ints.begin(), twice)
+          , -3
+        );
+    }
+
+    {
         std::list<int> ints(ptr1, ptr2);
         test_distance(ints.begin(), ints.end(),  3);
+
+        test_distance(
+            boost::make_transform_iterator(ints.begin(), twice)
+          , boost::make_transform_iterator(ints.end(), twice)
+          , 3
+        );
     }
 
     {
         boost::container::slist<int> ints(ptr1, ptr2);
         test_distance(ints.begin(), ints.end(),  3);
+
+        test_distance(
+            boost::make_transform_iterator(ints.begin(), twice)
+          , boost::make_transform_iterator(ints.end(), twice)
+          , 3
+        );
     }
 
     return boost::report_errors();
