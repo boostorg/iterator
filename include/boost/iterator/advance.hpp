@@ -9,17 +9,16 @@
 
 #include <boost/config.hpp>
 #include <boost/iterator/iterator_categories.hpp>
-#include <boost/iterator/iterator_traits.hpp>
 
 namespace boost {
 namespace iterators {
 
     namespace detail {
-        template <typename InputIterator>
+        template <typename InputIterator, typename Distance>
         inline BOOST_CXX14_CONSTEXPR void
         advance_impl(
             InputIterator& it
-          , typename iterator_difference<InputIterator>::type n
+          , Distance n
           , incrementable_traversal_tag
         )
         {
@@ -29,11 +28,11 @@ namespace iterators {
             }
         }
 
-        template <typename BidirectionalIterator>
+        template <typename BidirectionalIterator, typename Distance>
         inline BOOST_CXX14_CONSTEXPR void
         advance_impl(
             BidirectionalIterator& it
-          , typename iterator_difference<BidirectionalIterator>::type n
+          , Distance n
           , bidirectional_traversal_tag
         )
         {
@@ -51,11 +50,11 @@ namespace iterators {
             }
         }
 
-        template <typename RandomAccessIterator>
+        template <typename RandomAccessIterator, typename Distance>
         inline BOOST_CXX14_CONSTEXPR void
         advance_impl(
             RandomAccessIterator& it
-          , typename iterator_difference<RandomAccessIterator>::type n
+          , Distance n
           , random_access_traversal_tag
         )
         {
@@ -64,9 +63,9 @@ namespace iterators {
     }
 
     namespace advance_adl_barrier {
-        template <typename InputIterator>
+        template <typename InputIterator, typename Distance>
         inline BOOST_CXX14_CONSTEXPR void
-        advance(InputIterator& it, typename iterator_difference<InputIterator>::type n)
+        advance(InputIterator& it, Distance n)
         {
             detail::advance_impl(
                 it, n, typename iterator_traversal<InputIterator>::type()
