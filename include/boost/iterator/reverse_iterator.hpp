@@ -50,7 +50,7 @@ namespace iterators {
 
       void advance(typename super_t::difference_type n)
       {
-          this->base_reference() += -n;
+          this->base_reference() -= n;
       }
 
       template <class OtherIterator>
