@@ -213,6 +213,23 @@ __ zip_iterator.pdf
  Iterator Utilities
 ====================
 
+Operations
+----------
+
+The standard library does not handle new-style iterators properly,
+because it knows nothing about the iterator traversal concepts.
+The Boost.Iterator library provides implementations that fully understand
+the new concepts for the two basic operations:
+
+- |advance|_
+- |distance|_
+
+.. |advance| replace:: ``advance``
+.. _advance: advance.html
+
+.. |distance| replace:: ``distance``
+.. _distance: distance.html
+
 Traits
 ------
 

@@ -176,6 +176,18 @@ templates.
 
 * _iterator_archetypes_: Concept archetype classes for the new iterators concepts.
 
+[h2 Iterator Algorithms]
+
+The library provides a number of generic algorithms for use with iterators. These
+algorithms take advantage of the new concepts defined by the library to provide
+better performance and functionality.
+
+[def _next_prior_       [link iterator.algorithms.next_prior `next_prior.hpp`]]
+
+* _next_prior_: Provides `next()` and `prior()` functions for obtaining
+  next and prior iterators to a given iterator. The functions are also compatible
+  with non-iterator types.
+
 [endsect]
 
 [include concepts.qbk]
@@ -201,6 +213,8 @@ templates.
 [include utilities.qbk]
 
 [endsect]
+
+[include algorithms.qbk]
 
 [section:upgrading Upgrading from the old Boost Iterator Adaptor Library]
 
