@@ -18,8 +18,7 @@
 // simple functions, though, and it would be very strange if these
 // tests were to fail.
 
-#define BOOST_INCLUDE_MAIN
-#include <boost/test/test_tools.hpp>
+#include <boost/core/lightweight_test.hpp>
 
 #include <list>
 #include <vector>
@@ -73,32 +72,32 @@ bool minus_n_unsigned_test(Iterator first, Iterator last, Distance size)
     return i == first;
 }
 
-int test_main(int, char*[])
+int main(int, char*[])
 {
     std::vector<int> x(8);
     std::list<int> y(x.begin(), x.end());
 
     // Tests with iterators
-    BOOST_REQUIRE(plus_one_test(x.begin(), x.end(), y.begin()));
-    BOOST_REQUIRE(plus_n_test(x.begin(), x.end(), y.begin()));
-    BOOST_REQUIRE(minus_one_test(x.begin(), x.end(), y.end()));
-    BOOST_REQUIRE(minus_n_test(x.begin(), x.end(), y.end()));
-    BOOST_REQUIRE(minus_n_unsigned_test(x.begin(), x.end(), x.size()));
-    BOOST_REQUIRE(minus_n_unsigned_test(y.begin(), y.end(), y.size()));
+    BOOST_TEST(plus_one_test(x.begin(), x.end(), y.begin()));
+    BOOST_TEST(plus_n_test(x.begin(), x.end(), y.begin()));
+    BOOST_TEST(minus_one_test(x.begin(), x.end(), y.end()));
+    BOOST_TEST(minus_n_test(x.begin(), x.end(), y.end()));
+    BOOST_TEST(minus_n_unsigned_test(x.begin(), x.end(), x.size()));
+    BOOST_TEST(minus_n_unsigned_test(y.begin(), y.end(), y.size()));
 
-    BOOST_REQUIRE(plus_one_test(x.rbegin(), x.rend(), y.begin()));
-    BOOST_REQUIRE(plus_n_test(x.rbegin(), x.rend(), y.begin()));
-    BOOST_REQUIRE(minus_one_test(x.rbegin(), x.rend(), y.end()));
-    BOOST_REQUIRE(minus_n_test(x.rbegin(), x.rend(), y.end()));
-    BOOST_REQUIRE(minus_n_unsigned_test(x.rbegin(), x.rend(), x.size()));
-    BOOST_REQUIRE(minus_n_unsigned_test(x.rbegin(), x.rend(), y.size()));
+    BOOST_TEST(plus_one_test(x.rbegin(), x.rend(), y.begin()));
+    BOOST_TEST(plus_n_test(x.rbegin(), x.rend(), y.begin()));
+    BOOST_TEST(minus_one_test(x.rbegin(), x.rend(), y.end()));
+    BOOST_TEST(minus_n_test(x.rbegin(), x.rend(), y.end()));
+    BOOST_TEST(minus_n_unsigned_test(x.rbegin(), x.rend(), x.size()));
+    BOOST_TEST(minus_n_unsigned_test(x.rbegin(), x.rend(), y.size()));
 
     // Tests with integers
-    BOOST_REQUIRE(boost::next(5) == 6);
-    BOOST_REQUIRE(boost::next(5, 7) == 12);
-    BOOST_REQUIRE(boost::prior(5) == 4);
-    BOOST_REQUIRE(boost::prior(5, 7) == -2);
-    BOOST_REQUIRE(boost::prior(5, 7u) == -2);
+    BOOST_TEST(boost::next(5) == 6);
+    BOOST_TEST(boost::next(5, 7) == 12);
+    BOOST_TEST(boost::prior(5) == 4);
+    BOOST_TEST(boost::prior(5, 7) == -2);
+    BOOST_TEST(boost::prior(5, 7u) == -2);
 
-    return 0;
+    return boost::report_errors();
 }
