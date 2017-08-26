@@ -4,7 +4,9 @@
 
 Certain data types, such as the C++ Standard Library's forward and bidirectional iterators, do not provide addition and subtraction via `operator+()` or `operator-()`. This means that non-modifying computation of the next or prior value requires a temporary, even though `operator++()` or `operator--()` is provided. It also means that writing code like `itr+1` inside a template restricts the iterator category to random access iterators.
 
-The `next()` and `prior()` functions provide a simple way around these problems:
+The `next()` and `prior()` functions defined in `boost/next_prior.hpp` provide a simple way around these problems.
+
+[section Synopsis]
 
     template <class T>
     T next(T x)
@@ -32,7 +34,9 @@ The `next()` and `prior()` functions provide a simple way around these problems:
         return x;
     }
 
-[note Function implementation above is given for exposition only. The actual implementation has the same effect for iterators, but has different properties, as documented later.]
+[note Function implementations above are given for exposition only. The actual implementation has the same effect for iterators, but has different properties, as documented later.]
+
+[endsect]
 
 Usage is simple:
 
@@ -42,7 +46,7 @@ Usage is simple:
 
 The distance from the given iterator should be supplied as an absolute value. For example, the iterator four iterators prior to the given iterator `p` may be obtained by `prior(p, 4)`.
 
-With C++11, the standard library provides `std::next()` and `std::prev()` function templates, which serve the same purpose. However, there are advantages to `boost::next()` and `boost::prior()`.
+With C++11, the Standard Library provides `std::next()` and `std::prev()` function templates, which serve the same purpose. However, there are advantages to `boost::next()` and `boost::prior()`.
 
 First, `boost::next()` and `boost::prior()` are compatible not only with iterators but with any type that provides arithmetic operators `operator++()`, `operator--()`, `operator+()`, `operator-()`, `operator+=()` or `operator-=()`. For example, this is possible:
 
