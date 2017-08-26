@@ -42,15 +42,15 @@ Usage is simple:
 
 The distance from the given iterator should be supplied as an absolute value. For example, the iterator four iterators prior to the given iterator `p` may be obtained by `prior(p, 4)`.
 
-With C++11, the standard library provides `std::next()` and `std::prev()` function templates, which serve the same purpose. However, there are advantages to `boost::next()` and `boost::prior()`:
+With C++11, the standard library provides `std::next()` and `std::prev()` function templates, which serve the same purpose. However, there are advantages to `boost::next()` and `boost::prior()`.
 
-- `boost::next()` and `boost::prior()` are compatible not only with iterators but with any type that provides arithmetic operators `operator++()`, `operator--()`, `operator+()`, `operator-()`, `operator+=()` or `operator-=()`. For example, this is possible:
+First, `boost::next()` and `boost::prior()` are compatible not only with iterators but with any type that provides arithmetic operators `operator++()`, `operator--()`, `operator+()`, `operator-()`, `operator+=()` or `operator-=()`. For example, this is possible:
 
     int x = 10;
     int y = boost::next(x, 5);
     assert(y == 15);
 
-- `boost::next()` and `boost::prior()` use [link iterator.concepts.concepts_traversal traversal categories] to select the most efficient implementation. For some kinds of iterators, such as [link iterator.specialized.transform transform iterators], the standard iterator category does not reflect the traversal category correctly and therefore `std::next()` and `std::prev()` will fall back to linear complexity.
+Second, `boost::next()` and `boost::prior()` use [link iterator.concepts.concepts_traversal traversal categories] to select the most efficient implementation. For some kinds of iterators, such as [link iterator.specialized.transform transform iterators], the standard iterator category does not reflect the traversal category correctly and therefore `std::next()` and `std::prev()` will fall back to linear complexity.
 
 [section Acknowledgements]
 
