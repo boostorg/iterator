@@ -25,6 +25,7 @@
 # include <boost/static_assert.hpp>
 # include <boost/concept_archetype.hpp> // for detail::dummy_constructor
 # include <boost/implicit_cast.hpp>
+# include <boost/core/ignore_unused.hpp>
 
 namespace boost {
 
@@ -59,6 +60,7 @@ void trivial_iterator_test(const Iterator i, const Iterator j, T val)
   typename std::iterator_traits<Iterator>::value_type v = *i;
 #endif
   assert(v == val);
+  boost::ignore_unused(v);
 #if 0
   // hmm, this will give a warning for transform_iterator...  perhaps
   // this should be separated out into a stand-alone test since there
@@ -71,6 +73,7 @@ void trivial_iterator_test(const Iterator i, const Iterator j, T val)
   assert(k == i);
   assert(k != j);
   assert(*k == val);
+  boost::ignore_unused(k);
 }
 
 
@@ -108,6 +111,7 @@ void input_iterator_test(Iterator i, T v1, T v2)
   // we cannot test for equivalence of (void)++i & (void)i++
   // as i is only guaranteed to be single pass.
   assert(*i++ == v1);
+  boost::ignore_unused(i1);
 
   i1 = i;
 
@@ -116,6 +120,7 @@ void input_iterator_test(Iterator i, T v1, T v2)
 
   assert(*i1 == v2);
   assert(*i  == v2);
+  boost::ignore_unused(i1);
 
   // i is dereferencable, so it must be incrementable.
   ++i;
@@ -216,6 +221,7 @@ void random_access_iterator_test(Iterator i, int N, TrueVals vals)
   int c;
 
   typedef typename std::iterator_traits<Iterator>::value_type value_type;
+  boost::ignore_unused<value_type>();
 
   for (c = 0; c < N-1; ++c) {
     assert(i == j + c);
@@ -236,6 +242,7 @@ void random_access_iterator_test(Iterator i, int N, TrueVals vals)
     assert(*i == vals[N - 1 - c]);
     assert(*i == boost::implicit_cast<value_type>(j[N - 1 - c]));
     Iterator q = k - c;
+    boost::ignore_unused(q);
     assert(*i == *q);
     assert(i > j);
     assert(i >= j);
@@ -259,6 +266,7 @@ void const_nonconst_iterator_test(Iterator i, ConstIterator j)
   k = i;
   assert(k == i);
   assert(i == k);
+  boost::ignore_unused(k);
 }
 
 } // namespace iterators
