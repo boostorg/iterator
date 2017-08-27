@@ -94,7 +94,7 @@ int main(int argc, char * argv[])
     assert(generated.size() == 10);
     assert(counter_generator.n == 42 + 10);
     for(std::size_t i = 0; i != 10; ++i)
-        assert(generated[i] == 42 + i);
+        assert(generated[i] == static_cast<int>(42 + i));
     cout << "function iterator test with stateful function object successful." << endl;
 
 #if !defined(BOOST_NO_CXX11_LAMBDAS) && !defined(BOOST_NO_CXX11_AUTO_DECLARATIONS)
@@ -110,7 +110,7 @@ int main(int argc, char * argv[])
 
     assert(generated.size() == 10);
     for(std::size_t i = 0; i != 10; ++i)
-        assert(generated[i] == 42 + i);
+        assert(generated[i] == static_cast<int>(42 + i));
     cout << "function iterator test with lambda expressions successful." << endl;
 #endif // BOOST_NO_CXX11_LAMBDAS
 
