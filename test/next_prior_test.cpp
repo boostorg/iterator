@@ -93,13 +93,13 @@ int main(int, char*[])
     BOOST_TEST(minus_n_unsigned_test(x.rbegin(), x.rend(), y.size()));
 
     // Test with pointers
-    int arr[8] = {};
-    int* p = arr;
+    std::vector<int> z(x.size());
+    int* p = &z[0];
     BOOST_TEST(plus_one_test(x.begin(), x.end(), p));
     BOOST_TEST(plus_n_test(x.begin(), x.end(), p));
-    BOOST_TEST(minus_one_test(x.begin(), x.end(), p + sizeof(arr)));
-    BOOST_TEST(minus_n_test(x.begin(), x.end(), p + sizeof(arr)));
-    BOOST_TEST(minus_n_unsigned_test(p, p + sizeof(arr), sizeof(arr)));
+    BOOST_TEST(minus_one_test(x.begin(), x.end(), p + z.size()));
+    BOOST_TEST(minus_n_test(x.begin(), x.end(), p + z.size()));
+    BOOST_TEST(minus_n_unsigned_test(p, p + z.size(), z.size()));
 
     // Tests with integers
     BOOST_TEST(boost::next(5) == 6);
