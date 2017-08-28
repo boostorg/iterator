@@ -2,7 +2,7 @@
 
 [section:advance Function template `advance()`]
 
-The `boost::iterators::advance` function template is an adapted version of `std::advance` for the Boost iterator [link iterator.concepts.concepts_traversal traversal concepts].
+The `boost::iterators::advance` function template is an adapted version of `std::advance` for the Boost iterator [link iterator.concepts.traversal traversal concepts].
 
 [heading Header]
 
@@ -26,11 +26,11 @@ Moves `it` forward by `n` increments (or backward by `|n|` decrements if `n` is 
 
 Let `it`[sub `i`] be the iterator obtained by incrementing (or decrementing if `n` is negative) `it` by `i`. All the iterators `it`[sub `i`] for `i` = 0, 1, 2, ..., `|n|` should be valid.
 
-If `Iterator` does not model [link iterator.concepts.concepts_traversal.bidirectional Bidirectional Traversal Iterator], `n` should be non-negative.
+If `Iterator` does not model [link iterator.concepts.traversal.bidirectional Bidirectional Traversal Iterator], `n` should be non-negative.
 
 [heading Complexity]
 
-If `Iterator` models [link iterator.concepts.concepts_traversal.random_access Random Access Traversal Iterator], it takes constant time; otherwise it takes linear time.
+If `Iterator` models [link iterator.concepts.traversal.random_access Random Access Traversal Iterator], it takes constant time; otherwise it takes linear time.
 
 [heading Notes]
 
@@ -45,7 +45,7 @@ Contributed by Michel Morin.
 
 [section:distance Function template `distance()`]
 
-The `boost::iterators::distance` function template is an adapted version of `std::distance` for the Boost iterator [link iterator.concepts.concepts_traversal traversal concepts].
+The `boost::iterators::distance` function template is an adapted version of `std::distance` for the Boost iterator [link iterator.concepts.traversal traversal concepts].
 
 [heading Header]
 
@@ -63,15 +63,15 @@ Computes the (signed) distance from `first` to `last`.
 
 [heading Requirements]
 
-`Iterator` should model [link iterator.concepts.concepts_traversal.single_pass Single Pass Iterator].
+`Iterator` should model [link iterator.concepts.traversal.single_pass Single Pass Iterator].
 
 [heading Preconditions]
 
-If `Iterator` models [link iterator.concepts.concepts_traversal.random_access Random Access Traversal Iterator], `[first, last)` or `[last, first)` should be valid; otherwise `[first, last)` should be valid.
+If `Iterator` models [link iterator.concepts.traversal.random_access Random Access Traversal Iterator], `[first, last)` or `[last, first)` should be valid; otherwise `[first, last)` should be valid.
 
 [heading Complexity]
 
-If `Iterator` models [link iterator.concepts.concepts_traversal.random_access Random Access Traversal Iterator], it takes constant time; otherwise it takes linear time.
+If `Iterator` models [link iterator.concepts.traversal.random_access Random Access Traversal Iterator], it takes constant time; otherwise it takes linear time.
 
 [heading Notes]
 
@@ -138,7 +138,7 @@ First, `boost::next()` and `boost::prior()` are compatible not only with iterato
     int y = boost::next(x, 5);
     assert(y == 15);
 
-Second, `boost::next()` and `boost::prior()` use [link iterator.concepts.concepts_traversal traversal categories] to select the most efficient implementation. For some kinds of iterators, such as [link iterator.specialized.transform transform iterators], the standard iterator category does not reflect the traversal category correctly and therefore `std::next()` and `std::prev()` will fall back to linear complexity.
+Second, `boost::next()` and `boost::prior()` use [link iterator.concepts.traversal traversal categories] to select the most efficient implementation. For some kinds of iterators, such as [link iterator.specialized.transform transform iterators], the standard iterator category does not reflect the traversal category correctly and therefore `std::next()` and `std::prev()` will fall back to linear complexity.
 
 [heading Acknowledgements]
 

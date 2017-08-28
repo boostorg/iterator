@@ -1,7 +1,7 @@
 
 [section:concepts Iterator Concepts]
 
-[section:concepts_access Access]
+[section:access Access]
 
 [section:readable Readable Iterator Concept]
 
@@ -108,7 +108,7 @@ iterator.
 
 [endsect]
 
-[section:concepts_traversal Traversal]
+[section:traversal Traversal]
 
 [section:incrementable Incrementable Iterator Concept]
 
