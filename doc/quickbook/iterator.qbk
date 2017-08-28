@@ -112,7 +112,9 @@ templates.
 
 [def _counting_    [link iterator.specialized.counting `counting_iterator`]]
 [def _filter_      [link iterator.specialized.filter `filter_iterator`]]
-[def _function_    [link iterator.specialized.function_output `function_output_iterator`]]
+[def _function_input_ [@../function_input_iterator.html `function_input_iterator`]]
+[def _function_output_ [link iterator.specialized.function_output `function_output_iterator`]]
+[def _generator_   [@../generator_iterator.htm `generator_iterator`]]
 [def _indirect_    [link iterator.specialized.indirect `indirect_iterator`]]
 [def _permutation_ [link iterator.specialized.permutation `permutation_iterator`]]
 [def _reverse_     [link iterator.specialized.reverse `reverse_iterator`]]
@@ -128,9 +130,17 @@ templates.
 * _filter_: an iterator over the subset of elements of some
   sequence which satisfy a given predicate
 
-* _function_: an output iterator wrapping a unary function
+* _function_input_: an input iterator wrapping a generator (nullary
+  function object); each time the iterator is dereferenced, the function object
+  is called to get the value to return.
+
+* _function_output_: an output iterator wrapping a unary function
   object; each time an element is written into the dereferenced
   iterator, it is passed as a parameter to the function object.
+
+* _generator_: an input iterator wrapping a generator (nullary
+  function object); each time the iterator is dereferenced, the function object
+  is called to get the value to return. An outdated analogue of _function_input_.
 
 * _indirect_: an iterator over the objects *pointed-to* by the
   elements of some sequence.

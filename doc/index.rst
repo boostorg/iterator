@@ -146,6 +146,10 @@ iterator templates based on the Boost `iterator facade and adaptor`_.
   object; each time an element is written into the dereferenced
   iterator, it is passed as a parameter to the function object.
 
+* |generator|_: an input iterator wrapping a generator (nullary
+  function object); each time the iterator is dereferenced, the function object
+  is called to get the value to return. This is an outdated analogue of |function_input|_.
+
 * |indirect|_ (PDF__): an iterator over the objects *pointed-to* by the
   elements of some sequence.
 
@@ -182,6 +186,9 @@ __ function_input_iterator.pdf
 .. |function_output| replace:: ``function_output_iterator``
 .. _function_output: function_output_iterator.html
 __ function_output_iterator.pdf
+
+.. |generator| replace:: ``generator_iterator``
+.. _generator: generator_iterator.htm
 
 .. |indirect| replace:: ``indirect_iterator``
 .. _indirect: indirect_iterator.html
