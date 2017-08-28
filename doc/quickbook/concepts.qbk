@@ -176,6 +176,11 @@ semantics.
     [`!(a == b)`]
   ]
   [
+    [`iterator_traits<X>::difference_type`]
+    [A signed integral type representing the distance between iterators]
+    []
+  ]
+  [
     [`iterator_traversal<X>::type`]
     [Convertible to`single_pass_traversal_tag`]
     []
@@ -206,11 +211,6 @@ valid and respect the stated semantics.
     [`++r`]
     [`X&`]
     [`r == s` and `r` is dereferenceable implies `++r == ++s.`]
-  ]
-  [
-    [`iterator_traits<X>::difference_type`]
-    [A signed integral type representing the distance between iterators]
-    []
   ]
   [
     [`iterator_traversal<X>::type`]
