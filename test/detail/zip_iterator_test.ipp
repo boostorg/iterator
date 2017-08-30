@@ -62,7 +62,7 @@ int main()
         // Trac #12895
         boost::zip_iterator<
             TUPLE<int*, std::string*>
-        > i(MAKE_TUPLE(vi.data(), vs.data()));
+        > i(MAKE_TUPLE(&vi[0], &vs[0]));
 
         BOOST_TEST(boost::fusion::at_c<0>(* i     ) == 42);
         BOOST_TEST(boost::fusion::at_c<1>(* i     ) == "kokoro");
