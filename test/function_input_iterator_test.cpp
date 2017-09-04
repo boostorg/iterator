@@ -3,7 +3,6 @@
 // (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 
-#include <cassert>
 #include <cstddef>
 
 #include <algorithm>
@@ -12,6 +11,7 @@
 #include <vector>
 
 #include <boost/config.hpp>
+#include <boost/core/lightweight_test.hpp>
 #include <boost/iterator/function_input_iterator.hpp>
 
 namespace {
@@ -54,9 +54,7 @@ int main()
         back_inserter(generated)
         );
 
-    assert(values.size() == generated.size());
-    assert(equal(values.begin(), values.end(), generated.begin()));
-    cout << "function iterator test with function objects successful." << endl;
+    BOOST_TEST_ALL_EQ(values.begin(), values.end(), generated.begin(), generated.end());
 
     // test the iterator with normal functions
     vector<int>().swap(generated);
@@ -66,9 +64,7 @@ int main()
         back_inserter(generated)
         );
 
-    assert(values.size() == generated.size());
-    assert(equal(values.begin(), values.end(), generated.begin()));
-    cout << "function iterator test with pointer to function successful." << endl;
+    BOOST_TEST_ALL_EQ(values.begin(), values.end(), generated.begin(), generated.end());
 
     // test the iterator with a reference to a function
     vector<int>().swap(generated);
@@ -78,9 +74,7 @@ int main()
         back_inserter(generated)
         );
 
-    assert(values.size() == generated.size());
-    assert(equal(values.begin(), values.end(), generated.begin()));
-    cout << "function iterator test with reference to function successful." << endl;
+    BOOST_TEST_ALL_EQ(values.begin(), values.end(), generated.begin(), generated.end());
 
     // test the iterator with a stateful function object
     counter counter_generator(42);
@@ -91,11 +85,10 @@ int main()
         back_inserter(generated)
         );
 
-    assert(generated.size() == 10);
-    assert(counter_generator.n == 42 + 10);
+    BOOST_TEST_EQ(generated.size(), 10);
+    BOOST_TEST_EQ(counter_generator.n, 42 + 10);
     for(std::size_t i = 0; i != 10; ++i)
-        assert(generated[i] == static_cast<int>(42 + i));
-    cout << "function iterator test with stateful function object successful." << endl;
+        BOOST_TEST_EQ(generated[i], static_cast<int>(42 + i));
 
 #if !defined(BOOST_NO_CXX11_LAMBDAS) && !defined(BOOST_NO_CXX11_AUTO_DECLARATIONS)
     // test the iterator with lambda expressions
@@ -108,11 +101,10 @@ int main()
         back_inserter(generated)
         );
 
-    assert(generated.size() == 10);
+    BOOST_TEST_EQ(generated.size(), 10);
     for(std::size_t i = 0; i != 10; ++i)
-        assert(generated[i] == static_cast<int>(42 + i));
-    cout << "function iterator test with lambda expressions successful." << endl;
+        BOOST_TEST_EQ(generated[i], static_cast<int>(42 + i));
 #endif // BOOST_NO_CXX11_LAMBDAS
 
-    return 0;
+    return boost::report_errors();
 }
