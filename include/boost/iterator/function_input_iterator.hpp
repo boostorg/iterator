@@ -14,7 +14,6 @@
 #include <boost/core/addressof.hpp>
 #include <boost/mpl/if.hpp>
 #include <boost/function_types/is_function_pointer.hpp>
-#include <boost/function_types/is_function_reference.hpp>
 #include <boost/function_types/result_type.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/none.hpp>
@@ -101,16 +100,6 @@ namespace iterators {
             mutable optional<typename function_types::result_type<Function>::type> value;
         };
 
-        template <class Function, class Input>
-        class function_reference_input_iterator
-            : public function_pointer_input_iterator<Function*,Input>
-        {
-        public:
-            function_reference_input_iterator(Function & f_, Input state_ = Input())
-                : function_pointer_input_iterator<Function*,Input>(&f_, state_)
-            {}
-        };
-
     } // namespace impl
 
     template <class Function, class Input>
@@ -118,21 +107,13 @@ namespace iterators {
         : public mpl::if_<
             function_types::is_function_pointer<Function>,
             impl::function_pointer_input_iterator<Function,Input>,
-            typename mpl::if_<
-                function_types::is_function_reference<Function>,
-                impl::function_reference_input_iterator<Function,Input>,
-                impl::function_input_iterator<Function,Input>
-            >::type
+            impl::function_input_iterator<Function,Input>
         >::type
     {
         typedef typename mpl::if_<
             function_types::is_function_pointer<Function>,
             impl::function_pointer_input_iterator<Function,Input>,
-            typename mpl::if_<
-                function_types::is_function_reference<Function>,
-                impl::function_reference_input_iterator<Function,Input>,
-                impl::function_input_iterator<Function,Input>
-            >::type
+            impl::function_input_iterator<Function,Input>
         >::type base_type;
     public:
         function_input_iterator(Function & f, Input i)
