@@ -11,6 +11,7 @@
 
 #include <boost/config.hpp>
 #include <boost/assert.hpp>
+#include <boost/core/addressof.hpp>
 #include <boost/mpl/if.hpp>
 #include <boost/function_types/is_function_pointer.hpp>
 #include <boost/function_types/is_function_reference.hpp>
@@ -38,7 +39,7 @@ namespace iterators {
         public:
             function_input_iterator() {}
             function_input_iterator(Function & f_, Input state_ = Input())
-                : f(&f_), state(state_) {}
+                : f(boost::addressof(f_)), state(state_) {}
 
             void increment() {
                 if(value)
