@@ -31,9 +31,9 @@ namespace iterators {
         class function_input_iterator
             : public iterator_facade<
             function_input_iterator<Function, Input>,
-            BOOST_DEDUCED_TYPENAME result_of<Function ()>::type,
+            typename result_of<Function ()>::type,
             single_pass_traversal_tag,
-            BOOST_DEDUCED_TYPENAME result_of<Function ()>::type const &
+            typename result_of<Function ()>::type const &
             >
         {
         public:
@@ -49,7 +49,7 @@ namespace iterators {
                 ++state;
             }
 
-            BOOST_DEDUCED_TYPENAME result_of<Function ()>::type const &
+            typename result_of<Function ()>::type const &
                 dereference() const {
                     return (value ? value : value = (*f)()).get();
             }
@@ -61,7 +61,7 @@ namespace iterators {
         private:
             Function * f;
             Input state;
-            mutable optional<BOOST_DEDUCED_TYPENAME result_of<Function ()>::type> value;
+            mutable optional<typename result_of<Function ()>::type> value;
         };
 
         template <class Function, class Input>
