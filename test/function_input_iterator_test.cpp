@@ -85,12 +85,13 @@ int main()
         back_inserter(generated)
         );
 
-    BOOST_TEST_EQ(generated.size(), 10);
+    BOOST_TEST_EQ(generated.size(), 10u);
     BOOST_TEST_EQ(counter_generator.n, 42 + 10);
     for(std::size_t i = 0; i != 10; ++i)
         BOOST_TEST_EQ(generated[i], static_cast<int>(42 + i));
 
-#if !defined(BOOST_NO_CXX11_LAMBDAS) && !defined(BOOST_NO_CXX11_AUTO_DECLARATIONS)
+#if !defined(BOOST_NO_CXX11_LAMBDAS) && !defined(BOOST_NO_CXX11_AUTO_DECLARATIONS) \
+ && !defined(BOOST_NO_CXX11_DECLTYPE_N3276)
     // test the iterator with lambda expressions
     int num = 42;
     auto lambda_generator = [&num] { return num++; };
