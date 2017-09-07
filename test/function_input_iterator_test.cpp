@@ -90,7 +90,7 @@ int main()
         BOOST_TEST_EQ(generated[i], static_cast<int>(42 + i));
 
 #if !defined(BOOST_NO_CXX11_LAMBDAS) && !defined(BOOST_NO_CXX11_AUTO_DECLARATIONS) \
- && !defined(BOOST_NO_CXX11_DECLTYPE_N3276)
+    && (!defined(BOOST_NO_CXX11_DECLTYPE_N3276) || defined(BOOST_RESULT_OF_USE_DECLTYPE))
     // test the iterator with lambda expressions
     int num = 42;
     auto lambda_generator = [&num] { return num++; };
