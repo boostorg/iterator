@@ -111,7 +111,7 @@ int main()
         back_inserter(generated)
         );
 
-    BOOST_TEST_EQ(generated.size(), 10);
+    BOOST_TEST_EQ(generated.size(), 10u);
     for(std::size_t i = 0; i != 10; ++i)
         BOOST_TEST_EQ(generated[i], static_cast<int>(42 + i));
 #endif // BOOST_NO_CXX11_LAMBDAS
