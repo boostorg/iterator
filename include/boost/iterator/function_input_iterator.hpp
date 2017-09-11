@@ -20,19 +20,38 @@
 #include <boost/optional/optional.hpp>
 #include <boost/utility/result_of.hpp>
 
+#ifdef BOOST_RESULT_OF_USE_TR1
+#include <boost/type_traits/is_function.hpp>
+#endif
+
 namespace boost {
 
 namespace iterators {
 
     namespace impl {
 
+        // Computes the return type of an lvalue-call with an empty argument,
+        // i.e. decltype(declval<F&>()()). F should be a nullary lvalue-callable
+        // or function.
+        template <class F>
+        struct result_of_nullary_lvalue_call
+        {
+            typedef typename result_of<
+#ifdef BOOST_RESULT_OF_USE_TR1
+                typename mpl::if_<is_function<F>, F&, F>::type()
+#else
+                F&()
+#endif
+            >::type type;
+        };
+
         template <class Function, class Input>
         class function_input_iterator
             : public iterator_facade<
             function_input_iterator<Function, Input>,
-            typename result_of<Function ()>::type,
+            typename result_of_nullary_lvalue_call<Function>::type,
             single_pass_traversal_tag,
-            typename result_of<Function ()>::type const &
+            typename result_of_nullary_lvalue_call<Function>::type const &
             >
         {
         public:
@@ -48,7 +67,7 @@ namespace iterators {
                 ++state;
             }
 
-            typename result_of<Function ()>::type const &
+            typename result_of_nullary_lvalue_call<Function>::type const &
                 dereference() const {
                     return (value ? value : value = (*f)()).get();
             }
@@ -60,7 +79,7 @@ namespace iterators {
         private:
             Function * f;
             Input state;
-            mutable optional<typename result_of<Function ()>::type> value;
+            mutable optional<typename result_of_nullary_lvalue_call<Function>::type> value;
         };
 
         template <class Function, class Input>
