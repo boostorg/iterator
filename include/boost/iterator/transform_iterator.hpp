@@ -47,7 +47,11 @@ namespace iterators {
         // the function.
         typedef typename ia_dflt_help<
             Reference
+#ifdef BOOST_RESULT_OF_USE_TR1
           , result_of<const UnaryFunc(typename std::iterator_traits<Iterator>::reference)>
+#else
+          , result_of<const UnaryFunc&(typename std::iterator_traits<Iterator>::reference)>
+#endif
         >::type reference;
 
         // To get the default for Value: remove any reference on the
