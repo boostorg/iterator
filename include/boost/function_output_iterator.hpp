@@ -3,10 +3,11 @@
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 
-// This is a deprecated header left for backward compatibility
-
 #ifndef BOOST_FUNCTION_OUTPUT_ITERATOR_HPP
 #define BOOST_FUNCTION_OUTPUT_ITERATOR_HPP
+
+// This is a deprecated header left for backward compatibility.
+// Use boost/iterator/function_output_iterator.hpp instead.
 
 #include <boost/iterator/function_output_iterator.hpp>
 
