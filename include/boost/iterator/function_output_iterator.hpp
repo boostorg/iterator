@@ -8,8 +8,8 @@
 // 27 Feb 2001   Jeremy Siek
 //      Initial checkin.
 
-#ifndef BOOST_FUNCTION_OUTPUT_ITERATOR_HPP
-#define BOOST_FUNCTION_OUTPUT_ITERATOR_HPP
+#ifndef BOOST_ITERATOR_FUNCTION_OUTPUT_ITERATOR_HPP
+#define BOOST_ITERATOR_FUNCTION_OUTPUT_ITERATOR_HPP
 
 #include <iterator>
 
@@ -59,4 +59,4 @@ using iterators::make_function_output_iterator;
 
 } // namespace boost
 
-#endif // BOOST_FUNCTION_OUTPUT_ITERATOR_HPP
+#endif // BOOST_ITERATOR_FUNCTION_OUTPUT_ITERATOR_HPP
