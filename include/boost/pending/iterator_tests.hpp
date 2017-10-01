@@ -20,11 +20,11 @@
 //              (David Abrahams)
 
 # include <iterator>
-# include <boost/assert.hpp>
 # include <boost/static_assert.hpp>
 # include <boost/concept_archetype.hpp> // for detail::dummy_constructor
 # include <boost/implicit_cast.hpp>
 # include <boost/core/ignore_unused.hpp>
+# include <boost/core/lightweight_test.hpp>
 # include <boost/type_traits/is_same.hpp>
 # include <boost/type_traits/is_pointer.hpp>
 # include <boost/type_traits/is_reference.hpp>
@@ -53,28 +53,28 @@ template <class Iterator, class T>
 void trivial_iterator_test(const Iterator i, const Iterator j, T val)
 {
   Iterator k;
-  BOOST_ASSERT(i == i);
-  BOOST_ASSERT(j == j);
-  BOOST_ASSERT(i != j);
+  BOOST_TEST(i == i);
+  BOOST_TEST(j == j);
+  BOOST_TEST(i != j);
 #ifdef BOOST_NO_STD_ITERATOR_TRAITS
   T v = *i;
 #else
   typename std::iterator_traits<Iterator>::value_type v = *i;
 #endif
-  BOOST_ASSERT(v == val);
+  BOOST_TEST(v == val);
   boost::ignore_unused(v);
 #if 0
   // hmm, this will give a warning for transform_iterator...  perhaps
   // this should be separated out into a stand-alone test since there
   // are several situations where it can't be used, like for
   // integer_range::iterator.
-  BOOST_ASSERT(v == i->foo());
+  BOOST_TEST(v == i->foo());
 #endif
   k = i;
-  BOOST_ASSERT(k == k);
-  BOOST_ASSERT(k == i);
-  BOOST_ASSERT(k != j);
-  BOOST_ASSERT(*k == val);
+  BOOST_TEST(k == k);
+  BOOST_TEST(k == i);
+  BOOST_TEST(k != j);
+  BOOST_TEST(*k == val);
   boost::ignore_unused(k);
 }
 
@@ -94,8 +94,8 @@ void input_iterator_test(Iterator i, T v1, T v2)
 {
   Iterator i1(i);
 
-  BOOST_ASSERT(i == i1);
-  BOOST_ASSERT(!(i != i1));
+  BOOST_TEST(i == i1);
+  BOOST_TEST(!(i != i1));
 
   // I can see no generic way to create an input iterator
   // that is in the domain of== of i and != i.
@@ -104,24 +104,24 @@ void input_iterator_test(Iterator i, T v1, T v2)
   //
   //   Iterator i2;
   //
-  //   BOOST_ASSERT(i != i2);
-  //   BOOST_ASSERT(!(i == i2));
+  //   BOOST_TEST(i != i2);
+  //   BOOST_TEST(!(i == i2));
 
-  BOOST_ASSERT(*i1 == v1);
-  BOOST_ASSERT(*i  == v1);
+  BOOST_TEST(*i1 == v1);
+  BOOST_TEST(*i  == v1);
 
   // we cannot test for equivalence of (void)++i & (void)i++
   // as i is only guaranteed to be single pass.
-  BOOST_ASSERT(*i++ == v1);
+  BOOST_TEST(*i++ == v1);
   boost::ignore_unused(i1);
 
   i1 = i;
 
-  BOOST_ASSERT(i == i1);
-  BOOST_ASSERT(!(i != i1));
+  BOOST_TEST(i == i1);
+  BOOST_TEST(!(i != i1));
 
-  BOOST_ASSERT(*i1 == v2);
-  BOOST_ASSERT(*i  == v2);
+  BOOST_TEST(*i1 == v2);
+  BOOST_TEST(*i  == v2);
   boost::ignore_unused(i1);
 
   // i is dereferencable, so it must be incrementable.
@@ -164,15 +164,15 @@ void forward_iterator_test(Iterator i, T v1, T v2)
 
   Iterator i1 = i, i2 = i;
 
-  BOOST_ASSERT(i == i1++);
-  BOOST_ASSERT(i != ++i2);
+  BOOST_TEST(i == i1++);
+  BOOST_TEST(i != ++i2);
 
   trivial_iterator_test(i, i1, v1);
   trivial_iterator_test(i, i2, v1);
 
   ++i;
-  BOOST_ASSERT(i == i1);
-  BOOST_ASSERT(i == i2);
+  BOOST_TEST(i == i1);
+  BOOST_TEST(i == i2);
   ++i1;
   ++i2;
 
@@ -194,15 +194,15 @@ void bidirectional_iterator_test(Iterator i, T v1, T v2)
 
   Iterator i1 = i, i2 = i;
 
-  BOOST_ASSERT(i == i1--);
-  BOOST_ASSERT(i != --i2);
+  BOOST_TEST(i == i1--);
+  BOOST_TEST(i != --i2);
 
   trivial_iterator_test(i, i1, v2);
   trivial_iterator_test(i, i2, v2);
 
   --i;
-  BOOST_ASSERT(i == i1);
-  BOOST_ASSERT(i == i2);
+  BOOST_TEST(i == i1);
+  BOOST_TEST(i == i2);
   ++i1;
   ++i2;
 
@@ -226,30 +226,30 @@ void random_access_iterator_test(Iterator i, int N, TrueVals vals)
   boost::ignore_unused<value_type>();
 
   for (c = 0; c < N-1; ++c) {
-    BOOST_ASSERT(i == j + c);
-    BOOST_ASSERT(*i == vals[c]);
-    BOOST_ASSERT(*i == boost::implicit_cast<value_type>(j[c]));
-    BOOST_ASSERT(*i == *(j + c));
-    BOOST_ASSERT(*i == *(c + j));
+    BOOST_TEST(i == j + c);
+    BOOST_TEST(*i == vals[c]);
+    BOOST_TEST(*i == boost::implicit_cast<value_type>(j[c]));
+    BOOST_TEST(*i == *(j + c));
+    BOOST_TEST(*i == *(c + j));
     ++i;
-    BOOST_ASSERT(i > j);
-    BOOST_ASSERT(i >= j);
-    BOOST_ASSERT(j <= i);
-    BOOST_ASSERT(j < i);
+    BOOST_TEST(i > j);
+    BOOST_TEST(i >= j);
+    BOOST_TEST(j <= i);
+    BOOST_TEST(j < i);
   }
 
   Iterator k = j + N - 1;
   for (c = 0; c < N-1; ++c) {
-    BOOST_ASSERT(i == k - c);
-    BOOST_ASSERT(*i == vals[N - 1 - c]);
-    BOOST_ASSERT(*i == boost::implicit_cast<value_type>(j[N - 1 - c]));
+    BOOST_TEST(i == k - c);
+    BOOST_TEST(*i == vals[N - 1 - c]);
+    BOOST_TEST(*i == boost::implicit_cast<value_type>(j[N - 1 - c]));
     Iterator q = k - c;
     boost::ignore_unused(q);
-    BOOST_ASSERT(*i == *q);
-    BOOST_ASSERT(i > j);
-    BOOST_ASSERT(i >= j);
-    BOOST_ASSERT(j <= i);
-    BOOST_ASSERT(j < i);
+    BOOST_TEST(*i == *q);
+    BOOST_TEST(i > j);
+    BOOST_TEST(i >= j);
+    BOOST_TEST(j <= i);
+    BOOST_TEST(j < i);
     --i;
   }
 }
@@ -258,16 +258,16 @@ void random_access_iterator_test(Iterator i, int N, TrueVals vals)
 template <class Iterator, class ConstIterator>
 void const_nonconst_iterator_test(Iterator i, ConstIterator j)
 {
-  BOOST_ASSERT(i != j);
-  BOOST_ASSERT(j != i);
+  BOOST_TEST(i != j);
+  BOOST_TEST(j != i);
 
   ConstIterator k(i);
-  BOOST_ASSERT(k == i);
-  BOOST_ASSERT(i == k);
+  BOOST_TEST(k == i);
+  BOOST_TEST(i == k);
 
   k = i;
-  BOOST_ASSERT(k == i);
-  BOOST_ASSERT(i == k);
+  BOOST_TEST(k == i);
+  BOOST_TEST(i == k);
   boost::ignore_unused(k);
 }
 

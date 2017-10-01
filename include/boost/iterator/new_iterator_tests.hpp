@@ -40,7 +40,7 @@
 
 # include <boost/iterator/detail/config_def.hpp>
 # include <boost/detail/is_incrementable.hpp>
-# include <boost/detail/lightweight_test.hpp>
+# include <boost/core/lightweight_test.hpp>
 
 namespace boost {
 
