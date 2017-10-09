@@ -29,16 +29,18 @@
 //              (David Abrahams)
 
 # include <iterator>
-# include <boost/type_traits.hpp>
 # include <boost/static_assert.hpp>
 # include <boost/concept_archetype.hpp> // for detail::dummy_constructor
 # include <boost/pending/iterator_tests.hpp>
 # include <boost/iterator/is_readable_iterator.hpp>
 # include <boost/iterator/is_lvalue_iterator.hpp>
+# include <boost/type_traits/is_same.hpp>
+# include <boost/mpl/bool.hpp>
+# include <boost/mpl/and.hpp>
 
 # include <boost/iterator/detail/config_def.hpp>
 # include <boost/detail/is_incrementable.hpp>
-# include <boost/detail/lightweight_test.hpp>
+# include <boost/core/lightweight_test.hpp>
 
 namespace boost {
 
