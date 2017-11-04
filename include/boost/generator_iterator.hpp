@@ -36,7 +36,7 @@ class generator_iterator
     > super_t;
 
  public:
-    generator_iterator() {}
+    generator_iterator() : m_g(0) {}
     generator_iterator(Generator* g) : m_g(g), m_value((*m_g)()) {}
 
     void increment()
