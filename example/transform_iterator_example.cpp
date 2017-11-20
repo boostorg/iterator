@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <iostream>
 #include <boost/iterator/transform_iterator.hpp>
+#include <boost/functional.hpp>
 
 // What a bummer. We can't use std::binder1st with transform iterator
 // because it does not have a default constructor. Here's a version
@@ -17,7 +18,8 @@ namespace boost {
 
   template <class Operation> 
   class binder1st
-    : public std::unary_function<typename Operation::second_argument_type,
+    : public boost::functional::detail::unary_function<
+                                 typename Operation::second_argument_type,
                                  typename Operation::result_type> {
   protected:
     Operation op;
