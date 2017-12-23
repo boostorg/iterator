@@ -16,8 +16,8 @@
 
 #include "boost/shared_container_iterator.hpp"
 #include "boost/shared_ptr.hpp"
+#include <boost/core/lightweight_test.hpp>
 #include <vector>
-#include <cassert>
 
 struct resource {
   static int count;
@@ -41,24 +41,24 @@ void set_range(iterator& i, iterator& end)  {
   
   i = iterator(objs->begin(),objs);
   end = iterator(objs->end(),objs);
-  assert(resource::count == 6);
+  BOOST_TEST_EQ(resource::count, 6);
 }
 
 
 int main() {
 
-  assert(resource::count == 0);
+  BOOST_TEST_EQ(resource::count, 0);
   
   {
     iterator i;
     {
       iterator end;
       set_range(i,end);
-      assert(resource::count == 6);
+      BOOST_TEST_EQ(resource::count, 6);
     }
-    assert(resource::count == 6);
+    BOOST_TEST_EQ(resource::count, 6);
   }
-  assert(resource::count == 0);
+  BOOST_TEST_EQ(resource::count, 0);
   
-  return 0;
+  return boost::report_errors();
 }
