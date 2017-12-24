@@ -13,10 +13,12 @@
 #if BOOST_WORKAROUND(BOOST_MSVC, < 1600)
 
 BOOST_PRAGMA_MESSAGE("Skipping test on msvc-9.0 and below")
+int main() {}
 
-int main()
-{
-}
+#elif defined(BOOST_GCC) && __cplusplus < 201100
+
+BOOST_PRAGMA_MESSAGE("Skipping test on g++ in C++03 mode")
+int main() {}
 
 #else
 
@@ -28,4 +30,4 @@ int main()
 
 #include "detail/zip_iterator_test.ipp"
 
-#endif // #if BOOST_WORKAROUND
+#endif
