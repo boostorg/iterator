@@ -16,8 +16,13 @@ struct new_random_access
 {};
 
 struct new_iterator
-  : public std::iterator< new_random_access, int >
 {
+  typedef new_random_access iterator_category;
+  typedef int value_type;
+  typedef std::ptrdiff_t difference_type;
+  typedef int* pointer;
+  typedef int& reference;
+
   int& operator*() const { return *m_x; }
   new_iterator& operator++() { return *this; }
   new_iterator operator++(int) { return *this; }
@@ -36,8 +41,13 @@ struct new_iterator
 new_iterator operator+(std::ptrdiff_t, new_iterator x) { return x; }
 
 struct old_iterator
-  : public std::iterator<std::random_access_iterator_tag, int>
 {
+  typedef std::random_access_iterator_tag iterator_category;
+  typedef int value_type;
+  typedef std::ptrdiff_t difference_type;
+  typedef int* pointer;
+  typedef int& reference;
+
   int& operator*() const { return *m_x; }
   old_iterator& operator++() { return *this; }
   old_iterator operator++(int) { return *this; }
