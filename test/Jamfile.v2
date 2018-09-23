@@ -60,6 +60,7 @@ test-suite iterator
     [ run advance_test.cpp ]
     [ run distance_test.cpp ]
     [ compile adl_test.cpp ]
+    [ compile range_distance_compat_test.cpp ]
 
     [ run shared_iterator_test.cpp ]
 ;
