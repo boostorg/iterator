@@ -67,7 +67,8 @@ matrix:
       env: TOOLSET=clang CXXSTD=03,11,14,1z
 
 install:
-  - BOOST_BRANCH=develop && [ "$TRAVIS_BRANCH" == "master" ] && BOOST_BRANCH=master || true
+  - BOOST_BRANCH=develop
+  - if [ "$TRAVIS_BRANCH" = "master" ]; then BOOST_BRANCH=master; fi
   - cd ..
   - git clone -b $BOOST_BRANCH --depth 1 https://github.com/boostorg/boost.git boost-root
   - cd boost-root
@@ -83,7 +84,8 @@ install:
   - ./b2 headers
 
 script:
-  - ./b2 -j3 libs/iterator/test toolset=$TOOLSET cxxstd=$CXXSTD
+  - BUILD_JOBS=`(nproc || sysctl -n hw.ncpu) 2> /dev/null`
+  - ./b2 -j $BUILD_JOBS libs/iterator/test toolset=$TOOLSET cxxstd=$CXXSTD
 
 notifications:
   email:
