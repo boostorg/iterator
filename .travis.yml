@@ -67,6 +67,7 @@ matrix:
       env: TOOLSET=clang CXXSTD=03,11,14,1z
 
 install:
+  - GIT_FETCH_JOBS=8
   - BOOST_BRANCH=develop
   - if [ "$TRAVIS_BRANCH" = "master" ]; then BOOST_BRANCH=master; fi
   - cd ..
@@ -77,9 +78,9 @@ install:
   - git submodule init tools/boost_install
   - git submodule init libs/headers
   - git submodule init libs/config
-  - git submodule update --jobs 4
+  - git submodule update --jobs $GIT_FETCH_JOBS
   - cp -r $TRAVIS_BUILD_DIR/* libs/iterator
-  - python tools/boostdep/depinst/depinst.py iterator
+  - python tools/boostdep/depinst/depinst.py --git_args "--jobs $GIT_FETCH_JOBS" iterator
   - ./bootstrap.sh
   - ./b2 headers
 
