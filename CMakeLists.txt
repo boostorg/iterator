@@ -8,6 +8,8 @@
 
 cmake_minimum_required(VERSION 3.5)
 
+option( BOOST_ITERATOR_INCLUDE_TESTS "Add boost iterator tests" OFF )
+
 project(BoostIterator LANGUAGES CXX)
 
 add_library(boost_iterator INTERFACE)
@@ -32,3 +34,8 @@ target_link_libraries(boost_iterator
         Boost::type_traits
         Boost::utility
 )
+
+if( BOOST_ITERATOR_INCLUDE_TESTS )
+    add_subdirectory( test )
+endif()
+
