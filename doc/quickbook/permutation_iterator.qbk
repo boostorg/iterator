@@ -84,18 +84,18 @@ The output is:
 
 
 The source code for this example can be found
-[@../example/permutation_iter_example.cpp here].
+[example_link permutation_iter_example.cpp..here].
 
 [h2 Reference]
 
 [h3 Synopsis]
 
   template< class ElementIterator
-	  , class IndexIterator
-	  , class ValueT        = use_default
-	  , class CategoryT     = use_default
-	  , class ReferenceT    = use_default
-	  , class DifferenceT   = use_default >
+    , class IndexIterator
+    , class ValueT        = use_default
+    , class CategoryT     = use_default
+    , class ReferenceT    = use_default
+    , class DifferenceT   = use_default >
   class permutation_iterator
   {
   public:
@@ -104,10 +104,10 @@ The source code for this example can be found
 
     template< class OEIter, class OIIter, class V, class C, class R, class D >
     permutation_iterator(
-	permutation_iterator<OEIter, OIIter, V, C, R, D> const& r
-	, typename enable_if_convertible<OEIter, ElementIterator>::type* = 0
-	, typename enable_if_convertible<OIIter, IndexIterator>::type* = 0
-	);
+      permutation_iterator<OEIter, OIIter, V, C, R, D> const& r
+      , typename enable_if_convertible<OEIter, ElementIterator>::type* = 0
+      , typename enable_if_convertible<OIIter, IndexIterator>::type* = 0
+    );
     reference operator*() const;
     permutation_iterator& operator++();
     ElementIterator const& base() const;
@@ -173,10 +173,10 @@ following operations.
 
     template< class OEIter, class OIIter, class V, class C, class R, class D >
     permutation_iterator(
-	permutation_iterator<OEIter, OIIter, V, C, R, D> const& r
-	, typename enable_if_convertible<OEIter, ElementIterator>::type* = 0
-	, typename enable_if_convertible<OIIter, IndexIterator>::type* = 0
-	);
+      permutation_iterator<OEIter, OIIter, V, C, R, D> const& r
+      , typename enable_if_convertible<OEIter, ElementIterator>::type* = 0
+      , typename enable_if_convertible<OIIter, IndexIterator>::type* = 0
+    );
 
 [*Effects: ] Constructs `m_elt` from `r.m_elt` and
   `m_order` from `y.m_order`.
