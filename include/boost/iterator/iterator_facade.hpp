@@ -368,6 +368,23 @@ namespace iterators {
             return *m_iter;
         }
 
+        // conversion operator to value_type
+        // it is needed in case reference is not convertible to value_type by a standard conversion sequence
+        // (e.g. boost::multi_array iterators)
+        template<typename T = value_type>
+        operator typename boost::iterators::enable_if<
+            mpl::not_<
+                is_same<
+                        typename remove_reference<T>::type,
+                        typename remove_reference<reference>::type
+                >
+            >
+            , value_type
+        >::type() const
+        {
+            return *m_iter;
+        }
+
         operator_brackets_proxy& operator=(value_type const& val)
         {
             *m_iter = val;
