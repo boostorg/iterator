@@ -27,7 +27,7 @@
 #include <iterator>
 #include <vector>
 #include <list>
-#include <boost/detail/lightweight_test.hpp>
+#include <boost/core/lightweight_test.hpp>
 #include <iostream>
 
 // A UDT for which we can specialize std::iterator_traits<element*> on

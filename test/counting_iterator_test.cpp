@@ -45,7 +45,7 @@
 #endif 
 #include <vector>
 #include <list>
-#include <boost/detail/lightweight_test.hpp>
+#include <boost/core/lightweight_test.hpp>
 #ifndef BOOST_NO_SLIST
 # ifdef BOOST_SLIST_HEADER
 #   include BOOST_SLIST_HEADER
