@@ -8,6 +8,7 @@
 #include <functional>
 #include <iostream>
 #include <boost/iterator/filter_iterator.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/cstdlib.hpp> // for exit_success
 
 struct is_positive_number {
@@ -42,11 +43,11 @@ int main()
   // Another example using make_filter_iterator()
   std::copy(
       boost::make_filter_iterator(
-          std::bind2nd(std::greater<int>(), -2)
+          boost::bind(std::greater<int>(), boost::placeholders::_1, -2)
         , numbers, numbers + N)
             
     , boost::make_filter_iterator(
-          std::bind2nd(std::greater<int>(), -2)
+          boost::bind(std::greater<int>(), boost::placeholders::_1, -2)
         , numbers + N, numbers + N)
       
     , std::ostream_iterator<int>(std::cout, " ")

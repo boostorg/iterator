@@ -50,11 +50,11 @@ the integers greater than `-2`.
       // Another example using make_filter_iterator()
       std::copy(
           boost::make_filter_iterator(
-              std::bind2nd(std::greater<int>(), -2)
+              std::bind(std::greater<int>(), std::placeholders::_1, -2)
             , numbers, numbers + N)
 
         , boost::make_filter_iterator(
-              std::bind2nd(std::greater<int>(), -2)
+              std::bind(std::greater<int>(), std::placeholders::_1, -2)
             , numbers + N, numbers + N)
 
         , std::ostream_iterator<int>(std::cout, " ")
