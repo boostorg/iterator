@@ -21,13 +21,13 @@ int main(int, char*[])
     pointers_to_chars[i] = &characters[i];
 
   // Example of using indirect_iterator
-  
+
   boost::indirect_iterator<char**, char>
     indirect_first(pointers_to_chars), indirect_last(pointers_to_chars + N);
 
   std::copy(indirect_first, indirect_last, std::ostream_iterator<char>(std::cout, ","));
   std::cout << std::endl;
-  
+
 
   // Example of making mutable and constant indirect iterators
 
@@ -48,13 +48,13 @@ int main(int, char*[])
             std::ostream_iterator<char>(std::cout, ","));
   std::cout << std::endl;
 
-  
+
   // Example of using make_indirect_iterator()
 
-  std::copy(boost::make_indirect_iterator(pointers_to_chars), 
+  std::copy(boost::make_indirect_iterator(pointers_to_chars),
             boost::make_indirect_iterator(pointers_to_chars + N),
             std::ostream_iterator<char>(std::cout, ","));
   std::cout << std::endl;
-  
+
   return 0;
 }

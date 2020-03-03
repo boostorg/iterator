@@ -41,6 +41,6 @@ int main()
     boost::function_requires< boost_concepts::InteroperableIteratorConcept<rev_iter, c_rev_iter> >();
   }
 #endif
-  
+
   return boost::exit_success;
 }

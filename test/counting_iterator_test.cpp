@@ -42,7 +42,7 @@
 #include <stdlib.h>
 #ifndef __BORLANDC__
 # include <boost/tuple/tuple.hpp>
-#endif 
+#endif
 #include <vector>
 #include <list>
 #include <boost/core/lightweight_test.hpp>
@@ -94,13 +94,13 @@ void category_test(
 
     // Pick a random position internal to the range
     difference_type offset = (unsigned)rand() % distance;
-    
+
 #ifdef BOOST_NO_LIMITS_COMPILE_TIME_CONSTANTS
     BOOST_TEST(offset >= 0);
-#else 
+#else
     assert_nonnegative<difference_type>::test(offset);
 #endif
-    
+
     CountingIterator internal = start;
     std::advance(internal, offset);
 
@@ -111,7 +111,7 @@ void category_test(
     std::pair<CountingIterator,CountingIterator> xy(
         std::equal_range(start, finish, *internal));
     CountingIterator x = xy.first, y = xy.second;
-    
+
     BOOST_TEST(boost::detail::distance(x, y) == 1);
 
     // Show that values outside the range can't be found
@@ -122,7 +122,7 @@ void category_test(
     std::vector<value_type> v;
     for (value_type z = *start; !(z == *finish); ++z)
         v.push_back(z);
-    
+
     // Note that this test requires a that the first argument is
     // dereferenceable /and/ a valid iterator prior to the first argument
     boost::random_access_iterator_test(start, v.size(), v.begin());
@@ -200,11 +200,11 @@ void test_container(Container* = 0)  // default arg works around MSVC bug
     Container c(1 + (unsigned)rand() % 1673);
 
     const typename Container::iterator start = c.begin();
-    
+
     // back off by 1 to leave room for dereferenceable value at the end
     typename Container::iterator finish = start;
     std::advance(finish, c.size() - 1);
-    
+
     test(start, finish);
 
     typedef typename Container::const_iterator const_iterator;
@@ -283,14 +283,14 @@ int main()
     test_integer3<long, std::random_access_iterator_tag, int>();
     test_integer<my_int2>();
     test_integer<my_int3>();
-    
+
    // Some tests on container iterators, to prove we handle a few different categories
     test_container<std::vector<int> >();
     test_container<std::list<int> >();
 # ifndef BOOST_NO_SLIST
     test_container<BOOST_STD_EXTENSION_NAMESPACE::slist<int> >();
 # endif
-    
+
     // Also prove that we can handle raw pointers.
     int array[2000];
     test(boost::make_counting_iterator(array), boost::make_counting_iterator(array+2000-1));

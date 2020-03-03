@@ -19,10 +19,10 @@ int main()
 {
   int numbers_[] = { 0, -1, 4, -3, 5, 8, -2 };
   const int N = sizeof(numbers_)/sizeof(int);
-  
+
   typedef int* base_iterator;
   base_iterator numbers(numbers_);
-  
+
   // Example using make_filter_iterator()
   std::copy(boost::make_filter_iterator<is_positive_number>(numbers, numbers + N),
             boost::make_filter_iterator<is_positive_number>(numbers + N, numbers + N),
@@ -32,7 +32,7 @@ int main()
   // Example using filter_iterator
   typedef boost::filter_iterator<is_positive_number, base_iterator>
     FilterIter;
-  
+
   is_positive_number predicate;
   FilterIter filter_iter_first(predicate, numbers, numbers + N);
   FilterIter filter_iter_last(predicate, numbers + N, numbers + N);
@@ -45,15 +45,15 @@ int main()
       boost::make_filter_iterator(
           boost::bind(std::greater<int>(), boost::placeholders::_1, -2)
         , numbers, numbers + N)
-            
+
     , boost::make_filter_iterator(
           boost::bind(std::greater<int>(), boost::placeholders::_1, -2)
         , numbers + N, numbers + N)
-      
+
     , std::ostream_iterator<int>(std::cout, " ")
   );
-  
+
   std::cout << std::endl;
-  
+
   return boost::exit_success;
 }

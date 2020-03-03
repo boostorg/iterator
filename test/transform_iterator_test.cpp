@@ -42,7 +42,7 @@ struct mult_functor {
   int a;
 };
 
-struct adaptable_mult_functor 
+struct adaptable_mult_functor
  : mult_functor
 {
   typedef int result_type;
@@ -249,7 +249,7 @@ main()
     );
 
     boost::constant_lvalue_iterator_test(
-        boost::make_transform_iterator((pair_t*)values, const_select_first()), x[0]); 
+        boost::make_transform_iterator((pair_t*)values, const_select_first()), x[0]);
 
     boost::non_const_lvalue_iterator_test(
         boost::make_transform_iterator((pair_t*)values, select_first()), x[0], 17);

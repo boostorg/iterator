@@ -149,7 +149,7 @@ BOOST_MPL_HAS_XXX_TRAIT_NAMED_DEF(has_element_type, element_type, true)
 int
 main()
 {
-  dummyT array[] = { dummyT(0), dummyT(1), dummyT(2), 
+  dummyT array[] = { dummyT(0), dummyT(1), dummyT(2),
                      dummyT(3), dummyT(4), dummyT(5) };
   const int N = sizeof(array)/sizeof(dummyT);
 

@@ -27,7 +27,7 @@ void iterop_test()
 {
     typedef boost::permutation_iterator< double*, int const* > permutation_type;
     typedef boost::permutation_iterator< double const*, int const* > permutation_const_type;
-  
+
     BOOST_CONCEPT_ASSERT((
       boost_concepts::InteroperableIteratorConcept<
            permutation_type
@@ -58,7 +58,7 @@ void permutation_test()
   permutation_type begin = boost::make_permutation_iterator( elements.begin(), indices.begin() );
   permutation_type it = begin;
   permutation_type end = boost::make_permutation_iterator( elements.begin(), indices.end() );
-  
+
   BOOST_CHECK( it == begin );
   BOOST_CHECK( it != end );
 
@@ -70,7 +70,7 @@ void permutation_test()
   }
 
   it = begin;
-  for( int i1 = 0; i1 < index_size - 1 ; ++++i1, ++++it ) 
+  for( int i1 = 0; i1 < index_size - 1 ; ++++i1, ++++it )
   {
     index_type::iterator i_it2 = indices.begin();
     std::advance( i_it2, i1 );
@@ -79,14 +79,14 @@ void permutation_test()
 
   it = begin;
   std::advance(it, index_size);
-  for( index_type::iterator i_it3 = indices.end(); it != begin; ) 
+  for( index_type::iterator i_it3 = indices.end(); it != begin; )
   {
     BOOST_CHECK( *--it == elements[ *--i_it3 ] );
   }
-  
+
   it = begin;
   std::advance(it, index_size);
-  for( int i2 = 0; i2 < index_size - 1; i2+=2, --it ) 
+  for( int i2 = 0; i2 < index_size - 1; i2+=2, --it )
   {
     index_type::iterator i_it4 = --indices.end();
     std::advance( i_it4, -i2 );

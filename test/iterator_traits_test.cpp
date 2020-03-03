@@ -40,7 +40,7 @@ struct my_iterator1
     : boost::forward_iterator_helper<my_iterator1, char, long, const char*, const char&>
 {
     my_iterator1(const char* p) : m_p(p) {}
-    
+
     bool operator==(const my_iterator1& rhs) const
         { return this->m_p == rhs.m_p; }
 
@@ -63,9 +63,9 @@ struct my_iterator2
     typedef const char* pointer;
     typedef const char& reference;
     typedef std::forward_iterator_tag iterator_category;
-    
+
     my_iterator2(const char* p) : m_p(p) {}
-    
+
     bool operator==(const my_iterator2& rhs) const
         { return this->m_p == rhs.m_p; }
 
@@ -189,7 +189,7 @@ maybe_pointer_test<int*, int, std::ptrdiff_t, int*, int&, std::random_access_ite
 
 non_pointer_test<my_iterator1, char, long, const char*, const char&, std::forward_iterator_tag>
        my_iterator1_test;
-                    
+
 non_pointer_test<my_iterator2, char, long, const char*, const char&, std::forward_iterator_tag>
        my_iterator2_test;
 
@@ -205,7 +205,7 @@ int main()
     {
         std::list<int> l(length);
         BOOST_TEST(boost::detail::distance(l.begin(), l.end()) == length);
-        
+
         std::vector<int> v(length);
         BOOST_TEST(boost::detail::distance(v.begin(), v.end()) == length);
 

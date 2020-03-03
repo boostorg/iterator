@@ -19,7 +19,7 @@ struct string_appender
     string_appender(std::string& s)
         : m_str(&s)
     {}
-    
+
     void operator()(const std::string& x) const
     {
         *m_str += x;
@@ -37,9 +37,9 @@ int main(int, char*[])
   x.push_back("!");
 
   std::string s = "";
-  std::copy(x.begin(), x.end(), 
+  std::copy(x.begin(), x.end(),
             boost::make_function_output_iterator(string_appender(s)));
-  
+
   std::cout << s << std::endl;
 
   return 0;
