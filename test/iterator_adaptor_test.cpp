@@ -56,7 +56,7 @@ struct ptr_iterator
       , V*
       , V
       , boost::random_access_traversal_tag
-#if BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x551))
+#if BOOST_WORKAROUND(BOOST_BORLANDC, BOOST_TESTED_AT(0x551))
       , V&
 #endif
    >
@@ -67,7 +67,7 @@ private:
       , V*
       , V
       , boost::random_access_traversal_tag
-#if BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x551))
+#if BOOST_WORKAROUND(BOOST_BORLANDC, BOOST_TESTED_AT(0x551))
       , V&
 #endif
     > super_t;
@@ -226,7 +226,7 @@ main()
 # endif
 #endif
 
-#if !BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x564)) // borland drops constness
+#if !BOOST_WORKAROUND(BOOST_BORLANDC, BOOST_TESTED_AT(0x564)) // borland drops constness
     test = static_assert_same<Iter1::pointer, int const*>::value;
 #endif
   }
@@ -238,7 +238,7 @@ main()
 
     test = static_assert_same<Iter::value_type, int>::value;
     test = static_assert_same<Iter::reference, int const&>::value;
-#if !BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x564)) // borland drops constness
+#if !BOOST_WORKAROUND(BOOST_BORLANDC, BOOST_TESTED_AT(0x564)) // borland drops constness
     test = static_assert_same<Iter::pointer, int const*>::value;
 #endif
 
