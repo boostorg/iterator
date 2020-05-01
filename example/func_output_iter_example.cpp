@@ -12,7 +12,7 @@
 #include <string>
 #include <vector>
 
-#include <boost/function_output_iterator.hpp>
+#include <boost/iterator/function_output_iterator.hpp>
 
 struct string_appender
 {
