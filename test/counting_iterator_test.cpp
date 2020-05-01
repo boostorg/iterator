@@ -17,7 +17,7 @@
 
 #include <boost/config.hpp>
 
-#ifdef __BORLANDC__     // Borland mis-detects our custom iterators
+#ifdef BOOST_BORLANDC     // Borland mis-detects our custom iterators
 # pragma warn -8091     // template argument ForwardIterator passed to '...' is a output iterator
 # pragma warn -8071     // Conversion may lose significant digits (due to counting_iterator<char> += n).
 #endif
@@ -40,7 +40,7 @@
 #include <climits>
 #include <iterator>
 #include <stdlib.h>
-#ifndef __BORLANDC__
+#ifndef BOOST_BORLANDC
 # include <boost/tuple/tuple.hpp>
 #endif
 #include <vector>
