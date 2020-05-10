@@ -76,7 +76,7 @@ struct my_iterator2
 
 // Used to prove that we're not overly confused by the existence of
 // std::iterator<> in the hierarchy under MSVC6 - we should find that
-// boost::detail::iterator_traits<my_iterator3>::difference_type is int.
+// std::iterator_traits<my_iterator3>::difference_type is int.
 struct my_iterator3 : my_iterator1
 {
     typedef int difference_type;
@@ -107,8 +107,8 @@ template <class Iterator,
     class value_type, class difference_type, class pointer, class reference, class category>
 struct non_portable_tests
 {
-    typedef typename boost::detail::iterator_traits<Iterator>::pointer test_pt;
-    typedef typename boost::detail::iterator_traits<Iterator>::reference test_rt;
+    typedef typename std::iterator_traits<Iterator>::pointer test_pt;
+    typedef typename std::iterator_traits<Iterator>::reference test_rt;
     typedef typename assert_same<test_pt, pointer>::type a1;
     typedef typename assert_same<test_rt, reference>::type a2;
 };
@@ -117,8 +117,8 @@ template <class Iterator,
     class value_type, class difference_type, class pointer, class reference, class category>
 struct portable_tests
 {
-    typedef typename boost::detail::iterator_traits<Iterator>::difference_type test_dt;
-    typedef typename boost::detail::iterator_traits<Iterator>::iterator_category test_cat;
+    typedef typename std::iterator_traits<Iterator>::difference_type test_dt;
+    typedef typename std::iterator_traits<Iterator>::iterator_category test_cat;
     typedef typename assert_same<test_dt, difference_type>::type a1;
     typedef typename assert_same<test_cat, category>::type a2;
 };
@@ -129,7 +129,7 @@ template <class Iterator,
 struct input_iterator_test
     : portable_tests<Iterator,value_type,difference_type,pointer,reference,category>
 {
-    typedef typename boost::detail::iterator_traits<Iterator>::value_type test_vt;
+    typedef typename std::iterator_traits<Iterator>::value_type test_vt;
     typedef typename assert_same<test_vt, value_type>::type a1;
 };
 
@@ -203,15 +203,15 @@ int main()
     for (int length = 3; length < 100; length += length / 3)
     {
         std::list<int> l(length);
-        BOOST_TEST(boost::detail::distance(l.begin(), l.end()) == length);
+        BOOST_TEST(std::distance(l.begin(), l.end()) == length);
 
         std::vector<int> v(length);
-        BOOST_TEST(boost::detail::distance(v.begin(), v.end()) == length);
+        BOOST_TEST(std::distance(v.begin(), v.end()) == length);
 
-        BOOST_TEST(boost::detail::distance(&ints[0], ints + length) == length);
-        BOOST_TEST(boost::detail::distance(my_iterator1(chars), my_iterator1(chars + length)) == length);
-        BOOST_TEST(boost::detail::distance(my_iterator2(chars), my_iterator2(chars + length)) == length);
-        BOOST_TEST(boost::detail::distance(my_iterator3(chars), my_iterator3(chars + length)) == length);
+        BOOST_TEST(std::distance(&ints[0], ints + length) == length);
+        BOOST_TEST(std::distance(my_iterator1(chars), my_iterator1(chars + length)) == length);
+        BOOST_TEST(std::distance(my_iterator2(chars), my_iterator2(chars + length)) == length);
+        BOOST_TEST(std::distance(my_iterator3(chars), my_iterator3(chars + length)) == length);
     }
     return boost::report_errors();
 }

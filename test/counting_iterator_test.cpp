@@ -86,9 +86,9 @@ void category_test(
     std::random_access_iterator_tag)
 {
     typedef typename
-        boost::detail::iterator_traits<CountingIterator>::difference_type
+        std::iterator_traits<CountingIterator>::difference_type
         difference_type;
-    difference_type distance = boost::detail::distance(start, finish);
+    difference_type distance = std::distance(start, finish);
 
     // Pick a random position internal to the range
     difference_type offset = (unsigned)rand() % distance;
@@ -110,7 +110,7 @@ void category_test(
         std::equal_range(start, finish, *internal));
     CountingIterator x = xy.first, y = xy.second;
 
-    BOOST_TEST(boost::detail::distance(x, y) == 1);
+    BOOST_TEST(std::distance(x, y) == 1);
 
     // Show that values outside the range can't be found
     BOOST_TEST(!std::binary_search(start, boost::prior(finish), *finish));
