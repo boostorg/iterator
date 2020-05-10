@@ -26,13 +26,11 @@
 # pragma warning(disable:4786) // identifier truncated in debug info
 #endif
 
-#include <boost/detail/iterator.hpp>
 #include <boost/iterator/counting_iterator.hpp>
 #include <boost/iterator/new_iterator_tests.hpp>
 
 #include <boost/next_prior.hpp>
 #include <boost/mpl/if.hpp>
-#include <boost/detail/iterator.hpp>
 #include <boost/detail/workaround.hpp>
 #include <boost/limits.hpp>
 

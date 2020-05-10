@@ -20,7 +20,6 @@
 //              reference type from operator* (David Abrahams)
 //  19 Jan 2001 Initial version with iterator operators (David Abrahams)
 
-#include <boost/detail/iterator.hpp>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/operators.hpp>
 #include <boost/static_assert.hpp>
