@@ -152,6 +152,13 @@ struct maybe_pointer_test
 input_iterator_test<std::istream_iterator<int>, int, std::ptrdiff_t, int*, int&, std::input_iterator_tag>
         istream_iterator_test;
 
+// C++20 changed ostream_iterator::difference_type to ptrdiff_t.
+#if __cplusplus >= 202002L && (\
+    (defined(BOOST_LIBSTDCXX_VERSION) && BOOST_LIBSTDCXX_VERSION >= 100100) \
+    )
+#define BOOST_ITERATOR_CXX20_OSTREAM_ITERATOR
+#endif
+
 #if BOOST_WORKAROUND(BOOST_BORLANDC, <= 0x564) && !defined(__SGI_STL_PORT)
 typedef ::std::char_traits<char>::off_type distance;
 non_pointer_test<std::ostream_iterator<int>,int,
@@ -163,6 +170,10 @@ non_pointer_test<std::ostream_iterator<int>,
 #elif BOOST_WORKAROUND(__DECCXX_VER, BOOST_TESTED_AT(70190006))
 non_pointer_test<std::ostream_iterator<int>,
     int, long, int*, int&, std::output_iterator_tag>
+        ostream_iterator_test;
+#elif defined(BOOST_ITERATOR_CXX20_OSTREAM_ITERATOR)
+non_pointer_test<std::ostream_iterator<int>,
+    void, std::ptrdiff_t, void, void, std::output_iterator_tag>
         ostream_iterator_test;
 #else
 non_pointer_test<std::ostream_iterator<int>,
