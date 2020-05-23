@@ -23,6 +23,7 @@
 #include <boost/type_traits/is_same.hpp>
 #include <boost/operators.hpp>
 #include <boost/static_assert.hpp>
+#include <boost/config.hpp>
 #include <iterator>
 #include <vector>
 #include <list>
@@ -153,7 +154,8 @@ input_iterator_test<std::istream_iterator<int>, int, std::ptrdiff_t, int*, int&,
         istream_iterator_test;
 
 // C++20 changed ostream_iterator::difference_type to ptrdiff_t.
-#if __cplusplus >= 202002L && (\
+// Note: gcc 10.1 defines __cplusplus to a value less than 202002L, but greater than 201703L in C++20 mode.
+#if __cplusplus > 201703L && (\
     (defined(BOOST_LIBSTDCXX_VERSION) && BOOST_LIBSTDCXX_VERSION >= 100100) \
     )
 #define BOOST_ITERATOR_CXX20_OSTREAM_ITERATOR
