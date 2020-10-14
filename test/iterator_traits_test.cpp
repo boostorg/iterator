@@ -157,7 +157,8 @@ input_iterator_test<std::istream_iterator<int>, int, std::ptrdiff_t, int*, int&,
 // Note: gcc 10.1 defines __cplusplus to a value less than 202002L, but greater than 201703L in C++20 mode.
 #if __cplusplus > 201703L && (\
     (defined(BOOST_LIBSTDCXX_VERSION) && BOOST_LIBSTDCXX_VERSION >= 100100) \
-    )
+    ) || \
+    defined(_MSVC_LANG) && _MSVC_LANG > 201703L && _MSVC_STL_UPDATE >= 202010L
 #define BOOST_ITERATOR_CXX20_OSTREAM_ITERATOR
 #endif
 
