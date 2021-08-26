@@ -12,6 +12,7 @@
 #define BOOST_ITERATOR_FUNCTION_OUTPUT_ITERATOR_HPP
 
 #include <iterator>
+#include <utility>
 
 namespace boost {
 namespace iterators {
@@ -28,8 +29,9 @@ namespace iterators {
 
     explicit function_output_iterator() {}
 
-    explicit function_output_iterator(const UnaryFunction& f)
-      : m_f(f) {}
+    template <class T>
+    explicit function_output_iterator(T&& f)
+      : m_f(std::forward<T>(f)) {}
 
     struct output_proxy {
       output_proxy(UnaryFunction& f) : m_f(f) { }
@@ -48,8 +50,9 @@ namespace iterators {
 
   template <class UnaryFunction>
   inline function_output_iterator<UnaryFunction>
-  make_function_output_iterator(const UnaryFunction& f = UnaryFunction()) {
-    return function_output_iterator<UnaryFunction>(f);
+  make_function_output_iterator(UnaryFunction&& f = UnaryFunction()) {
+    return function_output_iterator<UnaryFunction>(
+        std::forward<UnaryFunction>(f));
   }
 
 } // namespace iterators
