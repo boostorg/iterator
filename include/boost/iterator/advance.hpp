@@ -9,6 +9,7 @@
 
 #include <boost/config.hpp>
 #include <boost/iterator/iterator_categories.hpp>
+#include <boost/type_traits/is_unsigned.hpp>
 
 namespace boost {
 namespace iterators {
@@ -30,10 +31,24 @@ namespace iterators {
 
         template <typename BidirectionalIterator, typename Distance>
         inline BOOST_CXX14_CONSTEXPR void
-        advance_impl(
+        advance_bidirectional_impl(
             BidirectionalIterator& it
           , Distance n
-          , bidirectional_traversal_tag
+          , boost::true_type // unsigned distance
+        )
+        {
+            while (n > 0) {
+                ++it;
+                --n;
+            }
+        }
+
+        template <typename BidirectionalIterator, typename Distance>
+        inline BOOST_CXX14_CONSTEXPR void
+        advance_bidirectional_impl(
+            BidirectionalIterator& it
+          , Distance n
+          , boost::false_type // signed distance
         )
         {
             if (n >= 0) {
@@ -48,6 +63,19 @@ namespace iterators {
                     ++n;
                 }
             }
+        }
+
+        template <typename BidirectionalIterator, typename Distance>
+        inline BOOST_CXX14_CONSTEXPR void
+        advance_impl(
+            BidirectionalIterator& it
+          , Distance n
+          , bidirectional_traversal_tag
+        )
+        {
+            advance_bidirectional_impl(
+                it, n, typename is_unsigned<Distance>::type()
+            );
         }
 
         template <typename RandomAccessIterator, typename Distance>
