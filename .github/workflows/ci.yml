@@ -235,10 +235,6 @@ jobs:
             cxxstd: "03,11,14,17,2a"
             os: macos-10.15
 
-          - name: CMake tests
-            cmake_tests: 1
-            os: ubuntu-20.04
-
     runs-on: ${{matrix.os}}
     container: ${{matrix.container}}
 
@@ -402,15 +398,3 @@ jobs:
             fi
             B2_ARGS+=("libs/$LIBRARY/test")
             ./b2 "${B2_ARGS[@]}"
-
-      - name: Run CMake tests
-        if: matrix.cmake_tests
-        run: |
-            cd ../boost-root
-            mkdir __build_static__ && cd __build_static__
-            cmake ../libs/$LIBRARY/test/test_cmake
-            cmake --build . --target boost_${LIBRARY}_cmake_self_test -j $BUILD_JOBS
-            cd ..
-            mkdir __build_shared__ && cd __build_shared__
-            cmake -DBUILD_SHARED_LIBS=On ../libs/$LIBRARY/test/test_cmake
-            cmake --build . --target boost_${LIBRARY}_cmake_self_test -j $BUILD_JOBS
