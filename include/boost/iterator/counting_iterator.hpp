@@ -15,12 +15,11 @@
 # include <boost/type_traits/is_arithmetic.hpp>
 # endif
 # include <boost/type_traits/is_integral.hpp>
-# include <boost/iterator/iterator_adaptor.hpp>
+# include <boost/type_traits/type_identity.hpp>
+# include <boost/type_traits/conditional.hpp>
+# include <boost/type_traits/integral_constant.hpp>
 # include <boost/detail/numeric_traits.hpp>
-# include <boost/mpl/bool.hpp>
-# include <boost/mpl/if.hpp>
-# include <boost/mpl/identity.hpp>
-# include <boost/mpl/eval_if.hpp>
+# include <boost/iterator/iterator_adaptor.hpp>
 
 namespace boost {
 namespace iterators {
@@ -63,23 +62,23 @@ namespace detail
 
   template <class T>
   struct is_numeric
-    : mpl::bool_<(::boost::iterators::detail::is_numeric_impl<T>::value)>
+    : boost::integral_constant<bool, ::boost::iterators::detail::is_numeric_impl<T>::value>
   {};
 
 #  if defined(BOOST_HAS_LONG_LONG)
   template <>
   struct is_numeric< ::boost::long_long_type>
-    : mpl::true_ {};
+    : boost::true_type {};
 
   template <>
   struct is_numeric< ::boost::ulong_long_type>
-    : mpl::true_ {};
+    : boost::true_type {};
 #  endif
 
   // Some compilers fail to have a numeric_limits specialization
   template <>
   struct is_numeric<wchar_t>
-    : mpl::true_ {};
+    : true_type {};
 
   template <class T>
   struct numeric_difference
@@ -92,20 +91,20 @@ namespace detail
   {
       typedef typename detail::ia_dflt_help<
           CategoryOrTraversal
-        , mpl::eval_if<
-              is_numeric<Incrementable>
-            , mpl::identity<random_access_traversal_tag>
+        , typename boost::conditional<
+              is_numeric<Incrementable>::value
+            , boost::type_identity<random_access_traversal_tag>
             , iterator_traversal<Incrementable>
-          >
+          >::type
       >::type traversal;
 
       typedef typename detail::ia_dflt_help<
           Difference
-        , mpl::eval_if<
-              is_numeric<Incrementable>
+        , typename boost::conditional<
+              is_numeric<Incrementable>::value
             , numeric_difference<Incrementable>
             , iterator_difference<Incrementable>
-          >
+          >::type
       >::type difference;
 
       typedef iterator_adaptor<
@@ -201,13 +200,13 @@ class counting_iterator
     difference_type
     distance_to(counting_iterator<OtherIncrementable, CategoryOrTraversal, Difference> const& y) const
     {
-      typedef typename mpl::if_<
-          detail::is_numeric<Incrementable>
-        , detail::number_distance<difference_type, Incrementable, OtherIncrementable>
-        , detail::iterator_distance<difference_type, Incrementable, OtherIncrementable>
-      >::type d;
+        typedef typename boost::conditional<
+            detail::is_numeric<Incrementable>::value
+          , detail::number_distance<difference_type, Incrementable, OtherIncrementable>
+          , detail::iterator_distance<difference_type, Incrementable, OtherIncrementable>
+        >::type d;
 
-      return d::distance(this->base(), y.base());
+        return d::distance(this->base(), y.base());
     }
 };
 
