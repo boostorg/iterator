@@ -67,11 +67,21 @@ namespace detail
 
 #  if defined(BOOST_HAS_LONG_LONG)
   template <>
-  struct is_numeric< ::boost::long_long_type>
+  struct is_numeric<boost::long_long_type>
     : boost::true_type {};
 
   template <>
-  struct is_numeric< ::boost::ulong_long_type>
+  struct is_numeric<boost::ulong_long_type>
+    : boost::true_type {};
+#  endif
+
+#  if defined(BOOST_HAS_INT128)
+  template <>
+  struct is_numeric<boost::int128_type>
+    : boost::true_type {};
+
+  template <>
+  struct is_numeric<boost::uint128_type>
     : boost::true_type {};
 #  endif
 
@@ -85,6 +95,21 @@ namespace detail
   {
       typedef typename boost::detail::numeric_traits<T>::difference_type type;
   };
+
+#  if defined(BOOST_HAS_INT128)
+  // std::numeric_limits, which is used by numeric_traits, is not specialized for __int128 in some standard libraries
+  template <>
+  struct numeric_difference<boost::int128_type>
+  {
+      typedef boost::int128_type type;
+  };
+
+  template <>
+  struct numeric_difference<boost::uint128_type>
+  {
+      typedef boost::int128_type type;
+  };
+#  endif
 
   template <class Incrementable, class CategoryOrTraversal, class Difference>
   struct counting_iterator_base

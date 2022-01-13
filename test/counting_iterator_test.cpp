@@ -271,8 +271,12 @@ int main()
     test_integer<long>();
     test_integer<unsigned long>();
 #if defined(BOOST_HAS_LONG_LONG)
-    test_integer< ::boost::long_long_type>();
-    test_integer< ::boost::ulong_long_type>();
+    test_integer<boost::long_long_type>();
+    test_integer<boost::ulong_long_type>();
+#endif
+#if defined(BOOST_HAS_INT128)
+    test_integer<boost::int128_type>();
+    test_integer<boost::uint128_type>();
 #endif
 
     // Test user-defined type.
