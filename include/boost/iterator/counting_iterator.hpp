@@ -5,6 +5,16 @@
 #ifndef COUNTING_ITERATOR_DWA200348_HPP
 # define COUNTING_ITERATOR_DWA200348_HPP
 
+# include <boost/config.hpp>
+# include <boost/static_assert.hpp>
+# ifndef BOOST_NO_LIMITS_COMPILE_TIME_CONSTANTS
+# include <limits>
+# elif !BOOST_WORKAROUND(BOOST_BORLANDC, BOOST_TESTED_AT(0x551))
+# include <boost/type_traits/is_convertible.hpp>
+# else
+# include <boost/type_traits/is_arithmetic.hpp>
+# endif
+# include <boost/type_traits/is_integral.hpp>
 # include <boost/iterator/iterator_adaptor.hpp>
 # include <boost/detail/numeric_traits.hpp>
 # include <boost/mpl/bool.hpp>
@@ -45,7 +55,7 @@ namespace detail
            && boost::is_convertible<T,int>::value
       ));
 #  else
-    BOOST_STATIC_CONSTANT(bool, value = ::boost::is_arithmetic<T>::value);
+      BOOST_STATIC_CONSTANT(bool, value = ::boost::is_arithmetic<T>::value);
 #  endif
 
 # endif
@@ -76,8 +86,6 @@ namespace detail
   {
       typedef typename boost::detail::numeric_traits<T>::difference_type type;
   };
-
-  BOOST_STATIC_ASSERT(is_numeric<int>::value);
 
   template <class Incrementable, class CategoryOrTraversal, class Difference>
   struct counting_iterator_base
@@ -161,9 +169,9 @@ class counting_iterator
  public:
     typedef typename super_t::difference_type difference_type;
 
-    counting_iterator() { }
+    BOOST_DEFAULTED_FUNCTION(counting_iterator(), {})
 
-    counting_iterator(counting_iterator const& rhs) : super_t(rhs.base()) {}
+    BOOST_DEFAULTED_FUNCTION(counting_iterator(counting_iterator const& rhs), : super_t(rhs.base()) {})
 
     counting_iterator(Incrementable x)
       : super_t(x)
@@ -179,6 +187,8 @@ class counting_iterator
       : super_t(t.base())
     {}
 # endif
+
+    BOOST_DEFAULTED_FUNCTION(counting_iterator& operator=(counting_iterator const& rhs), { *static_cast< super_t* >(this) = static_cast< super_t const& >(rhs); return *this; })
 
  private:
 
@@ -206,8 +216,8 @@ template <class Incrementable>
 inline counting_iterator<Incrementable>
 make_counting_iterator(Incrementable x)
 {
-  typedef counting_iterator<Incrementable> result_t;
-  return result_t(x);
+    typedef counting_iterator<Incrementable> result_t;
+    return result_t(x);
 }
 
 } // namespace iterators
