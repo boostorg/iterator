@@ -27,7 +27,7 @@ class node_iter
     typedef boost::iterator_adaptor<
         node_iter<Value>, Value*, boost::use_default, boost::forward_traversal_tag
     > super_t;
-    
+
  public:
     node_iter()
       : super_t(0) {}
@@ -43,14 +43,14 @@ class node_iter
             boost::is_convertible<OtherValue*,Value*>
           , enabler
         >::type = enabler()
-# endif 
+# endif
     )
       : super_t(other.base()) {}
 
 # if !BOOST_WORKAROUND(__GNUC__, == 2)
- private: // GCC2 can't grant friendship to template member functions    
+ private: // GCC2 can't grant friendship to template member functions
     friend class boost::iterator_core_access;
-# endif     
+# endif
     void increment() { this->base_reference() = this->base()->next(); }
 };
 

@@ -38,15 +38,15 @@ class node_iter
             boost::is_convertible<OtherValue*,Value*>
           , enabler
         >::type = enabler()
-# endif 
+# endif
     )
       : m_node(other.m_node) {}
 
 
 # if !BOOST_WORKAROUND(__GNUC__, == 2)
- private: // GCC2 can't grant friendship to template member functions    
+ private: // GCC2 can't grant friendship to template member functions
     friend class boost::iterator_core_access;
-# endif 
+# endif
 
     template <class OtherValue>
     bool equal(node_iter<OtherValue> const& other) const
@@ -63,7 +63,7 @@ class node_iter
 # else
  private:
     template <class> friend class node_iter;
-# endif 
+# endif
     Value* m_node;
 };
 
