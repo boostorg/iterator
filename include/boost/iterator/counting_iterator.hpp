@@ -180,6 +180,10 @@ class counting_iterator
     {}
 # endif
 
+#ifndef BOOST_NO_CXX11_DEFAULTED_FUNCTIONS
+    counting_iterator& operator=(counting_iterator const&) = default;
+#endif
+
  private:
 
     typename super_t::reference dereference() const
