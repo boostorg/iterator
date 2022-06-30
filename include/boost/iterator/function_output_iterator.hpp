@@ -16,7 +16,9 @@
 #include <boost/core/enable_if.hpp>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/type_traits/remove_cv.hpp>
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
 #include <boost/type_traits/remove_reference.hpp>
+#endif
 
 namespace boost {
 namespace iterators {
