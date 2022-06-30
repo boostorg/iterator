@@ -14,10 +14,6 @@
 #include <iterator>
 #include <boost/config.hpp>
 
-#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
-#include <utility>
-#endif
-
 namespace boost {
 namespace iterators {
 
@@ -46,7 +42,7 @@ namespace iterators {
       }
 #else
       template <class T> output_proxy& operator=(T&& value) {
-        m_f(std::forward<T>(value));
+        m_f(static_cast< T&& >(value));
         return *this;
       }
 #endif
