@@ -12,6 +12,11 @@
 #define BOOST_ITERATOR_FUNCTION_OUTPUT_ITERATOR_HPP
 
 #include <iterator>
+#include <boost/config.hpp>
+
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+#include <utility>
+#endif
 
 namespace boost {
 namespace iterators {
@@ -33,10 +38,19 @@ namespace iterators {
 
     struct output_proxy {
       output_proxy(UnaryFunction& f) : m_f(f) { }
+
+#ifdef BOOST_NO_CXX11_RVALUE_REFERENCES
       template <class T> output_proxy& operator=(const T& value) {
         m_f(value);
         return *this;
       }
+#else
+      template <class T> output_proxy& operator=(T&& value) {
+        m_f(std::forward<T>(value));
+        return *this;
+      }
+#endif
+
       UnaryFunction& m_f;
     };
     output_proxy operator*() { return output_proxy(m_f); }
