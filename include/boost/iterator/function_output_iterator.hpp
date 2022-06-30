@@ -19,20 +19,11 @@ namespace iterators {
 
   template <class UnaryFunction>
   class function_output_iterator {
+  private:
     typedef function_output_iterator self;
-  public:
-    typedef std::output_iterator_tag iterator_category;
-    typedef void                value_type;
-    typedef void                difference_type;
-    typedef void                pointer;
-    typedef void                reference;
 
-    explicit function_output_iterator() {}
-
-    explicit function_output_iterator(const UnaryFunction& f)
-      : m_f(f) {}
-
-    struct output_proxy {
+    class output_proxy {
+    public:
       explicit output_proxy(UnaryFunction& f) : m_f(f) { }
 
 #ifdef BOOST_NO_CXX11_RVALUE_REFERENCES
@@ -47,11 +38,26 @@ namespace iterators {
       }
 #endif
 
+    private:
       UnaryFunction& m_f;
     };
+
+  public:
+    typedef std::output_iterator_tag iterator_category;
+    typedef void                value_type;
+    typedef void                difference_type;
+    typedef void                pointer;
+    typedef void                reference;
+
+    explicit function_output_iterator() {}
+
+    explicit function_output_iterator(const UnaryFunction& f)
+      : m_f(f) {}
+
     output_proxy operator*() { return output_proxy(m_f); }
     self& operator++() { return *this; }
     self& operator++(int) { return *this; }
+
   private:
     UnaryFunction m_f;
   };
