@@ -37,7 +37,7 @@ namespace iterators {
       : m_f(f) {}
 
     struct output_proxy {
-      output_proxy(UnaryFunction& f) : m_f(f) { }
+      explicit output_proxy(UnaryFunction& f) : m_f(f) { }
 
 #ifdef BOOST_NO_CXX11_RVALUE_REFERENCES
       template <class T> output_proxy& operator=(const T& value) {
