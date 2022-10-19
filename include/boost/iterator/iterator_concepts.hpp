@@ -69,7 +69,7 @@ namespace boost_concepts
   private:
       ValueType v;
       Iterator i;
-  };
+  }
 
   template <
       typename Iterator

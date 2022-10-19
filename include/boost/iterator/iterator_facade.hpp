@@ -753,7 +753,7 @@ namespace iterators {
         Derived operator-(difference_type x) const
         {
             Derived result(this->derived());
-            return result -= x;
+            return result - x;
         }
     };
 
