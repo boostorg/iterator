@@ -138,11 +138,11 @@ struct iterator_category_with_traversal
     // Make sure this isn't used to build any categories where
     // convertibility to Traversal is redundant.  Should just use the
     // Category element in that case.
-    BOOST_STATIC_ASSERT(
+    BOOST_STATIC_ASSERT((
         !is_convertible<
               typename iterator_category_to_traversal<Category>::type
             , Traversal
-          >::value);
+          >::value));
 
     BOOST_STATIC_ASSERT(is_iterator_category<Category>::value);
     BOOST_STATIC_ASSERT(!is_iterator_category<Traversal>::value);
