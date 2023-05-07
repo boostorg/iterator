@@ -144,8 +144,8 @@ struct iterator_category_with_traversal
             , Traversal
           >::value);
 
-    BOOST_STATIC_ASSERT(is_iterator_category<Category>::type::value);
-    BOOST_STATIC_ASSERT(!is_iterator_category<Traversal>::type::value);
+    BOOST_STATIC_ASSERT(is_iterator_category<Category>::value);
+    BOOST_STATIC_ASSERT(!is_iterator_category<Traversal>::value);
     BOOST_STATIC_ASSERT(!is_iterator_traversal<Category>::value);
 #  if !BOOST_WORKAROUND(BOOST_MSVC, BOOST_TESTED_AT(1310))
     BOOST_STATIC_ASSERT(is_iterator_traversal<Traversal>::value);
@@ -157,7 +157,7 @@ struct iterator_category_with_traversal
 template <class Traversal, class ValueParam, class Reference>
 struct facade_iterator_category_impl
 {
-    BOOST_STATIC_ASSERT(!is_iterator_category<Traversal>::type::value);
+    BOOST_STATIC_ASSERT(!is_iterator_category<Traversal>::value);
 
     typedef typename iterator_facade_default_category<
         Traversal,ValueParam,Reference
