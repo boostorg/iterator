@@ -26,6 +26,8 @@ test-suite iterator
     [ run zip_iterator_test_std_tuple.cpp ]
     [ run zip_iterator_test_std_pair.cpp ]
 
+    [ run is_iterator.cpp ]
+
     # These tests should work for just about everything.
     [ compile is_lvalue_iterator.cpp ]
     [ compile is_readable_iterator.cpp ]
