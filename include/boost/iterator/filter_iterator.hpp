@@ -13,12 +13,12 @@
 #include <boost/type_traits/is_class.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/config.hpp>
+#include <boost/config/workaround.hpp>
 
 #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
-#include <utility>
-#define BOOST_ITERATOR_DETAIL_MOVE(x) std::move(x)
+#define BOOST_ITERATOR_DETAIL_MOVE(_type, _value) static_cast< _type&& >(_value)
 #else
-#define BOOST_ITERATOR_DETAIL_MOVE(x) x
+#define BOOST_ITERATOR_DETAIL_MOVE(_type, _value) _value
 #endif
 
 namespace boost {
@@ -62,13 +62,13 @@ namespace iterators {
       filter_iterator() { }
 
       filter_iterator(Predicate f, Iterator x, Iterator end_ = Iterator())
-          : super_t(BOOST_ITERATOR_DETAIL_MOVE(x)), m_predicate(BOOST_ITERATOR_DETAIL_MOVE(f)), m_end(BOOST_ITERATOR_DETAIL_MOVE(end_))
+          : super_t(BOOST_ITERATOR_DETAIL_MOVE(Iterator, x)), m_predicate(BOOST_ITERATOR_DETAIL_MOVE(Predicate, f)), m_end(BOOST_ITERATOR_DETAIL_MOVE(Iterator, end_))
       {
           satisfy_predicate();
       }
 
       filter_iterator(Iterator x, Iterator end_ = Iterator())
-        : super_t(BOOST_ITERATOR_DETAIL_MOVE(x)), m_predicate(), m_end(BOOST_ITERATOR_DETAIL_MOVE(end_))
+        : super_t(BOOST_ITERATOR_DETAIL_MOVE(Iterator, x)), m_predicate(), m_end(BOOST_ITERATOR_DETAIL_MOVE(Iterator, end_))
       {
         // Pro8 is a little too aggressive about instantiating the
         // body of this function.
@@ -119,7 +119,7 @@ namespace iterators {
   inline filter_iterator<Predicate,Iterator>
   make_filter_iterator(Predicate f, Iterator x, Iterator end = Iterator())
   {
-      return filter_iterator<Predicate,Iterator>(BOOST_ITERATOR_DETAIL_MOVE(f),BOOST_ITERATOR_DETAIL_MOVE(x),BOOST_ITERATOR_DETAIL_MOVE(end));
+      return filter_iterator<Predicate,Iterator>(BOOST_ITERATOR_DETAIL_MOVE(Predicate, f), BOOST_ITERATOR_DETAIL_MOVE(Iterator, x), BOOST_ITERATOR_DETAIL_MOVE(Iterator, end));
   }
 
   template <class Predicate, class Iterator>
@@ -131,7 +131,7 @@ namespace iterators {
       >::type x
     , Iterator end = Iterator())
   {
-      return filter_iterator<Predicate,Iterator>(BOOST_ITERATOR_DETAIL_MOVE(x),BOOST_ITERATOR_DETAIL_MOVE(end));
+      return filter_iterator<Predicate,Iterator>(BOOST_ITERATOR_DETAIL_MOVE(Iterator, x), BOOST_ITERATOR_DETAIL_MOVE(Iterator, end));
   }
 
 } // namespace iterators
