@@ -13,6 +13,13 @@
 #include <boost/type_traits/is_class.hpp>
 #include <boost/static_assert.hpp>
 
+#if __cplusplus >= 201103L
+#include <utility>
+#define STD_MOVE(x) std::move(x)
+#else
+#define STD_MOVE(x) x
+#endif
+
 namespace boost {
 namespace iterators {
 
@@ -54,13 +61,13 @@ namespace iterators {
       filter_iterator() { }
 
       filter_iterator(Predicate f, Iterator x, Iterator end_ = Iterator())
-          : super_t(std::move(x)), m_predicate(std::move(f)), m_end(std::move(end_))
+          : super_t(STD_MOVE(x)), m_predicate(STD_MOVE(f)), m_end(STD_MOVE(end_))
       {
           satisfy_predicate();
       }
 
       filter_iterator(Iterator x, Iterator end_ = Iterator())
-        : super_t(std::move(x)), m_predicate(), m_end(std::move(end_))
+        : super_t(STD_MOVE(x)), m_predicate(), m_end(STD_MOVE(end_))
       {
         // Pro8 is a little too aggressive about instantiating the
         // body of this function.
@@ -111,7 +118,7 @@ namespace iterators {
   inline filter_iterator<Predicate,Iterator>
   make_filter_iterator(Predicate f, Iterator x, Iterator end = Iterator())
   {
-      return filter_iterator<Predicate,Iterator>(std::move(f),std::move(x),std::move(end));
+      return filter_iterator<Predicate,Iterator>(STD_MOVE(f),STD_MOVE(x),STD_MOVE(end));
   }
 
   template <class Predicate, class Iterator>
@@ -123,7 +130,7 @@ namespace iterators {
       >::type x
     , Iterator end = Iterator())
   {
-      return filter_iterator<Predicate,Iterator>(std::move(x),std::move(end));
+      return filter_iterator<Predicate,Iterator>(STD_MOVE(x),STD_MOVE(end));
   }
 
 } // namespace iterators
