@@ -54,13 +54,13 @@ namespace iterators {
       filter_iterator() { }
 
       filter_iterator(Predicate f, Iterator x, Iterator end_ = Iterator())
-          : super_t(x), m_predicate(f), m_end(end_)
+          : super_t(std::move(x)), m_predicate(std::move(f)), m_end(std::move(end_))
       {
           satisfy_predicate();
       }
 
       filter_iterator(Iterator x, Iterator end_ = Iterator())
-        : super_t(x), m_predicate(), m_end(end_)
+        : super_t(std::move(x)), m_predicate(), m_end(std::move(end_))
       {
         // Pro8 is a little too aggressive about instantiating the
         // body of this function.
@@ -111,7 +111,7 @@ namespace iterators {
   inline filter_iterator<Predicate,Iterator>
   make_filter_iterator(Predicate f, Iterator x, Iterator end = Iterator())
   {
-      return filter_iterator<Predicate,Iterator>(f,x,end);
+      return filter_iterator<Predicate,Iterator>(std::move(f),std::move(x),std::move(end));
   }
 
   template <class Predicate, class Iterator>
@@ -123,7 +123,7 @@ namespace iterators {
       >::type x
     , Iterator end = Iterator())
   {
-      return filter_iterator<Predicate,Iterator>(x,end);
+      return filter_iterator<Predicate,Iterator>(std::move(x),std::move(end));
   }
 
 } // namespace iterators
