@@ -12,6 +12,14 @@
 
 #include <boost/type_traits/is_class.hpp>
 #include <boost/static_assert.hpp>
+#include <boost/config.hpp>
+
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+#include <utility>
+#define BOOST_ITERATOR_DETAIL_MOVE(x) std::move(x)
+#else
+#define BOOST_ITERATOR_DETAIL_MOVE(x) x
+#endif
 
 namespace boost {
 namespace iterators {
@@ -54,13 +62,13 @@ namespace iterators {
       filter_iterator() { }
 
       filter_iterator(Predicate f, Iterator x, Iterator end_ = Iterator())
-          : super_t(x), m_predicate(f), m_end(end_)
+          : super_t(BOOST_ITERATOR_DETAIL_MOVE(x)), m_predicate(BOOST_ITERATOR_DETAIL_MOVE(f)), m_end(BOOST_ITERATOR_DETAIL_MOVE(end_))
       {
           satisfy_predicate();
       }
 
       filter_iterator(Iterator x, Iterator end_ = Iterator())
-        : super_t(x), m_predicate(), m_end(end_)
+        : super_t(BOOST_ITERATOR_DETAIL_MOVE(x)), m_predicate(), m_end(BOOST_ITERATOR_DETAIL_MOVE(end_))
       {
         // Pro8 is a little too aggressive about instantiating the
         // body of this function.
@@ -111,7 +119,7 @@ namespace iterators {
   inline filter_iterator<Predicate,Iterator>
   make_filter_iterator(Predicate f, Iterator x, Iterator end = Iterator())
   {
-      return filter_iterator<Predicate,Iterator>(f,x,end);
+      return filter_iterator<Predicate,Iterator>(BOOST_ITERATOR_DETAIL_MOVE(f),BOOST_ITERATOR_DETAIL_MOVE(x),BOOST_ITERATOR_DETAIL_MOVE(end));
   }
 
   template <class Predicate, class Iterator>
@@ -123,7 +131,7 @@ namespace iterators {
       >::type x
     , Iterator end = Iterator())
   {
-      return filter_iterator<Predicate,Iterator>(x,end);
+      return filter_iterator<Predicate,Iterator>(BOOST_ITERATOR_DETAIL_MOVE(x),BOOST_ITERATOR_DETAIL_MOVE(end));
   }
 
 } // namespace iterators
@@ -132,5 +140,7 @@ using iterators::filter_iterator;
 using iterators::make_filter_iterator;
 
 } // namespace boost
+
+#undef BOOST_ITERATOR_DETAIL_MOVE
 
 #endif // BOOST_FILTER_ITERATOR_23022003THW_HPP
