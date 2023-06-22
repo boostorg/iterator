@@ -12,6 +12,7 @@
 
 #include <boost/type_traits/is_class.hpp>
 #include <boost/static_assert.hpp>
+#include <boost/config.hpp>
 
 #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
 #include <utility>
