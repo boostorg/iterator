@@ -8,7 +8,6 @@
 #include <boost/iterator/new_iterator_tests.hpp>
 
 #include <boost/call_traits.hpp>
-#include <boost/polymorphic_cast.hpp>
 #include <boost/type_traits/is_convertible.hpp>
 #include <boost/core/enable_if.hpp>
 
@@ -188,12 +187,12 @@ struct derived : base
 
     virtual void assign(const base &b)
     {
-        state = boost::polymorphic_cast<const derived *>(&b)->state;
+        state = dynamic_cast<const derived &>(b).state;
     }
 
     virtual bool equal(const base &b) const
     {
-        return state == boost::polymorphic_cast<const derived *>(&b)->state;
+        return state == dynamic_cast<const derived &>(b).state;
     }
 
     int state;
