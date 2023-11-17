@@ -17,7 +17,6 @@ target_link_libraries(boost_iterator
         Boost::assert
         Boost::concept_check
         Boost::config
-        Boost::conversion
         Boost::core
         Boost::detail
         Boost::function_types
