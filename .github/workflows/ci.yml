@@ -288,6 +288,10 @@ jobs:
             cxxstd: "11,14,17,2a"
             os: macos-11
 
+          - name: CMake tests
+            cmake_tests: 1
+            os: ubuntu-20.04
+
     timeout-minutes: 60
     runs-on: ${{matrix.os}}
     container: ${{matrix.container}}
@@ -486,3 +490,19 @@ jobs:
             fi
             B2_ARGS+=("libs/$LIBRARY/test")
             ./b2 "${B2_ARGS[@]}"
+
+      - name: Run CMake tests
+        if: matrix.cmake_tests
+        run: |
+            if [ -n "${{matrix.macosx_version_min}}" ]
+            then
+                export MACOSX_DEPLOYMENT_TARGET="${{matrix.macosx_version_min}}"
+            fi
+            cd ../boost-root
+            mkdir __build_static__ && cd __build_static__
+            cmake ../libs/$LIBRARY/test/test_cmake
+            cmake --build . --target boost_${LIBRARY}_cmake_self_test -j $BUILD_JOBS
+            cd ..
+            mkdir __build_shared__ && cd __build_shared__
+            cmake -DBUILD_SHARED_LIBS=On ../libs/$LIBRARY/test/test_cmake
+            cmake --build . --target boost_${LIBRARY}_cmake_self_test -j $BUILD_JOBS
