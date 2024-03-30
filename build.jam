@@ -7,20 +7,20 @@ import project ;
 
 project /boost/iterator
     : common-requirements
-        <source>/boost/assert//boost_assert
-        <source>/boost/concept_check//boost_concept_check
-        <source>/boost/config//boost_config
-        <source>/boost/conversion//boost_conversion
-        <source>/boost/core//boost_core
-        <source>/boost/detail//boost_detail
-        <source>/boost/function_types//boost_function_types
-        <source>/boost/fusion//boost_fusion
-        <source>/boost/mpl//boost_mpl
-        <source>/boost/optional//boost_optional
-        <source>/boost/smart_ptr//boost_smart_ptr
-        <source>/boost/static_assert//boost_static_assert
-        <source>/boost/type_traits//boost_type_traits
-        <source>/boost/utility//boost_utility
+        <library>/boost/assert//boost_assert
+        <library>/boost/concept_check//boost_concept_check
+        <library>/boost/config//boost_config
+        <library>/boost/conversion//boost_conversion
+        <library>/boost/core//boost_core
+        <library>/boost/detail//boost_detail
+        <library>/boost/function_types//boost_function_types
+        <library>/boost/fusion//boost_fusion
+        <library>/boost/mpl//boost_mpl
+        <library>/boost/optional//boost_optional
+        <library>/boost/smart_ptr//boost_smart_ptr
+        <library>/boost/static_assert//boost_static_assert
+        <library>/boost/type_traits//boost_type_traits
+        <library>/boost/utility//boost_utility
         <include>include
     ;
 
