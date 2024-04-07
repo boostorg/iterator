@@ -10,7 +10,6 @@ project /boost/iterator
         <library>/boost/assert//boost_assert
         <library>/boost/concept_check//boost_concept_check
         <library>/boost/config//boost_config
-        <library>/boost/conversion//boost_conversion
         <library>/boost/core//boost_core
         <library>/boost/detail//boost_detail
         <library>/boost/function_types//boost_function_types
