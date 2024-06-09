@@ -15,19 +15,7 @@
 #include <boost/iterator/detail/facade_iterator_category.hpp>
 #include <boost/iterator/detail/enable_if.hpp>
 
-#include <boost/core/addressof.hpp>
-
-#include <boost/type_traits/is_same.hpp>
-#include <boost/type_traits/add_const.hpp>
-#include <boost/type_traits/add_pointer.hpp>
-#include <boost/type_traits/add_lvalue_reference.hpp>
-#include <boost/type_traits/remove_const.hpp>
-#include <boost/type_traits/remove_reference.hpp>
-#include <boost/type_traits/is_convertible.hpp>
-#include <boost/type_traits/is_pod.hpp>
-
 #include <boost/mpl/eval_if.hpp>
-#include <boost/mpl/if.hpp>
 #include <boost/mpl/or.hpp>
 #include <boost/mpl/and.hpp>
 #include <boost/mpl/not.hpp>
@@ -36,6 +24,8 @@
 #include <boost/mpl/identity.hpp>
 
 #include <cstddef>
+#include <type_traits>
+#include <memory>
 
 #include <boost/iterator/detail/config_def.hpp> // this goes last
 
@@ -116,13 +106,13 @@ namespace iterators {
             CategoryOrTraversal, ValueParam, Reference
         >::type iterator_category;
 
-        typedef typename remove_const<ValueParam>::type value_type;
+        typedef typename std::remove_const<ValueParam>::type value_type;
 
         // Not the real associated pointer type
         typedef typename mpl::eval_if<
             boost::iterators::detail::iterator_writability_disabled<ValueParam,Reference>
-          , add_pointer<const value_type>
-          , add_pointer<value_type>
+          , std::add_pointer<const value_type>
+          , std::add_pointer<value_type>
         >::type pointer;
 
 # if defined(BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION)                          \
@@ -179,7 +169,7 @@ namespace iterators {
         // Provides (r++)->foo()
         value_type* operator->() const
         {
-            return boost::addressof(stored_value);
+            return std::addressof(stored_value);
         }
 
      private:
@@ -302,7 +292,7 @@ namespace iterators {
         // Provides (r++)->foo()
         value_type* operator->() const
         {
-            return boost::addressof(dereference_proxy.stored_value);
+            return std::addressof(dereference_proxy.stored_value);
         }
 
      private:
@@ -317,11 +307,11 @@ namespace iterators {
         static Reference r;
 
         template <class R>
-        static typename mpl::if_<
-            is_convertible<
+        static typename std::conditional<
+            std::is_convertible<
                 R const volatile*
               , Value const volatile*
-            >
+            >::value
           , char[1]
           , char[2]
         >::type& helper(R const&);
@@ -338,8 +328,8 @@ namespace iterators {
 # else
     template <class Reference, class Value>
     struct is_non_proxy_reference
-      : is_convertible<
-            typename remove_reference<Reference>::type
+      : std::is_convertible<
+            typename std::remove_reference<Reference>::type
             const volatile*
           , Value const volatile*
         >
@@ -373,7 +363,7 @@ namespace iterators {
                     // 'reference-to-reference' in the template which described in CWG
                     // DR106.
                     // http://www.open-std.org/Jtc1/sc22/wg21/docs/cwg_defects.html#106
-                  , typename add_lvalue_reference<Value const>::type
+                  , typename std::add_lvalue_reference<Value const>::type
                 >
 
                 // No multipass iterator can have values that disappear
@@ -385,8 +375,8 @@ namespace iterators {
                     >
                 >
             >
-          , mpl::if_<
-                is_non_proxy_reference<Reference,Value>
+          , std::conditional<
+                is_non_proxy_reference<Reference,Value>::value
               , postfix_increment_proxy<Iterator>
               , writable_postfix_increment_proxy<Iterator>
             >
@@ -404,10 +394,10 @@ namespace iterators {
         struct proxy
         {
             explicit proxy(Reference const & x) : m_ref(x) {}
-            Reference* operator->() { return boost::addressof(m_ref); }
+            Reference* operator->() { return std::addressof(m_ref); }
             // This function is needed for MWCW and BCC, which won't call
             // operator-> again automatically per 13.3.1.2 para 8
-            operator Reference*() { return boost::addressof(m_ref); }
+            operator Reference*() { return std::addressof(m_ref); }
             Reference m_ref;
         };
         typedef proxy result_type;
@@ -423,7 +413,7 @@ namespace iterators {
         typedef Pointer result_type;
         static result_type apply(T& x)
         {
-            return boost::addressof(x);
+            return std::addressof(x);
         }
     };
 
@@ -466,7 +456,7 @@ namespace iterators {
             mpl::and_<
                 // Really we want an is_copy_constructible trait here,
                 // but is_POD will have to suffice in the meantime.
-                boost::is_POD<ValueType>
+                std::is_pod<ValueType>
               , iterator_writability_disabled<ValueType,Reference>
             >
         >
@@ -475,8 +465,8 @@ namespace iterators {
     template <class Iterator, class Value, class Reference>
     struct operator_brackets_result
     {
-        typedef typename mpl::if_<
-            use_operator_brackets_proxy<Value,Reference>
+        typedef typename std::conditional<
+            use_operator_brackets_proxy<Value,Reference>::value
           , operator_brackets_proxy<Iterator>
           , Value
         >::type type;
