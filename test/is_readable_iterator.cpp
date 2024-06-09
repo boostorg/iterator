@@ -4,9 +4,7 @@
 
 #include <deque>
 #include <iterator>
-#include <iostream>
 #include <cstddef> // std::ptrdiff_t
-#include <boost/static_assert.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/iterator/is_readable_iterator.hpp>
 
@@ -78,19 +76,19 @@ struct proxy_iterator2
 
 int main()
 {
-    BOOST_STATIC_ASSERT(boost::is_readable_iterator<v*>::value);
-    BOOST_STATIC_ASSERT(boost::is_readable_iterator<v const*>::value);
-    BOOST_STATIC_ASSERT(boost::is_readable_iterator<std::deque<v>::iterator>::value);
-    BOOST_STATIC_ASSERT(boost::is_readable_iterator<std::deque<v>::const_iterator>::value);
-    BOOST_STATIC_ASSERT(!boost::is_readable_iterator<std::back_insert_iterator<std::deque<v> > >::value);
-    BOOST_STATIC_ASSERT(!boost::is_readable_iterator<std::ostream_iterator<v> >::value);
-    BOOST_STATIC_ASSERT(boost::is_readable_iterator<proxy_iterator>::value);
-    BOOST_STATIC_ASSERT(!boost::is_readable_iterator<proxy_iterator2>::value);
-    BOOST_STATIC_ASSERT(boost::is_readable_iterator<value_iterator>::value);
+    static_assert(boost::is_readable_iterator<v*>::value, "");
+    static_assert(boost::is_readable_iterator<v const*>::value, "");
+    static_assert(boost::is_readable_iterator<std::deque<v>::iterator>::value, "");
+    static_assert(boost::is_readable_iterator<std::deque<v>::const_iterator>::value, "");
+    static_assert(!boost::is_readable_iterator<std::back_insert_iterator<std::deque<v> > >::value, "");
+    static_assert(!boost::is_readable_iterator<std::ostream_iterator<v> >::value, "");
+    static_assert(boost::is_readable_iterator<proxy_iterator>::value, "");
+    static_assert(!boost::is_readable_iterator<proxy_iterator2>::value, "");
+    static_assert(boost::is_readable_iterator<value_iterator>::value, "");
 
     // Make sure inaccessible copy constructor doesn't prevent
     // readability
-    BOOST_STATIC_ASSERT(boost::is_readable_iterator<noncopyable_iterator>::value);
+    static_assert(boost::is_readable_iterator<noncopyable_iterator>::value, "");
 
     return 0;
 }

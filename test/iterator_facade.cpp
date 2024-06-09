@@ -8,8 +8,7 @@
 #include <boost/iterator/new_iterator_tests.hpp>
 
 #include <boost/call_traits.hpp>
-#include <boost/type_traits/is_convertible.hpp>
-#include <boost/core/enable_if.hpp>
+#include <type_traits>
 
 // This is a really, really limited test so far.  All we're doing
 // right now is checking that the postfix++ proxy for single-pass
@@ -120,7 +119,7 @@ struct wrapper
     { }
     template <class U>
     wrapper(const wrapper<U>& other,
-        typename boost::enable_if< boost::is_convertible<U,T> >::type* = 0)
+        typename std::enable_if< std::is_convertible<U,T>::value >::type* = 0)
         : m_x(other.m_x)
     { }
 };
@@ -146,7 +145,7 @@ struct iterator_with_proxy_reference
 
 template <class T, class U>
 void same_type(U const&)
-{ BOOST_STATIC_ASSERT((boost::is_same<T,U>::value)); }
+{ static_assert(std::is_same<T,U>::value, ""); }
 
 template <class I, class A>
 struct abstract_iterator

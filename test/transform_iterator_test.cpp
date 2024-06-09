@@ -172,20 +172,20 @@ main()
   {
     {
       typedef boost::transform_iterator<adaptable_mult_functor, int*, float> iter_t;
-      BOOST_STATIC_ASSERT((boost::is_same<iter_t::reference,  float>::value));
-      BOOST_STATIC_ASSERT((boost::is_same<iter_t::value_type, float>::value));
+      static_assert(boost::is_same<iter_t::reference,  float>::value, "");
+      static_assert(boost::is_same<iter_t::value_type, float>::value, "");
     }
 
     {
       typedef boost::transform_iterator<adaptable_mult_functor, int*, boost::use_default, float> iter_t;
-      BOOST_STATIC_ASSERT((boost::is_same<iter_t::reference,  int>::value));
-      BOOST_STATIC_ASSERT((boost::is_same<iter_t::value_type, float>::value));
+      static_assert(boost::is_same<iter_t::reference,  int>::value, "");
+      static_assert(boost::is_same<iter_t::value_type, float>::value, "");
     }
 
     {
       typedef boost::transform_iterator<adaptable_mult_functor, int*, float, double> iter_t;
-      BOOST_STATIC_ASSERT((boost::is_same<iter_t::reference,  float>::value));
-      BOOST_STATIC_ASSERT((boost::is_same<iter_t::value_type, double>::value));
+      static_assert(boost::is_same<iter_t::reference,  float>::value, "");
+      static_assert(boost::is_same<iter_t::value_type, double>::value, "");
     }
   }
 

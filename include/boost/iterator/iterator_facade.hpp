@@ -13,30 +13,19 @@
 #include <boost/iterator/iterator_categories.hpp>
 
 #include <boost/iterator/detail/facade_iterator_category.hpp>
-#include <boost/iterator/detail/enable_if.hpp>
-
-#include <boost/static_assert.hpp>
-#include <boost/core/addressof.hpp>
-
-#include <boost/type_traits/is_same.hpp>
-#include <boost/type_traits/add_const.hpp>
-#include <boost/type_traits/add_pointer.hpp>
-#include <boost/type_traits/add_lvalue_reference.hpp>
-#include <boost/type_traits/remove_const.hpp>
-#include <boost/type_traits/remove_reference.hpp>
-#include <boost/type_traits/is_convertible.hpp>
-#include <boost/type_traits/is_pod.hpp>
 
 #include <boost/mpl/eval_if.hpp>
-#include <boost/mpl/if.hpp>
 #include <boost/mpl/or.hpp>
 #include <boost/mpl/and.hpp>
 #include <boost/mpl/not.hpp>
 #include <boost/mpl/always.hpp>
 #include <boost/mpl/apply.hpp>
 #include <boost/mpl/identity.hpp>
+#include <boost/mpl/if.hpp>
 
 #include <cstddef>
+#include <type_traits>
+#include <memory>
 
 #include <boost/iterator/detail/config_def.hpp> // this goes last
 
@@ -64,7 +53,7 @@ namespace iterators {
     // The type trait checks if the category or traversal is at least as advanced as the specified required traversal
     template< typename CategoryOrTraversal, typename Required >
     struct is_traversal_at_least :
-        public boost::is_convertible< typename iterator_category_to_traversal< CategoryOrTraversal >::type, Required >
+        public std::is_convertible< typename iterator_category_to_traversal< CategoryOrTraversal >::type, Required >
     {};
 
     //
@@ -76,8 +65,8 @@ namespace iterators {
       , class Return
     >
     struct enable_if_interoperable :
-        public boost::iterators::enable_if<
-            is_interoperable< Facade1, Facade2 >
+        public std::enable_if<
+            is_interoperable<Facade1, Facade2>::value
           , Return
         >
     {};
@@ -91,12 +80,12 @@ namespace iterators {
       , class Return
     >
     struct enable_if_interoperable_and_random_access_traversal :
-        public boost::iterators::enable_if<
+        public std::enable_if<
             mpl::and_<
                 is_interoperable< Facade1, Facade2 >
               , is_traversal_at_least< typename iterator_category< Facade1 >::type, random_access_traversal_tag >
               , is_traversal_at_least< typename iterator_category< Facade2 >::type, random_access_traversal_tag >
-            >
+            >::value
           , Return
         >
     {};
@@ -117,13 +106,13 @@ namespace iterators {
             CategoryOrTraversal, ValueParam, Reference
         >::type iterator_category;
 
-        typedef typename remove_const<ValueParam>::type value_type;
+        typedef typename std::remove_const<ValueParam>::type value_type;
 
         // Not the real associated pointer type
         typedef typename mpl::eval_if<
             boost::iterators::detail::iterator_writability_disabled<ValueParam,Reference>
-          , add_pointer<const value_type>
-          , add_pointer<value_type>
+          , std::add_pointer<const value_type>
+          , std::add_pointer<value_type>
         >::type pointer;
 
 # if defined(BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION)                          \
@@ -180,7 +169,7 @@ namespace iterators {
         // Provides (r++)->foo()
         value_type* operator->() const
         {
-            return boost::addressof(stored_value);
+            return std::addressof(stored_value);
         }
 
      private:
@@ -240,38 +229,15 @@ namespace iterators {
         }
 
         // Provides writability of *r++
-#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
         template <class T>
-        typename iterators::enable_if<
-            is_not_writable_postfix_increment_dereference_proxy< T >,
+        typename std::enable_if<
+            is_not_writable_postfix_increment_dereference_proxy<T>::value,
             writable_postfix_increment_dereference_proxy const&
         >::type operator=(T&& x) const
         {
             *this->stored_iterator = static_cast< T&& >(x);
             return *this;
         }
-#else
-        template <class T>
-        typename iterators::enable_if<
-            is_not_writable_postfix_increment_dereference_proxy< T >,
-            writable_postfix_increment_dereference_proxy const&
-        >::type operator=(T const& x) const
-        {
-            *this->stored_iterator = x;
-            return *this;
-        }
-
-        // This overload just in case only non-const objects are writable
-        template <class T>
-        typename iterators::enable_if<
-            is_not_writable_postfix_increment_dereference_proxy< T >,
-            writable_postfix_increment_dereference_proxy const&
-        >::type operator=(T& x) const
-        {
-            *this->stored_iterator = x;
-            return *this;
-        }
-#endif
 
      private:
         Iterator stored_iterator;
@@ -303,7 +269,7 @@ namespace iterators {
         // Provides (r++)->foo()
         value_type* operator->() const
         {
-            return boost::addressof(dereference_proxy.stored_value);
+            return std::addressof(dereference_proxy.stored_value);
         }
 
      private:
@@ -318,11 +284,11 @@ namespace iterators {
         static Reference r;
 
         template <class R>
-        static typename mpl::if_<
-            is_convertible<
+        static typename std::conditional<
+            std::is_convertible<
                 R const volatile*
               , Value const volatile*
-            >
+            >::value
           , char[1]
           , char[2]
         >::type& helper(R const&);
@@ -339,8 +305,8 @@ namespace iterators {
 # else
     template <class Reference, class Value>
     struct is_non_proxy_reference
-      : is_convertible<
-            typename remove_reference<Reference>::type
+      : std::is_convertible<
+            typename std::remove_reference<Reference>::type
             const volatile*
           , Value const volatile*
         >
@@ -367,20 +333,20 @@ namespace iterators {
       : mpl::eval_if<
             mpl::and_<
                 // A proxy is only needed for readable iterators
-                is_convertible<
+                std::is_convertible<
                     Reference
                     // Use add_lvalue_reference to form `reference to Value` due to
                     // some (strict) C++03 compilers (e.g. `gcc -std=c++03`) reject
                     // 'reference-to-reference' in the template which described in CWG
                     // DR106.
                     // http://www.open-std.org/Jtc1/sc22/wg21/docs/cwg_defects.html#106
-                  , typename add_lvalue_reference<Value const>::type
+                  , typename std::add_lvalue_reference<Value const>::type
                 >
 
                 // No multipass iterator can have values that disappear
                 // before positions can be re-visited
               , mpl::not_<
-                    is_convertible<
+                    std::is_convertible<
                         typename iterator_category_to_traversal<CategoryOrTraversal>::type
                       , forward_traversal_tag
                     >
@@ -405,10 +371,10 @@ namespace iterators {
         struct proxy
         {
             explicit proxy(Reference const & x) : m_ref(x) {}
-            Reference* operator->() { return boost::addressof(m_ref); }
+            Reference* operator->() { return std::addressof(m_ref); }
             // This function is needed for MWCW and BCC, which won't call
             // operator-> again automatically per 13.3.1.2 para 8
-            operator Reference*() { return boost::addressof(m_ref); }
+            operator Reference*() { return std::addressof(m_ref); }
             Reference m_ref;
         };
         typedef proxy result_type;
@@ -424,7 +390,7 @@ namespace iterators {
         typedef Pointer result_type;
         static result_type apply(T& x)
         {
-            return boost::addressof(x);
+            return std::addressof(x);
         }
     };
 
@@ -467,7 +433,8 @@ namespace iterators {
             mpl::and_<
                 // Really we want an is_copy_constructible trait here,
                 // but is_POD will have to suffice in the meantime.
-                boost::is_POD<ValueType>
+                std::is_standard_layout<ValueType>
+              , std::is_trivial<ValueType>
               , iterator_writability_disabled<ValueType,Reference>
             >
         >
@@ -476,8 +443,8 @@ namespace iterators {
     template <class Iterator, class Value, class Reference>
     struct operator_brackets_result
     {
-        typedef typename mpl::if_<
-            use_operator_brackets_proxy<Value,Reference>
+        typedef typename std::conditional<
+            use_operator_brackets_proxy<Value,Reference>::value
           , operator_brackets_proxy<Iterator>
           , Value
         >::type type;
@@ -498,19 +465,12 @@ namespace iterators {
     struct choose_difference_type
     {
         template <class I1, class I2>
-        struct apply
-          :
-# ifdef BOOST_NO_ONE_WAY_ITERATOR_INTEROP
-          iterator_difference<I1>
-# else
-          mpl::eval_if<
-              is_convertible<I2,I1>
-            , iterator_difference<I1>
-            , iterator_difference<I2>
-          >
-# endif
+        struct apply : mpl::eval_if<
+                           std::is_convertible<I2,I1>
+                         , iterator_difference<I1>
+                         , iterator_difference<I2>
+                       >
         {};
-
     };
 
     template <
@@ -528,17 +488,6 @@ namespace iterators {
 
 
   // Macros which describe the declarations of binary operators
-# ifdef BOOST_NO_STRICT_ITERATOR_INTEROPERABILITY
-#  define BOOST_ITERATOR_FACADE_INTEROP_HEAD_IMPL(prefix, op, result_type, enabler)       \
-    template <                                                              \
-        class Derived1, class V1, class TC1, class Reference1, class Difference1 \
-      , class Derived2, class V2, class TC2, class Reference2, class Difference2 \
-    >                                                                       \
-    prefix typename mpl::apply2<result_type,Derived1,Derived2>::type \
-    operator op(                                                            \
-        iterator_facade<Derived1, V1, TC1, Reference1, Difference1> const& lhs   \
-      , iterator_facade<Derived2, V2, TC2, Reference2, Difference2> const& rhs)
-# else
 #  define BOOST_ITERATOR_FACADE_INTEROP_HEAD_IMPL(prefix, op, result_type, enabler)   \
     template <                                                          \
         class Derived1, class V1, class TC1, class Reference1, class Difference1 \
@@ -551,7 +500,6 @@ namespace iterators {
     operator op(                                                        \
         iterator_facade<Derived1, V1, TC1, Reference1, Difference1> const& lhs   \
       , iterator_facade<Derived2, V2, TC2, Reference2, Difference2> const& rhs)
-# endif
 
 #  define BOOST_ITERATOR_FACADE_INTEROP_HEAD(prefix, op, result_type)       \
     BOOST_ITERATOR_FACADE_INTEROP_HEAD_IMPL(prefix, op, result_type, boost::iterators::detail::enable_if_interoperable)
@@ -561,9 +509,12 @@ namespace iterators {
 
 #  define BOOST_ITERATOR_FACADE_PLUS_HEAD(prefix,args)              \
     template <class Derived, class V, class TC, class R, class D>   \
-    prefix typename boost::iterators::enable_if<                    \
-        boost::iterators::detail::is_traversal_at_least< TC, boost::iterators::random_access_traversal_tag >,  \
-        Derived                                                     \
+    prefix typename std::enable_if<                                 \
+        boost::iterators::detail::is_traversal_at_least<            \
+            TC                                                      \
+          , boost::iterators::random_access_traversal_tag           \
+        >::value                                                    \
+      , Derived                                                     \
     >::type operator+ args
 
   //
@@ -644,13 +595,13 @@ namespace iterators {
       }
 
       template <class Facade1, class Facade2>
-      static bool equal(Facade1 const& f1, Facade2 const& f2, mpl::true_)
+      static bool equal(Facade1 const& f1, Facade2 const& f2, std::true_type)
       {
           return f1.equal(f2);
       }
 
       template <class Facade1, class Facade2>
-      static bool equal(Facade1 const& f1, Facade2 const& f2, mpl::false_)
+      static bool equal(Facade1 const& f1, Facade2 const& f2, std::false_type)
       {
           return f2.equal(f1);
       }
@@ -663,14 +614,14 @@ namespace iterators {
 
       template <class Facade1, class Facade2>
       static typename Facade1::difference_type distance_from(
-          Facade1 const& f1, Facade2 const& f2, mpl::true_)
+          Facade1 const& f1, Facade2 const& f2, std::true_type)
       {
           return -f1.distance_to(f2);
       }
 
       template <class Facade1, class Facade2>
       static typename Facade2::difference_type distance_from(
-          Facade1 const& f1, Facade2 const& f2, mpl::false_)
+          Facade1 const& f1, Facade2 const& f2, std::false_type)
       {
           return f2.distance_to(f1);
       }
@@ -950,19 +901,13 @@ namespace iterators {
   // ----------------
   //
 
-# ifdef BOOST_NO_ONE_WAY_ITERATOR_INTEROP
-#  define BOOST_ITERATOR_CONVERTIBLE(a,b) mpl::true_()
-# else
-#  define BOOST_ITERATOR_CONVERTIBLE(a,b) is_convertible<a,b>()
-# endif
+#  define BOOST_ITERATOR_CONVERTIBLE(a,b) std::is_convertible<a,b>()
 
 # define BOOST_ITERATOR_FACADE_INTEROP(op, result_type, return_prefix, base_op) \
   BOOST_ITERATOR_FACADE_INTEROP_HEAD(inline, op, result_type)                   \
   {                                                                             \
       /* For those compilers that do not support enable_if */                   \
-      BOOST_STATIC_ASSERT((                                                     \
-          is_interoperable< Derived1, Derived2 >::value                         \
-      ));                                                                       \
+      static_assert(is_interoperable<Derived1, Derived2>::value, "");           \
       return_prefix iterator_core_access::base_op(                              \
           *static_cast<Derived1 const*>(&lhs)                                   \
         , *static_cast<Derived2 const*>(&rhs)                                   \
@@ -973,7 +918,7 @@ namespace iterators {
 # define BOOST_ITERATOR_FACADE_RELATION(op, return_prefix, base_op) \
   BOOST_ITERATOR_FACADE_INTEROP(                                    \
       op                                                            \
-    , boost::iterators::detail::always_bool2                                   \
+    , boost::iterators::detail::always_bool2                        \
     , return_prefix                                                 \
     , base_op                                                       \
   )
@@ -988,11 +933,12 @@ namespace iterators {
   BOOST_ITERATOR_FACADE_INTEROP_RANDOM_ACCESS_HEAD(inline, op, result_type)                   \
   {                                                                             \
       /* For those compilers that do not support enable_if */                   \
-      BOOST_STATIC_ASSERT((                                                     \
+      static_assert(                                                            \
           is_interoperable< Derived1, Derived2 >::value &&                      \
           boost::iterators::detail::is_traversal_at_least< typename iterator_category< Derived1 >::type, random_access_traversal_tag >::value && \
-          boost::iterators::detail::is_traversal_at_least< typename iterator_category< Derived2 >::type, random_access_traversal_tag >::value \
-      ));                                                                       \
+          boost::iterators::detail::is_traversal_at_least< typename iterator_category< Derived2 >::type, random_access_traversal_tag >::value, \
+          ""                                                                    \
+      );                                                                        \
       return_prefix iterator_core_access::base_op(                              \
           *static_cast<Derived1 const*>(&lhs)                                   \
         , *static_cast<Derived2 const*>(&rhs)                                   \
@@ -1002,10 +948,10 @@ namespace iterators {
 
 # define BOOST_ITERATOR_FACADE_RANDOM_ACCESS_RELATION(op, return_prefix, base_op) \
   BOOST_ITERATOR_FACADE_INTEROP_RANDOM_ACCESS(                                    \
-      op                                                            \
-    , boost::iterators::detail::always_bool2                                   \
-    , return_prefix                                                 \
-    , base_op                                                       \
+      op                                                                          \
+    , boost::iterators::detail::always_bool2                                      \
+    , return_prefix                                                               \
+    , base_op                                                                     \
   )
 
   BOOST_ITERATOR_FACADE_RANDOM_ACCESS_RELATION(<, return 0 >, distance_from)

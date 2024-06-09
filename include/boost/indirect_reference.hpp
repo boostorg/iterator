@@ -13,7 +13,6 @@
 
 # include <boost/detail/is_incrementable.hpp>
 # include <boost/iterator/iterator_traits.hpp>
-# include <boost/type_traits/remove_cv.hpp>
 # include <boost/mpl/eval_if.hpp>
 # include <boost/pointee.hpp>
 

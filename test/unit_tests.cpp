@@ -3,10 +3,10 @@
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 #include <boost/iterator/iterator_adaptor.hpp>
-#include <boost/static_assert.hpp>
 
 #include "static_assert_same.hpp"
 
+#include <type_traits>
 #include <boost/iterator/minimum_category.hpp>
 
 struct X { int a; };
@@ -38,32 +38,41 @@ void category_test()
     using namespace boost::iterators;
     using namespace boost::iterators::detail;
 
-    BOOST_STATIC_ASSERT((
-        !boost::is_convertible<
+    static_assert(
+        !std::is_convertible<
             std::input_iterator_tag
-          , input_output_iterator_tag>::value));
+          , input_output_iterator_tag>::value,
+        "");
 
-    BOOST_STATIC_ASSERT((
-        !boost::is_convertible<
+    static_assert(
+        !std::is_convertible<
             std::output_iterator_tag
-          , input_output_iterator_tag>::value));
+          , input_output_iterator_tag
+         >::value,
+        "");
 
-    BOOST_STATIC_ASSERT((
-        boost::is_convertible<
+    static_assert(
+        std::is_convertible<
             input_output_iterator_tag
-          , std::input_iterator_tag>::value));
+          , std::input_iterator_tag
+        >::value,
+        "");
 
-    BOOST_STATIC_ASSERT((
-        boost::is_convertible<
+    static_assert(
+        std::is_convertible<
             input_output_iterator_tag
-          , std::output_iterator_tag>::value));
+          , std::output_iterator_tag
+        >::value,
+        "");
 
 #if 0 // This seems wrong; we're not advertising
       // input_output_iterator_tag are we?
-    BOOST_STATIC_ASSERT((
+    static_assert(
         boost::is_convertible<
             std::forward_iterator_tag
-          , input_output_iterator_tag>::value));
+          , input_output_iterator_tag
+        >::value,
+        "");
 #endif
 
     int test = static_assert_min_cat<

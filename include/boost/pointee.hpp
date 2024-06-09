@@ -15,12 +15,10 @@
 
 # include <boost/detail/is_incrementable.hpp>
 # include <boost/iterator/iterator_traits.hpp>
-# include <boost/type_traits/add_const.hpp>
-# include <boost/type_traits/remove_cv.hpp>
-# include <boost/mpl/if.hpp>
 # include <boost/mpl/eval_if.hpp>
 
 #include <iterator>
+#include <type_traits>
 
 namespace boost {
 
@@ -49,13 +47,13 @@ namespace detail
 
       BOOST_STATIC_CONSTANT(bool, is_constant = sizeof(impl::test(*impl::x)) == 1);
 
-      typedef typename mpl::if_c<
+      typedef typename std::conditional<
 #  if BOOST_WORKAROUND(BOOST_BORLANDC, BOOST_TESTED_AT(0x551))
           ::boost::detail::iterator_pointee<Iterator>::is_constant
 #  else
           is_constant
 #  endif
-        , typename add_const<value_type>::type
+        , typename std::add_const<value_type>::type
         , value_type
       >::type type;
   };

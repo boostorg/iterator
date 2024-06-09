@@ -9,27 +9,12 @@
 
 #include <boost/config.hpp>
 #include <boost/config/workaround.hpp>
-#include <boost/iterator/detail/enable_if.hpp>
 #include <boost/iterator/iterator_adaptor.hpp>
 #include <boost/iterator/iterator_categories.hpp>
-#include <boost/type_traits/function_traits.hpp>
-#include <boost/type_traits/is_const.hpp>
-#include <boost/type_traits/is_class.hpp>
-#include <boost/type_traits/is_function.hpp>
-#include <boost/type_traits/is_reference.hpp>
-#include <boost/type_traits/remove_const.hpp>
-#include <boost/type_traits/remove_reference.hpp>
 #include <boost/utility/result_of.hpp>
 
+#include <type_traits>
 #include <iterator>
-
-#if BOOST_WORKAROUND(BOOST_MSVC, BOOST_TESTED_AT(1310))
-#include <boost/type_traits/is_base_and_derived.hpp>
-#endif
-
-#if !BOOST_WORKAROUND(__MWERKS__, BOOST_TESTED_AT(0x3003))
-#include <boost/static_assert.hpp>
-#endif
 
 #include <boost/iterator/detail/config_def.hpp>
 
@@ -103,7 +88,7 @@ namespace iterators {
 #if !BOOST_WORKAROUND(__MWERKS__, BOOST_TESTED_AT(0x3003))
         // don't provide this constructor if UnaryFunc is a
         // function pointer type, since it will be 0.  Too dangerous.
-        BOOST_STATIC_ASSERT(is_class<UnaryFunc>::value);
+        static_assert(std::is_class<UnaryFunc>::value, "");
 #endif
     }
 
@@ -149,8 +134,8 @@ namespace iterators {
   // function pointer in the iterator be 0, leading to a runtime
   // crash.
   template <class UnaryFunc, class Iterator>
-  inline typename iterators::enable_if<
-      is_class<UnaryFunc>   // We should probably find a cheaper test than is_class<>
+  inline typename std::enable_if<
+      std::is_class<UnaryFunc>::value   // We should probably find a cheaper test than is_class<>
     , transform_iterator<UnaryFunc, Iterator>
   >::type
   make_transform_iterator(Iterator it)

@@ -16,14 +16,12 @@
 
 #include <cstddef>
 #include <boost/config.hpp>
-#include <boost/type_traits/integral_constant.hpp>
-#include <boost/type_traits/negation.hpp>
-#include <boost/type_traits/conjunction.hpp>
 #include <boost/type_traits/is_complete.hpp>
-#include <boost/type_traits/is_function.hpp>
 #if !defined(BOOST_NO_CXX17_ITERATOR_TRAITS)
 #include <iterator>
 #endif
+
+#include <type_traits>
 
 #ifdef BOOST_HAS_PRAGMA_ONCE
 #pragma once
@@ -68,10 +66,10 @@ struct is_iterator_impl :
 
 template< typename T >
 struct is_iterator_impl< T* > :
-    public boost::conjunction<
-        boost::is_complete< T >,
-        boost::negation< boost::is_function< T > >
-    >::type
+    std::integral_constant<
+        bool
+      , boost::is_complete<T>::value && !std::is_function<T>::value
+    >
 {
 };
 

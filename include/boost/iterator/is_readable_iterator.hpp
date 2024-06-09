@@ -6,17 +6,14 @@
 
 #include <boost/mpl/bool.hpp>
 #include <boost/mpl/aux_/lambda_support.hpp>
-#include <boost/type_traits/add_lvalue_reference.hpp>
 
 #include <boost/iterator/detail/any_conversion_eater.hpp>
 
 #include <iterator>
+#include <type_traits>
 
 // should be the last #include
-#include <boost/type_traits/integral_constant.hpp>
 #include <boost/iterator/detail/config_def.hpp>
-
-#ifndef BOOST_NO_IS_CONVERTIBLE
 
 namespace boost {
 
@@ -29,7 +26,7 @@ namespace detail
   template <class Value>
   struct is_readable_iterator_impl
   {
-      static char tester(typename add_lvalue_reference<Value>::type, int);
+      static char tester(typename std::add_lvalue_reference<Value>::type, int);
       static char (& tester(any_conversion_eater, ...) )[2];
 
       template <class It>
@@ -100,7 +97,7 @@ namespace detail
 } // namespace detail
 
 template< typename T > struct is_readable_iterator
-: public ::boost::integral_constant<bool,::boost::iterators::detail::is_readable_iterator_impl2<T>::value>
+: public std::integral_constant<bool,::boost::iterators::detail::is_readable_iterator_impl2<T>::value>
 {
 public:
     BOOST_MPL_AUX_LAMBDA_SUPPORT(1,is_readable_iterator,(T))
@@ -111,8 +108,6 @@ public:
 using iterators::is_readable_iterator;
 
 } // namespace boost
-
-#endif
 
 #include <boost/iterator/detail/config_undef.hpp>
 

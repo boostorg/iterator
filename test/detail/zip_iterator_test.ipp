@@ -8,6 +8,7 @@
 
 #include <boost/core/lightweight_test.hpp>
 
+#include <boost/type_traits/is_integral.hpp>
 #include <boost/assign/list_of.hpp>
 #include <boost/fusion/include/at.hpp>
 #include <boost/iterator/zip_iterator.hpp>

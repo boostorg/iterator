@@ -5,19 +5,14 @@
 #ifndef COUNTING_ITERATOR_DWA200348_HPP
 # define COUNTING_ITERATOR_DWA200348_HPP
 
+# include <type_traits>
+
 # include <boost/config.hpp>
-# include <boost/static_assert.hpp>
+# include <boost/detail/workaround.hpp>
 # ifndef BOOST_NO_LIMITS_COMPILE_TIME_CONSTANTS
 # include <limits>
-# elif !BOOST_WORKAROUND(BOOST_BORLANDC, BOOST_TESTED_AT(0x551))
-# include <boost/type_traits/is_convertible.hpp>
-# else
-# include <boost/type_traits/is_arithmetic.hpp>
 # endif
-# include <boost/type_traits/is_integral.hpp>
 # include <boost/type_traits/type_identity.hpp>
-# include <boost/type_traits/conditional.hpp>
-# include <boost/type_traits/integral_constant.hpp>
 # include <boost/detail/numeric_traits.hpp>
 # include <boost/iterator/iterator_adaptor.hpp>
 
@@ -39,7 +34,7 @@ namespace detail
   struct is_numeric_impl
   {
       // For a while, this wasn't true, but we rely on it below. This is a regression assert.
-      BOOST_STATIC_ASSERT(::boost::is_integral<char>::value);
+      static_assert(std::is_integral<char>::value, "");
 
 # ifndef BOOST_NO_LIMITS_COMPILE_TIME_CONSTANTS
 
@@ -50,11 +45,11 @@ namespace detail
 #  if !BOOST_WORKAROUND(BOOST_BORLANDC, BOOST_TESTED_AT(0x551))
       BOOST_STATIC_CONSTANT(
           bool, value = (
-              boost::is_convertible<int,T>::value
-           && boost::is_convertible<T,int>::value
+              std::is_convertible<int,T>::value
+           && std::is_convertible<T,int>::value
       ));
 #  else
-      BOOST_STATIC_CONSTANT(bool, value = ::boost::is_arithmetic<T>::value);
+      BOOST_STATIC_CONSTANT(bool, value = std::is_arithmetic<T>::value);
 #  endif
 
 # endif
@@ -62,7 +57,7 @@ namespace detail
 
   template <class T>
   struct is_numeric
-    : boost::integral_constant<bool, ::boost::iterators::detail::is_numeric_impl<T>::value>
+    : std::integral_constant<bool, ::boost::iterators::detail::is_numeric_impl<T>::value>
   {};
 
 #  if defined(BOOST_HAS_LONG_LONG)
@@ -116,7 +111,7 @@ namespace detail
   {
       typedef typename detail::ia_dflt_help<
           CategoryOrTraversal
-        , typename boost::conditional<
+        , typename std::conditional<
               is_numeric<Incrementable>::value
             , boost::type_identity<random_access_traversal_tag>
             , iterator_traversal<Incrementable>
@@ -125,7 +120,7 @@ namespace detail
 
       typedef typename detail::ia_dflt_help<
           Difference
-        , typename boost::conditional<
+        , typename std::conditional<
               is_numeric<Incrementable>::value
             , numeric_difference<Incrementable>
             , iterator_difference<Incrementable>
@@ -225,7 +220,7 @@ class counting_iterator
     difference_type
     distance_to(counting_iterator<OtherIncrementable, CategoryOrTraversal, Difference> const& y) const
     {
-        typedef typename boost::conditional<
+        typedef typename std::conditional<
             detail::is_numeric<Incrementable>::value
           , detail::number_distance<difference_type, Incrementable, OtherIncrementable>
           , detail::iterator_distance<difference_type, Incrementable, OtherIncrementable>

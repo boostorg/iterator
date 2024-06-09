@@ -8,7 +8,6 @@
 #ifndef BOOST_ZIP_ITERATOR_TMB_07_13_2003_HPP_
 # define BOOST_ZIP_ITERATOR_TMB_07_13_2003_HPP_
 
-#include <stddef.h>
 #include <boost/iterator/iterator_traits.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/iterator/iterator_adaptor.hpp> // for enable_if_convertible
@@ -18,9 +17,6 @@
 
 #include <utility> // for std::pair
 #include <boost/fusion/adapted/boost_tuple.hpp> // for backward compatibility
-
-#include <boost/type_traits/remove_reference.hpp>
-#include <boost/type_traits/remove_cv.hpp>
 
 #include <boost/mpl/at.hpp>
 #include <boost/mpl/fold.hpp>
@@ -83,7 +79,7 @@ namespace iterators {
       struct result<This(Iterator)>
       {
         typedef typename
-          remove_cv<typename remove_reference<Iterator>::type>::type
+          std::remove_cv<typename std::remove_reference<Iterator>::type>::type
         iterator;
 
         typedef typename iterator_reference<iterator>::type type;

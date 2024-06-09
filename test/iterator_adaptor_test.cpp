@@ -209,7 +209,7 @@ main()
     test = static_assert_same<Iter1::pointer, int*>::value;
     test = static_assert_same<Iter1::difference_type, std::ptrdiff_t>::value;
 #if !BOOST_WORKAROUND(__MWERKS__, <= 0x2407)
-    BOOST_STATIC_ASSERT((boost::is_convertible<Iter1::iterator_category, std::random_access_iterator_tag>::value));
+    static_assert(std::is_convertible<Iter1::iterator_category, std::random_access_iterator_tag>::value, "");
 #endif
   }
 
@@ -220,9 +220,9 @@ main()
     test = static_assert_same<Iter1::reference, const int&>::value;
 
 #if !BOOST_WORKAROUND(__MWERKS__, <= 0x2407)
-    BOOST_STATIC_ASSERT(boost::is_readable_iterator<Iter1>::value);
+    static_assert(boost::is_readable_iterator<Iter1>::value, "");
 # ifndef BOOST_NO_LVALUE_RETURN_DETECTION
-    BOOST_STATIC_ASSERT(boost::is_lvalue_iterator<Iter1>::value);
+    static_assert(boost::is_lvalue_iterator<Iter1>::value, "");
 # endif
 #endif
 
@@ -243,8 +243,8 @@ main()
 #endif
 
 #ifndef BOOST_NO_LVALUE_RETURN_DETECTION
-    BOOST_STATIC_ASSERT(boost::is_non_const_lvalue_iterator<BaseIter>::value);
-    BOOST_STATIC_ASSERT(boost::is_lvalue_iterator<Iter>::value);
+    static_assert(boost::is_non_const_lvalue_iterator<BaseIter>::value, "");
+    static_assert(boost::is_lvalue_iterator<Iter>::value, "");
 #endif
 
     typedef modify_traversal<BaseIter, boost::incrementable_traversal_tag> IncrementableIter;

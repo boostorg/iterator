@@ -29,13 +29,11 @@
 //              (David Abrahams)
 
 # include <iterator>
-# include <boost/static_assert.hpp>
+# include <type_traits>
 # include <boost/concept_archetype.hpp> // for detail::dummy_constructor
 # include <boost/pending/iterator_tests.hpp>
 # include <boost/iterator/is_readable_iterator.hpp>
 # include <boost/iterator/is_lvalue_iterator.hpp>
-# include <boost/type_traits/is_same.hpp>
-# include <boost/mpl/bool.hpp>
 # include <boost/mpl/and.hpp>
 
 # include <boost/iterator/detail/config_def.hpp>
@@ -90,7 +88,7 @@ void readable_iterator_test(const Iterator i1, T v)
 
   // I think we don't really need this as it checks the same things as
   // the above code.
-  BOOST_STATIC_ASSERT(is_readable_iterator<Iterator>::value);
+  static_assert(is_readable_iterator<Iterator>::value, "");
 # endif
 }
 
@@ -125,12 +123,12 @@ void constant_lvalue_iterator_test(Iterator i, T v1)
   Iterator i2(i);
   typedef typename std::iterator_traits<Iterator>::value_type value_type;
   typedef typename std::iterator_traits<Iterator>::reference reference;
-  BOOST_STATIC_ASSERT((is_same<const value_type&, reference>::value));
+  static_assert(std::is_same<const value_type&, reference>::value, "");
   const T& v2 = *i2;
   BOOST_TEST(v1 == v2);
 # ifndef BOOST_NO_LVALUE_RETURN_DETECTION
-  BOOST_STATIC_ASSERT(is_lvalue_iterator<Iterator>::value);
-  BOOST_STATIC_ASSERT(!is_non_const_lvalue_iterator<Iterator>::value);
+  static_assert(is_lvalue_iterator<Iterator>::value, "");
+  static_assert(!is_non_const_lvalue_iterator<Iterator>::value, "");
 # endif
 }
 
@@ -140,19 +138,19 @@ void non_const_lvalue_iterator_test(Iterator i, T v1, T v2)
   Iterator i2(i);
   typedef typename std::iterator_traits<Iterator>::value_type value_type;
   typedef typename std::iterator_traits<Iterator>::reference reference;
-  BOOST_STATIC_ASSERT((is_same<value_type&, reference>::value));
+  static_assert(std::is_same<value_type&, reference>::value, "");
   T& v3 = *i2;
   BOOST_TEST(v1 == v3);
 
-  // A non-const lvalue iterator is not neccessarily writable, but we
+  // A non-const lvalue iterator is not necessarily writable, but we
   // are assuming the value_type is assignable here
   *i = v2;
 
   T& v4 = *i2;
   BOOST_TEST(v2 == v4);
 # ifndef BOOST_NO_LVALUE_RETURN_DETECTION
-  BOOST_STATIC_ASSERT(is_lvalue_iterator<Iterator>::value);
-  BOOST_STATIC_ASSERT(is_non_const_lvalue_iterator<Iterator>::value);
+  static_assert(is_lvalue_iterator<Iterator>::value, "");
+  static_assert(is_non_const_lvalue_iterator<Iterator>::value, "");
 # endif
 }
 
