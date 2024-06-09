@@ -209,7 +209,7 @@ main()
     test = static_assert_same<Iter1::pointer, int*>::value;
     test = static_assert_same<Iter1::difference_type, std::ptrdiff_t>::value;
 #if !BOOST_WORKAROUND(__MWERKS__, <= 0x2407)
-    static_assert(boost::is_convertible<Iter1::iterator_category, std::random_access_iterator_tag>::value, "");
+    static_assert(std::is_convertible<Iter1::iterator_category, std::random_access_iterator_tag>::value, "");
 #endif
   }
 

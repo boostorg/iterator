@@ -31,7 +31,7 @@ namespace iterators {
           , Iterator
           , use_default
           , typename mpl::if_<
-                is_convertible<
+                std::is_convertible<
                     typename iterator_traversal<Iterator>::type
                   , random_access_traversal_tag
                 >
