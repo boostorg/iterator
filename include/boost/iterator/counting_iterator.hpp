@@ -8,6 +8,7 @@
 # include <boost/config.hpp>
 # ifndef BOOST_NO_LIMITS_COMPILE_TIME_CONSTANTS
 # include <limits>
+# include <boost/detail/workaround.hpp>
 # elif !BOOST_WORKAROUND(BOOST_BORLANDC, BOOST_TESTED_AT(0x551))
 # include <boost/type_traits/is_convertible.hpp>
 # else

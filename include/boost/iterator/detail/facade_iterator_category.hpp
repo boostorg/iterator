@@ -10,11 +10,10 @@
 
 # include <boost/mpl/or.hpp>  // used in iterator_tag inheritance logic
 # include <boost/mpl/and.hpp>
-# include <boost/mpl/if.hpp>
 # include <boost/mpl/eval_if.hpp>
 # include <boost/mpl/identity.hpp>
 
-# include <boost/type_traits/is_same.hpp>
+# include <type_traits>
 # include <boost/type_traits/is_const.hpp>
 # include <boost/type_traits/is_reference.hpp>
 # include <boost/type_traits/is_convertible.hpp>
@@ -161,11 +160,11 @@ struct facade_iterator_category_impl
         Traversal,ValueParam,Reference
     >::type category;
 
-    typedef typename mpl::if_<
-        is_same<
+    typedef typename std::conditional<
+        std::is_same<
             Traversal
           , typename iterator_category_to_traversal<category>::type
-        >
+        >::value
       , category
       , iterator_category_with_traversal<category,Traversal>
     >::type type;
