@@ -27,10 +27,6 @@
 #include <boost/type_traits/is_base_and_derived.hpp>
 #endif
 
-#if !BOOST_WORKAROUND(__MWERKS__, BOOST_TESTED_AT(0x3003))
-#include <boost/static_assert.hpp>
-#endif
-
 #include <boost/iterator/detail/config_def.hpp>
 
 
@@ -103,7 +99,7 @@ namespace iterators {
 #if !BOOST_WORKAROUND(__MWERKS__, BOOST_TESTED_AT(0x3003))
         // don't provide this constructor if UnaryFunc is a
         // function pointer type, since it will be 0.  Too dangerous.
-        BOOST_STATIC_ASSERT(is_class<UnaryFunc>::value);
+        static_assert(is_class<UnaryFunc>::value, "");
 #endif
     }
 

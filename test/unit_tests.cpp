@@ -3,7 +3,6 @@
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 #include <boost/iterator/iterator_adaptor.hpp>
-#include <boost/static_assert.hpp>
 
 #include "static_assert_same.hpp"
 

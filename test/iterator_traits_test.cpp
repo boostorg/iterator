@@ -22,7 +22,6 @@
 
 #include <boost/type_traits/is_same.hpp>
 #include <boost/operators.hpp>
-#include <boost/static_assert.hpp>
 #include <boost/config.hpp>
 #include <iterator>
 #include <vector>

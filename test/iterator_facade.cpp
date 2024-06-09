@@ -146,7 +146,7 @@ struct iterator_with_proxy_reference
 
 template <class T, class U>
 void same_type(U const&)
-{ BOOST_STATIC_ASSERT((boost::is_same<T,U>::value)); }
+{ static_assert(boost::is_same<T,U>::value, ""); }
 
 template <class I, class A>
 struct abstract_iterator

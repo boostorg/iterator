@@ -9,10 +9,8 @@
 
 
 #include <boost/config.hpp>
-#include <iostream>
 
 #include <boost/iterator/indirect_iterator.hpp>
-#include <boost/static_assert.hpp>
 #include "static_assert_same.hpp"
 #include <boost/type_traits/same_traits.hpp>
 

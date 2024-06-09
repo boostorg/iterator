@@ -24,7 +24,6 @@ target_link_libraries(boost_iterator
         Boost::mpl
         Boost::optional
         Boost::smart_ptr
-        Boost::static_assert
         Boost::type_traits
         Boost::utility
 )

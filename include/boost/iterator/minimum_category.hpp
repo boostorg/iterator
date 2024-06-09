@@ -4,7 +4,6 @@
 #ifndef BOOST_ITERATOR_MINIMUM_CATEGORY_HPP_INCLUDED_
 # define BOOST_ITERATOR_MINIMUM_CATEGORY_HPP_INCLUDED_
 
-# include <boost/static_assert.hpp>
 # include <boost/type_traits/is_convertible.hpp>
 # include <boost/type_traits/is_same.hpp>
 
@@ -44,7 +43,7 @@ struct minimum_category_impl<true,true>
 {
     template <class T1, class T2> struct apply
     {
-        BOOST_STATIC_ASSERT((is_same<T1,T2>::value));
+        static_assert(is_same<T1,T2>::value, "");
         typedef T1 type;
     };
 };

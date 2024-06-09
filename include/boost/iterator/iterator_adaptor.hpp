@@ -7,8 +7,6 @@
 #ifndef BOOST_ITERATOR_ADAPTOR_23022003THW_HPP
 #define BOOST_ITERATOR_ADAPTOR_23022003THW_HPP
 
-#include <boost/static_assert.hpp>
-
 #include <boost/core/use_default.hpp>
 
 #include <boost/iterator/iterator_categories.hpp>
@@ -209,7 +207,7 @@ namespace iterators {
     template <class Tr1, class Tr2>
     inline void iterator_adaptor_assert_traversal ()
     {
-      BOOST_STATIC_ASSERT((is_convertible<Tr1, Tr2>::value));
+      static_assert(is_convertible<Tr1, Tr2>::value, "");
     }
   }
 

@@ -8,7 +8,6 @@
 
 #include <boost/iterator/iterator_categories.hpp>
 #include <boost/operators.hpp>
-#include <boost/static_assert.hpp>
 
 #include <boost/iterator/detail/facade_iterator_category.hpp>
 
@@ -330,7 +329,7 @@ struct iterator_access_archetype_impl<
     template <class Value>
     struct archetype
     {
-        BOOST_STATIC_ASSERT(!is_const<Value>::value);
+        static_assert(!is_const<Value>::value, "");
         typedef void value_type;
         typedef void reference;
         typedef void pointer;
@@ -381,7 +380,7 @@ struct iterator_access_archetype_impl<archetypes::writable_lvalue_iterator_t>
             Value, archetypes::readable_lvalue_iterator_t
         >
     {
-        BOOST_STATIC_ASSERT((!is_const<Value>::value));
+        static_assert(!is_const<Value>::value, "");
     };
 };
 

@@ -6,7 +6,6 @@
 # define COUNTING_ITERATOR_DWA200348_HPP
 
 # include <boost/config.hpp>
-# include <boost/static_assert.hpp>
 # ifndef BOOST_NO_LIMITS_COMPILE_TIME_CONSTANTS
 # include <limits>
 # elif !BOOST_WORKAROUND(BOOST_BORLANDC, BOOST_TESTED_AT(0x551))
@@ -39,7 +38,7 @@ namespace detail
   struct is_numeric_impl
   {
       // For a while, this wasn't true, but we rely on it below. This is a regression assert.
-      BOOST_STATIC_ASSERT(::boost::is_integral<char>::value);
+      static_assert(::boost::is_integral<char>::value, "");
 
 # ifndef BOOST_NO_LIMITS_COMPILE_TIME_CONSTANTS
 

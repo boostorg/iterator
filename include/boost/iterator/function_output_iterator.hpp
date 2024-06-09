@@ -30,7 +30,7 @@ namespace iterators {
 
     class output_proxy {
     public:
-      explicit output_proxy(UnaryFunction& f) BOOST_NOEXCEPT : m_f(f) { }
+      explicit output_proxy(UnaryFunction& f) noexcept : m_f(f) { }
 
 #ifdef BOOST_NO_CXX11_RVALUE_REFERENCES
       template <class T>
@@ -52,7 +52,7 @@ namespace iterators {
       }
 #endif
 
-      BOOST_DEFAULTED_FUNCTION(output_proxy(output_proxy const& that), BOOST_NOEXCEPT : m_f(that.m_f) {})
+      BOOST_DEFAULTED_FUNCTION(output_proxy(output_proxy const& that), noexcept : m_f(that.m_f) {})
       BOOST_DELETED_FUNCTION(output_proxy& operator=(output_proxy const&))
 
     private:

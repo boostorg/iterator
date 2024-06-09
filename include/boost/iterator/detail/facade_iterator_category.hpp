@@ -14,8 +14,6 @@
 # include <boost/mpl/eval_if.hpp>
 # include <boost/mpl/identity.hpp>
 
-# include <boost/static_assert.hpp>
-
 # include <boost/type_traits/is_same.hpp>
 # include <boost/type_traits/is_const.hpp>
 # include <boost/type_traits/is_reference.hpp>
@@ -144,11 +142,11 @@ struct iterator_category_with_traversal
             , Traversal
           >::value));
 
-    BOOST_STATIC_ASSERT(is_iterator_category<Category>::value);
-    BOOST_STATIC_ASSERT(!is_iterator_category<Traversal>::value);
-    BOOST_STATIC_ASSERT(!is_iterator_traversal<Category>::value);
+    static_assert(is_iterator_category<Category>::value, "");
+    static_assert(!is_iterator_category<Traversal>::value, "");
+    static_assert(!is_iterator_traversal<Category>::value, "");
 #  if !BOOST_WORKAROUND(BOOST_MSVC, BOOST_TESTED_AT(1310))
-    BOOST_STATIC_ASSERT(is_iterator_traversal<Traversal>::value);
+    static_assert(is_iterator_traversal<Traversal>::value, "");
 #  endif
 };
 
@@ -157,7 +155,7 @@ struct iterator_category_with_traversal
 template <class Traversal, class ValueParam, class Reference>
 struct facade_iterator_category_impl
 {
-    BOOST_STATIC_ASSERT(!is_iterator_category<Traversal>::value);
+    static_assert(!is_iterator_category<Traversal>::value, "");
 
     typedef typename iterator_facade_default_category<
         Traversal,ValueParam,Reference

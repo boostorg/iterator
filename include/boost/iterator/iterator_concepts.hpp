@@ -17,8 +17,6 @@
 #include <boost/mpl/and.hpp>
 #include <boost/mpl/or.hpp>
 
-#include <boost/static_assert.hpp>
-
 // Use boost/limits to work around missing limits headers on some compilers
 #include <boost/limits.hpp>
 #include <boost/config.hpp>
@@ -144,8 +142,8 @@ namespace boost_concepts
   {
       typedef typename std::iterator_traits<Iterator>::difference_type difference_type;
 
-      BOOST_STATIC_ASSERT(boost::is_integral<difference_type>::value);
-      BOOST_STATIC_ASSERT(std::numeric_limits<difference_type>::is_signed);
+      static_assert(boost::is_integral<difference_type>::value, "");
+      static_assert(std::numeric_limits<difference_type>::is_signed, "");
 
       BOOST_CONCEPT_ASSERT((
           boost::Convertible<

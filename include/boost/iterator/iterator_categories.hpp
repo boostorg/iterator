@@ -18,8 +18,6 @@
 
 # include <boost/type_traits/is_convertible.hpp>
 
-# include <boost/static_assert.hpp>
-
 #include <iterator>
 
 namespace boost {

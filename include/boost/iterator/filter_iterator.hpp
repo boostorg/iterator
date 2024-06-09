@@ -11,7 +11,6 @@
 #include <boost/iterator/iterator_categories.hpp>
 
 #include <boost/type_traits/is_class.hpp>
-#include <boost/static_assert.hpp>
 #include <boost/config.hpp>
 #include <boost/config/workaround.hpp>
 
@@ -75,7 +74,7 @@ namespace iterators {
 #if !BOOST_WORKAROUND(__MWERKS__, BOOST_TESTED_AT(0x3003))
           // Don't allow use of this constructor if Predicate is a
           // function pointer type, since it will be 0.
-          BOOST_STATIC_ASSERT(is_class<Predicate>::value);
+          static_assert(is_class<Predicate>::value, "");
 #endif
           satisfy_predicate();
       }

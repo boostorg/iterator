@@ -20,7 +20,6 @@
 //              (David Abrahams)
 
 # include <iterator>
-# include <boost/static_assert.hpp>
 # include <boost/concept_archetype.hpp> // for detail::dummy_constructor
 # include <boost/core/ignore_unused.hpp>
 # include <boost/core/lightweight_test.hpp>
@@ -143,7 +142,7 @@ template <bool is_pointer> struct lvalue_test
         typedef typename Iterator::reference reference;
         typedef typename Iterator::value_type value_type;
 # endif
-        BOOST_STATIC_ASSERT(boost::is_reference<reference>::value);
+        static_assert(boost::is_reference<reference>::value, "");
         BOOST_STATIC_ASSERT((boost::is_same<reference,value_type&>::value
                              || boost::is_same<reference,const value_type&>::value
             ));

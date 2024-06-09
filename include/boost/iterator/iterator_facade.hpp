@@ -15,7 +15,6 @@
 #include <boost/iterator/detail/facade_iterator_category.hpp>
 #include <boost/iterator/detail/enable_if.hpp>
 
-#include <boost/static_assert.hpp>
 #include <boost/core/addressof.hpp>
 
 #include <boost/type_traits/is_same.hpp>
@@ -973,7 +972,7 @@ namespace iterators {
 # define BOOST_ITERATOR_FACADE_RELATION(op, return_prefix, base_op) \
   BOOST_ITERATOR_FACADE_INTEROP(                                    \
       op                                                            \
-    , boost::iterators::detail::always_bool2                                   \
+    , boost::iterators::detail::always_bool2                        \
     , return_prefix                                                 \
     , base_op                                                       \
   )
@@ -1002,10 +1001,10 @@ namespace iterators {
 
 # define BOOST_ITERATOR_FACADE_RANDOM_ACCESS_RELATION(op, return_prefix, base_op) \
   BOOST_ITERATOR_FACADE_INTEROP_RANDOM_ACCESS(                                    \
-      op                                                            \
-    , boost::iterators::detail::always_bool2                                   \
-    , return_prefix                                                 \
-    , base_op                                                       \
+      op                                                                          \
+    , boost::iterators::detail::always_bool2                                      \
+    , return_prefix                                                               \
+    , base_op                                                                     \
   )
 
   BOOST_ITERATOR_FACADE_RANDOM_ACCESS_RELATION(<, return 0 >, distance_from)
