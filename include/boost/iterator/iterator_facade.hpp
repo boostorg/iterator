@@ -230,7 +230,6 @@ namespace iterators {
         }
 
         // Provides writability of *r++
-#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
         template <class T>
         typename iterators::enable_if<
             is_not_writable_postfix_increment_dereference_proxy< T >,
@@ -240,28 +239,6 @@ namespace iterators {
             *this->stored_iterator = static_cast< T&& >(x);
             return *this;
         }
-#else
-        template <class T>
-        typename iterators::enable_if<
-            is_not_writable_postfix_increment_dereference_proxy< T >,
-            writable_postfix_increment_dereference_proxy const&
-        >::type operator=(T const& x) const
-        {
-            *this->stored_iterator = x;
-            return *this;
-        }
-
-        // This overload just in case only non-const objects are writable
-        template <class T>
-        typename iterators::enable_if<
-            is_not_writable_postfix_increment_dereference_proxy< T >,
-            writable_postfix_increment_dereference_proxy const&
-        >::type operator=(T& x) const
-        {
-            *this->stored_iterator = x;
-            return *this;
-        }
-#endif
 
      private:
         Iterator stored_iterator;

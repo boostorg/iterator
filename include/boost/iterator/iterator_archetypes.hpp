@@ -113,7 +113,7 @@ namespace detail
   template <class Value, class AccessCategory, class TraversalCategory>
   struct operator_brackets
     : mpl::eval_if<
-          is_convertible<TraversalCategory, random_access_traversal_tag>
+          std::is_convertible<TraversalCategory, random_access_traversal_tag>
         , mpl::eval_if<
               archetypes::has_access<
                   AccessCategory

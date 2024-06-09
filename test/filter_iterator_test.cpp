@@ -15,7 +15,6 @@
 #include <boost/cstdlib.hpp>
 
 #include <deque>
-#include <iostream>
 
 using boost::dummyT;
 
@@ -229,12 +228,12 @@ int main()
         filter_iter(one_or_four(), array, array+N)
         , dummyT(1), dummyT(4));
 
-    BOOST_STATIC_ASSERT(
-        (!boost::is_convertible<
+    static_assert(
+        !std::is_convertible<
              boost::iterator_traversal<filter_iter>::type
            , boost::random_access_traversal_tag
-         >::value
-        ));
+         >::value,
+        "");
 
     //# endif
 
