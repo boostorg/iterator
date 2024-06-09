@@ -12,13 +12,9 @@
 #define BOOST_ITERATOR_FUNCTION_OUTPUT_ITERATOR_HPP
 
 #include <iterator>
+#include <type_traits>
+
 #include <boost/config.hpp>
-#include <boost/core/enable_if.hpp>
-#include <boost/type_traits/is_same.hpp>
-#include <boost/type_traits/remove_cv.hpp>
-#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
-#include <boost/type_traits/remove_reference.hpp>
-#endif
 
 namespace boost {
 namespace iterators {
@@ -32,25 +28,14 @@ namespace iterators {
     public:
       explicit output_proxy(UnaryFunction& f) noexcept : m_f(f) { }
 
-#ifdef BOOST_NO_CXX11_RVALUE_REFERENCES
       template <class T>
-      typename boost::disable_if_c<
-        boost::is_same< typename boost::remove_cv< T >::type, output_proxy >::value,
-        output_proxy&
-      >::type operator=(const T& value) {
-        m_f(value);
-        return *this;
-      }
-#else
-      template <class T>
-      typename boost::disable_if_c<
-        boost::is_same< typename boost::remove_cv< typename boost::remove_reference< T >::type >::type, output_proxy >::value,
+      typename std::enable_if<
+        !std::is_same< typename std::remove_cv< typename std::remove_reference< T >::type >::type, output_proxy >::value,
         output_proxy&
       >::type operator=(T&& value) {
         m_f(static_cast< T&& >(value));
         return *this;
       }
-#endif
 
       BOOST_DEFAULTED_FUNCTION(output_proxy(output_proxy const& that), noexcept : m_f(that.m_f) {})
       BOOST_DELETED_FUNCTION(output_proxy& operator=(output_proxy const&))
