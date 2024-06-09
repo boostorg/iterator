@@ -66,10 +66,10 @@ struct is_iterator_impl :
 
 template< typename T >
 struct is_iterator_impl< T* > :
-    public std::conjunction<
-        boost::is_complete<T>
-      , std::negation<std::is_function<T>>
-    >::type
+    std::integral_constant<
+        bool
+      , boost::is_complete<T>::value && !std::is_function<T>::value
+    >
 {
 };
 
