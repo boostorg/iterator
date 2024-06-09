@@ -14,9 +14,6 @@
 # include <boost/mpl/identity.hpp>
 
 # include <type_traits>
-# include <boost/type_traits/is_const.hpp>
-# include <boost/type_traits/is_reference.hpp>
-# include <boost/type_traits/is_convertible.hpp>
 
 # include <boost/iterator/detail/config_def.hpp> // try to keep this last
 
@@ -81,24 +78,24 @@ template <class Traversal, class ValueParam, class Reference>
 struct iterator_facade_default_category
   : mpl::eval_if<
         mpl::and_<
-            is_reference<Reference>
-          , is_convertible<Traversal,forward_traversal_tag>
+            std::is_reference<Reference>
+          , std::is_convertible<Traversal,forward_traversal_tag>
         >
       , mpl::eval_if<
-            is_convertible<Traversal,random_access_traversal_tag>
+            std::is_convertible<Traversal,random_access_traversal_tag>
           , mpl::identity<std::random_access_iterator_tag>
           , mpl::if_<
-                is_convertible<Traversal,bidirectional_traversal_tag>
+                std::is_convertible<Traversal,bidirectional_traversal_tag>
               , std::bidirectional_iterator_tag
               , std::forward_iterator_tag
             >
         >
       , typename mpl::eval_if<
             mpl::and_<
-                is_convertible<Traversal, single_pass_traversal_tag>
+                std::is_convertible<Traversal, single_pass_traversal_tag>
 
                 // check for readability
-              , is_convertible<Reference, ValueParam>
+              , std::is_convertible<Reference, ValueParam>
             >
           , mpl::identity<std::input_iterator_tag>
           , mpl::identity<Traversal>
@@ -111,15 +108,15 @@ struct iterator_facade_default_category
 template <class T>
 struct is_iterator_category
   : mpl::or_<
-        is_convertible<T,std::input_iterator_tag>
-      , is_convertible<T,std::output_iterator_tag>
+        std::is_convertible<T,std::input_iterator_tag>
+      , std::is_convertible<T,std::output_iterator_tag>
     >
 {
 };
 
 template <class T>
 struct is_iterator_traversal
-  : is_convertible<T,incrementable_traversal_tag>
+  : std::is_convertible<T,incrementable_traversal_tag>
 {};
 
 //
@@ -135,11 +132,11 @@ struct iterator_category_with_traversal
     // Make sure this isn't used to build any categories where
     // convertibility to Traversal is redundant.  Should just use the
     // Category element in that case.
-    BOOST_STATIC_ASSERT((
-        !is_convertible<
+    static_assert(
+        !std::is_convertible<
               typename iterator_category_to_traversal<Category>::type
             , Traversal
-          >::value));
+          >::value, "");
 
     static_assert(is_iterator_category<Category>::value, "");
     static_assert(!is_iterator_category<Traversal>::value, "");
