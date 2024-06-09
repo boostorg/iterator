@@ -14,16 +14,13 @@
 
 #include <boost/detail/indirect_traits.hpp>
 
-#include <boost/type_traits/is_same.hpp>
-#include <boost/type_traits/add_reference.hpp>
-
 #include <boost/mpl/bool.hpp>
 #include <boost/mpl/identity.hpp>
 #include <boost/mpl/eval_if.hpp>
-#include <boost/mpl/not.hpp>
 #include <boost/mpl/has_xxx.hpp>
 
 #include <iterator>
+#include <type_traits>
 
 #ifdef BOOST_MPL_CFG_NO_HAS_XXX
 # include <boost/shared_ptr.hpp>
@@ -57,9 +54,9 @@ namespace iterators {
           , typename ia_dflt_help<
                 Reference
               , mpl::eval_if<
-                    is_same<Value,use_default>
+                    std::is_same<Value,use_default>
                   , indirect_reference<dereferenceable>
-                  , add_reference<Value>
+                  , std::add_lvalue_reference<Value>
                 >
             >::type
           , Difference
