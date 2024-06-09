@@ -92,7 +92,7 @@
 #  define BOOST_NO_IS_CONVERTIBLE_TEMPLATE // The following program fails to compile:
 
 #  if 0 // test code
-    #include <boost/type_traits/is_convertible.hpp>
+    #include <type_traits>
     template <class T>
     struct foo
     {
@@ -104,7 +104,7 @@
         T p;
     };
 
-    bool x = boost::is_convertible<foo<int const*>, foo<int*> >::value;
+    bool x = std::is_convertible<foo<int const*>, foo<int*> >::value;
 #  endif
 
 #endif
