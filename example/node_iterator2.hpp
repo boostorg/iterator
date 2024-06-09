@@ -6,9 +6,9 @@
 
 # include "node.hpp"
 # include <boost/iterator/iterator_facade.hpp>
+# include <type_traits>
 
 # ifndef BOOST_NO_SFINAE
-#  include <boost/type_traits/is_convertible.hpp>
 #  include <boost/utility/enable_if.hpp>
 # endif
 
@@ -35,18 +35,12 @@ class node_iter
         node_iter<OtherValue> const& other
 # ifndef BOOST_NO_SFINAE
       , typename boost::enable_if<
-            boost::is_convertible<OtherValue*,Value*>
+            std::is_convertible<OtherValue*,Value*>
           , enabler
         >::type = enabler()
 # endif
     )
       : m_node(other.m_node) {}
-
-
-# if !BOOST_WORKAROUND(__GNUC__, == 2)
- private: // GCC2 can't grant friendship to template member functions
-    friend class boost::iterator_core_access;
-# endif
 
     template <class OtherValue>
     bool equal(node_iter<OtherValue> const& other) const

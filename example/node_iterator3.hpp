@@ -6,9 +6,9 @@
 
 # include "node.hpp"
 # include <boost/iterator/iterator_adaptor.hpp>
+# include <type_traits>
 
 # ifndef BOOST_NO_SFINAE
-#  include <boost/type_traits/is_convertible.hpp>
 #  include <boost/utility/enable_if.hpp>
 # endif
 
@@ -40,7 +40,7 @@ class node_iter
         node_iter<OtherValue> const& other
 # ifndef BOOST_NO_SFINAE
       , typename boost::enable_if<
-            boost::is_convertible<OtherValue*,Value*>
+            std::is_convertible<OtherValue*,Value*>
           , enabler
         >::type = enabler()
 # endif
