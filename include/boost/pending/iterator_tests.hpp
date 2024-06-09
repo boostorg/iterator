@@ -142,7 +142,7 @@ template <bool is_pointer> struct lvalue_test
 # endif
         static_assert(std::is_reference<reference>::value, "");
         static_assert(std::is_same<reference,value_type&>::value
-                      || std::is_same<reference,const value_type&>::value);
+                      || std::is_same<reference,const value_type&>::value, "");
     }
 };
 
