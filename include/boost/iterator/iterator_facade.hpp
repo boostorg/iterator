@@ -951,9 +951,7 @@ namespace iterators {
   BOOST_ITERATOR_FACADE_INTEROP_HEAD(inline, op, result_type)                   \
   {                                                                             \
       /* For those compilers that do not support enable_if */                   \
-      BOOST_STATIC_ASSERT((                                                     \
-          is_interoperable< Derived1, Derived2 >::value                         \
-      ));                                                                       \
+      static_assert(is_interoperable<Derived1, Derived2>::value, "");           \
       return_prefix iterator_core_access::base_op(                              \
           *static_cast<Derived1 const*>(&lhs)                                   \
         , *static_cast<Derived2 const*>(&rhs)                                   \
@@ -979,11 +977,12 @@ namespace iterators {
   BOOST_ITERATOR_FACADE_INTEROP_RANDOM_ACCESS_HEAD(inline, op, result_type)                   \
   {                                                                             \
       /* For those compilers that do not support enable_if */                   \
-      BOOST_STATIC_ASSERT((                                                     \
+      static_assert(                                                            \
           is_interoperable< Derived1, Derived2 >::value &&                      \
           boost::iterators::detail::is_traversal_at_least< typename iterator_category< Derived1 >::type, random_access_traversal_tag >::value && \
-          boost::iterators::detail::is_traversal_at_least< typename iterator_category< Derived2 >::type, random_access_traversal_tag >::value \
-      ));                                                                       \
+          boost::iterators::detail::is_traversal_at_least< typename iterator_category< Derived2 >::type, random_access_traversal_tag >::value, \
+          ""                                                                    \
+      );                                                                        \
       return_prefix iterator_core_access::base_op(                              \
           *static_cast<Derived1 const*>(&lhs)                                   \
         , *static_cast<Derived2 const*>(&rhs)                                   \
