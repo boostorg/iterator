@@ -9,13 +9,7 @@
 #include <boost/concept_check.hpp>
 #include <boost/iterator/iterator_categories.hpp>
 
-#include <boost/type_traits/is_same.hpp>
-#include <boost/type_traits/is_integral.hpp>
-
-#include <boost/mpl/bool.hpp>
-#include <boost/mpl/if.hpp>
-#include <boost/mpl/and.hpp>
-#include <boost/mpl/or.hpp>
+#include <type_traits>
 
 // Use boost/limits to work around missing limits headers on some compilers
 #include <boost/limits.hpp>
@@ -142,7 +136,7 @@ namespace boost_concepts
   {
       typedef typename std::iterator_traits<Iterator>::difference_type difference_type;
 
-      static_assert(boost::is_integral<difference_type>::value, "");
+      static_assert(std::is_integral<difference_type>::value, "");
       static_assert(std::numeric_limits<difference_type>::is_signed, "");
 
       BOOST_CONCEPT_ASSERT((
