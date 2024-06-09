@@ -8,7 +8,7 @@
 #include <boost/iterator/new_iterator_tests.hpp>
 
 #include <boost/call_traits.hpp>
-#include <boost/type_traits/is_convertible.hpp>
+#include <type_traits>
 #include <boost/core/enable_if.hpp>
 
 // This is a really, really limited test so far.  All we're doing
@@ -120,7 +120,7 @@ struct wrapper
     { }
     template <class U>
     wrapper(const wrapper<U>& other,
-        typename boost::enable_if< boost::is_convertible<U,T> >::type* = 0)
+        typename boost::enable_if< std::is_convertible<U,T> >::type* = 0)
         : m_x(other.m_x)
     { }
 };
@@ -146,7 +146,7 @@ struct iterator_with_proxy_reference
 
 template <class T, class U>
 void same_type(U const&)
-{ static_assert(boost::is_same<T,U>::value, ""); }
+{ static_assert(std::is_same<T,U>::value, ""); }
 
 template <class I, class A>
 struct abstract_iterator

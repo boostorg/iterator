@@ -635,13 +635,13 @@ namespace iterators {
       }
 
       template <class Facade1, class Facade2>
-      static bool equal(Facade1 const& f1, Facade2 const& f2, mpl::true_)
+      static bool equal(Facade1 const& f1, Facade2 const& f2, std::true_type)
       {
           return f1.equal(f2);
       }
 
       template <class Facade1, class Facade2>
-      static bool equal(Facade1 const& f1, Facade2 const& f2, mpl::false_)
+      static bool equal(Facade1 const& f1, Facade2 const& f2, std::false_type)
       {
           return f2.equal(f1);
       }
@@ -654,14 +654,14 @@ namespace iterators {
 
       template <class Facade1, class Facade2>
       static typename Facade1::difference_type distance_from(
-          Facade1 const& f1, Facade2 const& f2, mpl::true_)
+          Facade1 const& f1, Facade2 const& f2, std::true_type)
       {
           return -f1.distance_to(f2);
       }
 
       template <class Facade1, class Facade2>
       static typename Facade2::difference_type distance_from(
-          Facade1 const& f1, Facade2 const& f2, mpl::false_)
+          Facade1 const& f1, Facade2 const& f2, std::false_type)
       {
           return f2.distance_to(f1);
       }
@@ -942,7 +942,7 @@ namespace iterators {
   //
 
 # ifdef BOOST_NO_ONE_WAY_ITERATOR_INTEROP
-#  define BOOST_ITERATOR_CONVERTIBLE(a,b) mpl::true_()
+#  define BOOST_ITERATOR_CONVERTIBLE(a,b) std::true_type()
 # else
 #  define BOOST_ITERATOR_CONVERTIBLE(a,b) std::is_convertible<a,b>()
 # endif
