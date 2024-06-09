@@ -9,20 +9,16 @@
 #ifndef BOOST_FUNCTION_INPUT_ITERATOR
 #define BOOST_FUNCTION_INPUT_ITERATOR
 
+#include <type_traits>
+#include <memory>
+
 #include <boost/config.hpp>
-#include <boost/assert.hpp>
-#include <boost/core/addressof.hpp>
-#include <boost/type_traits/conditional.hpp>
 #include <boost/function_types/is_function_pointer.hpp>
 #include <boost/function_types/result_type.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/none.hpp>
 #include <boost/optional/optional.hpp>
 #include <boost/utility/result_of.hpp>
-
-#ifdef BOOST_RESULT_OF_USE_TR1
-#include <boost/type_traits/is_function.hpp>
-#endif
 
 namespace boost {
 
@@ -41,7 +37,7 @@ namespace iterators {
         {
             typedef typename result_of<
 #ifdef BOOST_RESULT_OF_USE_TR1
-                typename boost::conditional<is_function<F>::value, F&, F>::type()
+                typename std::conditional<std::is_function<F>::value, F&, F>::type()
 #else
                 F&()
 #endif
@@ -60,7 +56,7 @@ namespace iterators {
         public:
             function_object_input_iterator() {}
             function_object_input_iterator(Function & f_, Input state_ = Input())
-                : f(boost::addressof(f_)), state(state_) {}
+                : f(std::addressof(f_)), state(state_) {}
 
             void increment() {
                 if (value)
@@ -130,13 +126,13 @@ namespace iterators {
 
     template <class Function, class Input>
     class function_input_iterator :
-        public boost::conditional<
+        public std::conditional<
             function_types::is_function_pointer<Function>::value,
             impl::function_pointer_input_iterator<Function,Input>,
             impl::function_object_input_iterator<Function,Input>
         >::type
     {
-        typedef typename boost::conditional<
+        typedef typename std::conditional<
             function_types::is_function_pointer<Function>::value,
             impl::function_pointer_input_iterator<Function,Input>,
             impl::function_object_input_iterator<Function,Input>

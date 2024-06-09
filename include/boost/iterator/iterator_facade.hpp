@@ -22,6 +22,7 @@
 #include <boost/mpl/always.hpp>
 #include <boost/mpl/apply.hpp>
 #include <boost/mpl/identity.hpp>
+#include <boost/mpl/if.hpp>
 
 #include <cstddef>
 #include <type_traits>
@@ -375,8 +376,8 @@ namespace iterators {
                     >
                 >
             >
-          , std::conditional<
-                is_non_proxy_reference<Reference,Value>::value
+          , mpl::if_<
+                is_non_proxy_reference<Reference,Value>
               , postfix_increment_proxy<Iterator>
               , writable_postfix_increment_proxy<Iterator>
             >
@@ -456,7 +457,8 @@ namespace iterators {
             mpl::and_<
                 // Really we want an is_copy_constructible trait here,
                 // but is_POD will have to suffice in the meantime.
-                std::is_pod<ValueType>
+                std::is_standard_layout<ValueType>
+              , std::is_trivial<ValueType>
               , iterator_writability_disabled<ValueType,Reference>
             >
         >
