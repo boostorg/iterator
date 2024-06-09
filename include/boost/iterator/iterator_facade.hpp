@@ -54,7 +54,7 @@ namespace iterators {
     // The type trait checks if the category or traversal is at least as advanced as the specified required traversal
     template< typename CategoryOrTraversal, typename Required >
     struct is_traversal_at_least :
-        public boost::is_convertible< typename iterator_category_to_traversal< CategoryOrTraversal >::type, Required >
+        public std::is_convertible< typename iterator_category_to_traversal< CategoryOrTraversal >::type, Required >
     {};
 
     //
@@ -357,7 +357,7 @@ namespace iterators {
       : mpl::eval_if<
             mpl::and_<
                 // A proxy is only needed for readable iterators
-                is_convertible<
+                std::is_convertible<
                     Reference
                     // Use add_lvalue_reference to form `reference to Value` due to
                     // some (strict) C++03 compilers (e.g. `gcc -std=c++03`) reject
@@ -370,7 +370,7 @@ namespace iterators {
                 // No multipass iterator can have values that disappear
                 // before positions can be re-visited
               , mpl::not_<
-                    is_convertible<
+                    std::is_convertible<
                         typename iterator_category_to_traversal<CategoryOrTraversal>::type
                       , forward_traversal_tag
                     >
@@ -495,7 +495,7 @@ namespace iterators {
           iterator_difference<I1>
 # else
           mpl::eval_if<
-              is_convertible<I2,I1>
+              std::is_convertible<I2,I1>
             , iterator_difference<I1>
             , iterator_difference<I2>
           >
@@ -944,7 +944,7 @@ namespace iterators {
 # ifdef BOOST_NO_ONE_WAY_ITERATOR_INTEROP
 #  define BOOST_ITERATOR_CONVERTIBLE(a,b) mpl::true_()
 # else
-#  define BOOST_ITERATOR_CONVERTIBLE(a,b) is_convertible<a,b>()
+#  define BOOST_ITERATOR_CONVERTIBLE(a,b) std::is_convertible<a,b>()
 # endif
 
 # define BOOST_ITERATOR_FACADE_INTEROP(op, result_type, return_prefix, base_op) \
