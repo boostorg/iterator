@@ -119,8 +119,8 @@ namespace iterators {
   template <class Predicate, class Iterator>
   inline filter_iterator<Predicate,Iterator>
   make_filter_iterator(
-      typename iterators::enable_if<
-          is_class<Predicate>
+      typename std::enable_if<
+          is_class<Predicate>::value
         , Iterator
       >::type x
     , Iterator end = Iterator())

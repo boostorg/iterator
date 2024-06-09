@@ -13,7 +13,6 @@
 #include <boost/iterator/iterator_categories.hpp>
 
 #include <boost/iterator/detail/facade_iterator_category.hpp>
-#include <boost/iterator/detail/enable_if.hpp>
 
 #include <boost/mpl/eval_if.hpp>
 #include <boost/mpl/or.hpp>
@@ -66,8 +65,8 @@ namespace iterators {
       , class Return
     >
     struct enable_if_interoperable :
-        public boost::iterators::enable_if<
-            is_interoperable< Facade1, Facade2 >
+        public std::enable_if<
+            is_interoperable<Facade1, Facade2>::value
           , Return
         >
     {};
@@ -81,12 +80,12 @@ namespace iterators {
       , class Return
     >
     struct enable_if_interoperable_and_random_access_traversal :
-        public boost::iterators::enable_if<
+        public std::enable_if<
             mpl::and_<
                 is_interoperable< Facade1, Facade2 >
               , is_traversal_at_least< typename iterator_category< Facade1 >::type, random_access_traversal_tag >
               , is_traversal_at_least< typename iterator_category< Facade2 >::type, random_access_traversal_tag >
-            >
+            >::value
           , Return
         >
     {};
@@ -231,8 +230,8 @@ namespace iterators {
 
         // Provides writability of *r++
         template <class T>
-        typename iterators::enable_if<
-            is_not_writable_postfix_increment_dereference_proxy< T >,
+        typename std::enable_if<
+            is_not_writable_postfix_increment_dereference_proxy<T>::value,
             writable_postfix_increment_dereference_proxy const&
         >::type operator=(T&& x) const
         {
@@ -529,9 +528,12 @@ namespace iterators {
 
 #  define BOOST_ITERATOR_FACADE_PLUS_HEAD(prefix,args)              \
     template <class Derived, class V, class TC, class R, class D>   \
-    prefix typename boost::iterators::enable_if<                    \
-        boost::iterators::detail::is_traversal_at_least< TC, boost::iterators::random_access_traversal_tag >,  \
-        Derived                                                     \
+    prefix typename std::enable_if<                                 \
+        boost::iterators::detail::is_traversal_at_least<            \
+            TC                                                      \
+          , boost::iterators::random_access_traversal_tag           \
+        >::value                                                    \
+      , Derived                                                     \
     >::type operator+ args
 
   //

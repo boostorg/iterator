@@ -9,7 +9,6 @@
 
 #include <boost/call_traits.hpp>
 #include <type_traits>
-#include <boost/core/enable_if.hpp>
 
 // This is a really, really limited test so far.  All we're doing
 // right now is checking that the postfix++ proxy for single-pass
@@ -120,7 +119,7 @@ struct wrapper
     { }
     template <class U>
     wrapper(const wrapper<U>& other,
-        typename boost::enable_if< std::is_convertible<U,T> >::type* = 0)
+        typename std::enable_if< std::is_convertible<U,T>::value >::type* = 0)
         : m_x(other.m_x)
     { }
 };

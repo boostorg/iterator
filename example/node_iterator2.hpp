@@ -8,10 +8,6 @@
 # include <boost/iterator/iterator_facade.hpp>
 # include <type_traits>
 
-# ifndef BOOST_NO_SFINAE
-#  include <boost/utility/enable_if.hpp>
-# endif
-
 template <class Value>
 class node_iter
   : public boost::iterator_facade<
@@ -34,8 +30,8 @@ class node_iter
     node_iter(
         node_iter<OtherValue> const& other
 # ifndef BOOST_NO_SFINAE
-      , typename boost::enable_if<
-            std::is_convertible<OtherValue*,Value*>
+      , typename std::enable_if<
+            std::is_convertible<OtherValue*,Value*>::value
           , enabler
         >::type = enabler()
 # endif

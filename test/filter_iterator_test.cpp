@@ -7,13 +7,13 @@
 #include <boost/iterator/filter_iterator.hpp>
 #include <boost/iterator/reverse_iterator.hpp>
 #include <boost/iterator/new_iterator_tests.hpp>
-#include <boost/type_traits/is_convertible.hpp>
 #include <boost/concept_check.hpp>
 #include <boost/concept_archetype.hpp>
 #include <boost/iterator/iterator_concepts.hpp>
 #include <boost/iterator/iterator_archetypes.hpp>
 #include <boost/cstdlib.hpp>
 
+#include <type_traits>
 #include <deque>
 
 using boost::dummyT;

@@ -13,7 +13,6 @@
 
 #include <boost/iterator/iterator_categories.hpp>
 #include <boost/iterator/iterator_facade.hpp>
-#include <boost/iterator/detail/enable_if.hpp>
 #include <boost/iterator/detail/config_def.hpp>
 #include <boost/iterator/iterator_traits.hpp>
 
@@ -81,7 +80,7 @@ namespace iterators {
   // false positives for user/library defined iterator types. See comments
   // on operator implementation for consequences.
   //
-#  if defined(BOOST_NO_IS_CONVERTIBLE) || defined(BOOST_NO_SFINAE)
+#  if defined(BOOST_NO_SFINAE)
 
   template <class From, class To>
   struct enable_if_convertible
@@ -93,8 +92,8 @@ namespace iterators {
 
   template<typename From, typename To>
   struct enable_if_convertible
-    : iterators::enable_if<
-          std::is_convertible<From, To>
+    : std::enable_if<
+          std::is_convertible<From, To>::value
         , boost::iterators::detail::enable_type
       >
   {};

@@ -9,7 +9,6 @@
 
 #include <boost/config.hpp>
 #include <boost/config/workaround.hpp>
-#include <boost/iterator/detail/enable_if.hpp>
 #include <boost/iterator/iterator_adaptor.hpp>
 #include <boost/iterator/iterator_categories.hpp>
 #include <boost/utility/result_of.hpp>
@@ -135,8 +134,8 @@ namespace iterators {
   // function pointer in the iterator be 0, leading to a runtime
   // crash.
   template <class UnaryFunc, class Iterator>
-  inline typename iterators::enable_if<
-      std::is_class<UnaryFunc>   // We should probably find a cheaper test than is_class<>
+  inline typename std::enable_if<
+      std::is_class<UnaryFunc>::value   // We should probably find a cheaper test than is_class<>
     , transform_iterator<UnaryFunc, Iterator>
   >::type
   make_transform_iterator(Iterator it)
