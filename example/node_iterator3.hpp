@@ -34,12 +34,10 @@ class node_iter
     template <class OtherValue>
     node_iter(
         node_iter<OtherValue> const& other
-# ifndef BOOST_NO_SFINAE
       , typename std::enable_if<
             std::is_convertible<OtherValue*,Value*>::value
           , enabler
         >::type = enabler()
-# endif
     )
       : super_t(other.base()) {}
 

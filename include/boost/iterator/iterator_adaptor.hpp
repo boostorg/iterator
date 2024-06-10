@@ -80,16 +80,6 @@ namespace iterators {
   // false positives for user/library defined iterator types. See comments
   // on operator implementation for consequences.
   //
-#  if defined(BOOST_NO_SFINAE)
-
-  template <class From, class To>
-  struct enable_if_convertible
-  {
-      typedef boost::iterators::detail::enable_type type;
-  };
-
-#  else
-
   template<typename From, typename To>
   struct enable_if_convertible
     : std::enable_if<
@@ -97,8 +87,6 @@ namespace iterators {
         , boost::iterators::detail::enable_type
       >
   {};
-
-# endif
 
   //
   // Default template argument handling for iterator_adaptor
