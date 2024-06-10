@@ -145,11 +145,11 @@ int main()
     BOOST_TEST(!boost::iterators::is_iterator< int complete::* >::value);
     BOOST_TEST(!boost::iterators::is_iterator< int (complete::*)(int) >::value);
     BOOST_TEST(!boost::iterators::is_iterator< int (complete::*)(int) const >::value);
-#if defined(__cpp_noexcept_function_type) && (__cpp_noexcept_function_type >= 201510L)
-    BOOST_TEST(!boost::iterators::is_iterator< int (*)(int) noexcept >::value);
-    BOOST_TEST(!boost::iterators::is_iterator< int (complete::*)(int) noexcept >::value);
-    BOOST_TEST(!boost::iterators::is_iterator< int (complete::*)(int) const noexcept >::value);
-#endif
+
+    BOOST_TEST(!boost::iterators::is_iterator< int (*)(int) BOOST_NOEXCEPT >::value);
+    BOOST_TEST(!boost::iterators::is_iterator< int (complete::*)(int) BOOST_NOEXCEPT >::value);
+    BOOST_TEST(!boost::iterators::is_iterator< int (complete::*)(int) const BOOST_NOEXCEPT >::value);
+
     BOOST_TEST(!boost::iterators::is_iterator< int[] >::value);
     BOOST_TEST(!boost::iterators::is_iterator< int[10] >::value);
     BOOST_TEST(!boost::iterators::is_iterator< int*[] >::value);
