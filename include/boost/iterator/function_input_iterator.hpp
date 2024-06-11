@@ -10,9 +10,9 @@
 #define BOOST_FUNCTION_INPUT_ITERATOR
 
 #include <type_traits>
-#include <memory>
 
 #include <boost/config.hpp>
+#include <boost/core/addressof.hpp>
 #include <boost/function_types/is_function_pointer.hpp>
 #include <boost/function_types/result_type.hpp>
 #include <boost/iterator/iterator_facade.hpp>
@@ -56,7 +56,7 @@ namespace iterators {
         public:
             function_object_input_iterator() {}
             function_object_input_iterator(Function & f_, Input state_ = Input())
-                : f(std::addressof(f_)), state(state_) {}
+                : f(addressof(f_)), state(state_) {}
 
             void increment() {
                 if (value)
