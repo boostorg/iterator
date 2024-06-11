@@ -171,7 +171,7 @@ namespace iterators {
   // versions of iterator_adaptor The idea is that when the user needs
   // to fiddle with the reference type it is highly likely that the
   // iterator category has to be adjusted as well.  Any of the
-  // following four template arguments may be committed or explicitly
+  // following four template arguments may be omitted or explicitly
   // replaced by use_default.
   //
   //   Value - if supplied, the value_type of the resulting iterator, unless
