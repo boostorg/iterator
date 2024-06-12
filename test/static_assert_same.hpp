@@ -7,7 +7,7 @@
 
 #include <type_traits>
 
-#define STATIC_ASSERT_SAME( T1,T2 ) static_assert(std::is_same<T1, T2>::value, "")
+#define STATIC_ASSERT_SAME( T1,T2 ) static_assert(std::is_same<T1, T2>::value, "T1 ans T2 are expected to be the same types.")
 
 template <class T1, class T2>
 struct static_assert_same

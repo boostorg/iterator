@@ -21,6 +21,8 @@
 #include <boost/pending/iterator_tests.hpp>
 #include <boost/concept_check.hpp>
 
+#include "static_assert_same.hpp"
+
 #ifdef BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
 namespace boost { namespace detail
 {
@@ -172,20 +174,20 @@ main()
   {
     {
       typedef boost::transform_iterator<adaptable_mult_functor, int*, float> iter_t;
-      static_assert(boost::is_same<iter_t::reference,  float>::value, "");
-      static_assert(boost::is_same<iter_t::value_type, float>::value, "");
+      STATIC_ASSERT_SAME(iter_t::reference,  float);
+      STATIC_ASSERT_SAME(iter_t::value_type, float);
     }
 
     {
       typedef boost::transform_iterator<adaptable_mult_functor, int*, boost::use_default, float> iter_t;
-      static_assert(boost::is_same<iter_t::reference,  int>::value, "");
-      static_assert(boost::is_same<iter_t::value_type, float>::value, "");
+      STATIC_ASSERT_SAME(iter_t::reference,  int);
+      STATIC_ASSERT_SAME(iter_t::value_type, float);
     }
 
     {
       typedef boost::transform_iterator<adaptable_mult_functor, int*, float, double> iter_t;
-      static_assert(boost::is_same<iter_t::reference,  float>::value, "");
-      static_assert(boost::is_same<iter_t::value_type, double>::value, "");
+      STATIC_ASSERT_SAME(iter_t::reference,  float);
+      STATIC_ASSERT_SAME(iter_t::value_type, double);
     }
   }
 
