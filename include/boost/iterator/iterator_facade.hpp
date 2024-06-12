@@ -934,19 +934,23 @@ namespace iterators {
 
 # define BOOST_ITERATOR_FACADE_INTEROP_RANDOM_ACCESS(op, result_type, return_prefix, base_op) \
   BOOST_ITERATOR_FACADE_INTEROP_RANDOM_ACCESS_HEAD(inline, op, result_type)                   \
-  {                                                                             \
-      /* For those compilers that do not support enable_if */                   \
-      static_assert(                                                            \
-          is_interoperable<Derived1, Derived2>::value &&                        \
-          boost::iterators::detail::is_traversal_at_least<typename iterator_category<Derived1>::type, random_access_traversal_tag>::value && \
-          boost::iterators::detail::is_traversal_at_least<typename iterator_category<Derived2>::type, random_access_traversal_tag>::value,   \
-          "Derived1 & Derived2 types must be interoperable and must both have random_access_traversal_tag."                                  \
-      );                                                                        \
-      return_prefix iterator_core_access::base_op(                              \
-          *static_cast<Derived1 const*>(&lhs)                                   \
-        , *static_cast<Derived2 const*>(&rhs)                                   \
-        , BOOST_ITERATOR_CONVERTIBLE(Derived2,Derived1)                         \
-      );                                                                        \
+  {                                                                                     \
+      using boost::iterators::detail::is_traversal_at_least;                            \
+      using Derived1IterCat = typename iterator_category<Derived1>::type;               \
+      using Derived2IterCat = typename iterator_category<Derived2>::type;               \
+      /* For those compilers that do not support enable_if */                           \
+      static_assert(                                                                    \
+          is_interoperable<Derived1, Derived2>::value &&                                \
+          is_traversal_at_least<Derived1IterCat, random_access_traversal_tag>::value && \
+          is_traversal_at_least<Derived2IterCat, random_access_traversal_tag>::value,   \
+          "Derived1 & Derived2 types must be interoperable and must both have "         \
+          "random_access_traversal_tag."                                                \
+      );                                                                                \
+      return_prefix iterator_core_access::base_op(                                      \
+          *static_cast<Derived1 const*>(&lhs)                                           \
+        , *static_cast<Derived2 const*>(&rhs)                                           \
+        , BOOST_ITERATOR_CONVERTIBLE(Derived2,Derived1)                                 \
+      );                                                                                \
   }
 
 # define BOOST_ITERATOR_FACADE_RANDOM_ACCESS_RELATION(op, return_prefix, base_op) \
