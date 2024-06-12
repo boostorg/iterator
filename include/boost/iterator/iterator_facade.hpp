@@ -937,8 +937,8 @@ namespace iterators {
   BOOST_ITERATOR_FACADE_INTEROP_RANDOM_ACCESS_HEAD(inline, op, result_type)                   \
   {                                                                                     \
       using boost::iterators::detail::is_traversal_at_least;                            \
-      using Derived1IterCat = typename iterator_category<Derived1>::type;               \
-      using Derived2IterCat = typename iterator_category<Derived2>::type;               \
+      typedef typename iterator_category<Derived1>::type Derived1IterCat;               \
+      typedef typename iterator_category<Derived2>::type Derived2IterCat;               \
       /* For those compilers that do not support enable_if */                           \
       static_assert(                                                                    \
           is_interoperable<Derived1, Derived2>::value &&                                \
