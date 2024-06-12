@@ -88,7 +88,7 @@ namespace iterators {
 #if !BOOST_WORKAROUND(__MWERKS__, BOOST_TESTED_AT(0x3003))
         // don't provide this constructor if UnaryFunc is a
         // function pointer type, since it will be 0.  Too dangerous.
-        static_assert(std::is_class<UnaryFunc>::value, "");
+        static_assert(std::is_class<UnaryFunc>::value, "Transform function must not be a function pointer.");
 #endif
     }
 

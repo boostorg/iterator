@@ -69,7 +69,7 @@ namespace iterators {
 #if !BOOST_WORKAROUND(__MWERKS__, BOOST_TESTED_AT(0x3003))
           // Don't allow use of this constructor if Predicate is a
           // function pointer type, since it will be 0.
-          static_assert(std::is_class<Predicate>::value, "");
+          static_assert(std::is_class<Predicate>::value, "Predicate must be a class.");
 #endif
           satisfy_predicate();
       }

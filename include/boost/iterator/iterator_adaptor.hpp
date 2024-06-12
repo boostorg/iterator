@@ -155,13 +155,6 @@ namespace iterators {
         >
         type;
     };
-
-    // workaround for aC++ CR JAGaf33512
-    template <class Tr1, class Tr2>
-    inline void iterator_adaptor_assert_traversal ()
-    {
-      static_assert(std::is_convertible<Tr1, Tr2>::value, "");
-    }
   }
 
   //
@@ -260,12 +253,12 @@ namespace iterators {
           typename super_t::iterator_category
       >::type my_traversal;
 
-# define BOOST_ITERATOR_ADAPTOR_ASSERT_TRAVERSAL(cat) \
-      boost::iterators::detail::iterator_adaptor_assert_traversal<my_traversal, cat>();
-
       void advance(typename super_t::difference_type n)
       {
-          BOOST_ITERATOR_ADAPTOR_ASSERT_TRAVERSAL(random_access_traversal_tag)
+          static_assert(
+            std::is_convertible<my_traversal, random_access_traversal_tag>::value,
+            "Super iterator must have a random_access_traversal_tag."
+          );
           m_iterator += n;
       }
 
@@ -273,7 +266,10 @@ namespace iterators {
 
       void decrement()
       {
-          BOOST_ITERATOR_ADAPTOR_ASSERT_TRAVERSAL(bidirectional_traversal_tag)
+          static_assert(
+            std::is_convertible<my_traversal, bidirectional_traversal_tag>::value,
+            "Super iterator must have a bidirectional_traversal_tag."
+          );
            --m_iterator;
       }
 
@@ -283,15 +279,16 @@ namespace iterators {
       typename super_t::difference_type distance_to(
           iterator_adaptor<OtherDerived, OtherIterator, V, C, R, D> const& y) const
       {
-          BOOST_ITERATOR_ADAPTOR_ASSERT_TRAVERSAL(random_access_traversal_tag)
+          static_assert(
+            std::is_convertible<my_traversal, random_access_traversal_tag>::value,
+            "Super iterator must have a random_access_traversal_tag."
+          );
           // Maybe readd with same_distance
           //           BOOST_STATIC_ASSERT(
           //               (detail::same_category_and_difference<Derived,OtherDerived>::value)
           //               );
           return y.base() - m_iterator;
       }
-
-# undef BOOST_ITERATOR_ADAPTOR_ASSERT_TRAVERSAL
 
    private: // data members
       Base m_iterator;

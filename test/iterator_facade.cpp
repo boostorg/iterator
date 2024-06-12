@@ -225,7 +225,7 @@ int main()
         BOOST_TEST_EQ(val.private_mutator_count, 0); // mutator() should be invoked on an object returned by value
         BOOST_TEST_EQ(shared_mutator_count, 2);
 
-        same_type<input_iter::pointer>(p.operator->());
+        same_type<input_iter::pointer>(p.operator->());  // possibly replace with static_assert(std::is_same<input_iter::pointer, std::remove_cvref<decltype(p.operator->())>>::value, "")
     }
 
     {

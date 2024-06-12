@@ -34,7 +34,7 @@ namespace detail
   struct is_numeric_impl
   {
       // For a while, this wasn't true, but we rely on it below. This is a regression assert.
-      static_assert(std::is_integral<char>::value, "");
+      static_assert(std::is_integral<char>::value, "std::is_integral<char> is expected to be true");
 
 # ifndef BOOST_NO_LIMITS_COMPILE_TIME_CONSTANTS
 
