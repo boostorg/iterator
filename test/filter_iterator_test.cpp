@@ -233,7 +233,7 @@ int main()
              boost::iterator_traversal<filter_iter>::type
            , boost::random_access_traversal_tag
          >::value,
-        "");
+        "Filter interator must have a random_access_traversal_tag.");
 
     //# endif
 

@@ -10,6 +10,8 @@
 #include <boost/call_traits.hpp>
 #include <type_traits>
 
+#include "static_assert_same.hpp"
+
 // This is a really, really limited test so far.  All we're doing
 // right now is checking that the postfix++ proxy for single-pass
 // iterators works properly.
@@ -143,10 +145,6 @@ struct iterator_with_proxy_reference
     { return wrapper<int&>(m_x); }
 };
 
-template <class T, class U>
-void same_type(U const&)
-{ static_assert(std::is_same<T,U>::value, ""); }
-
 template <class I, class A>
 struct abstract_iterator
     : boost::iterator_facade<
@@ -225,7 +223,7 @@ int main()
         BOOST_TEST_EQ(val.private_mutator_count, 0); // mutator() should be invoked on an object returned by value
         BOOST_TEST_EQ(shared_mutator_count, 2);
 
-        same_type<input_iter::pointer>(p.operator->());
+        STATIC_ASSERT_SAME(input_iter::pointer, std::remove_cv<std::remove_reference<decltype(p.operator->())>::type>::type);
     }
 
     {

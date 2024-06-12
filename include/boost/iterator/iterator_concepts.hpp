@@ -136,8 +136,8 @@ namespace boost_concepts
   {
       typedef typename std::iterator_traits<Iterator>::difference_type difference_type;
 
-      static_assert(std::is_integral<difference_type>::value, "");
-      static_assert(std::numeric_limits<difference_type>::is_signed, "");
+      static_assert(std::is_integral<difference_type>::value, "difference_type must be integral.");
+      static_assert(std::numeric_limits<difference_type>::is_signed, "difference_type must be signed.");
 
       BOOST_CONCEPT_ASSERT((
           boost::Convertible<

@@ -324,7 +324,7 @@ struct iterator_access_archetype_impl<
     template <class Value>
     struct archetype
     {
-        static_assert(!std::is_const<Value>::value, "");
+        static_assert(!std::is_const<Value>::value, "Value type must be const.");
         typedef void value_type;
         typedef void reference;
         typedef void pointer;
@@ -375,7 +375,7 @@ struct iterator_access_archetype_impl<archetypes::writable_lvalue_iterator_t>
             Value, archetypes::readable_lvalue_iterator_t
         >
     {
-        static_assert(!std::is_const<Value>::value, "");
+        static_assert(!std::is_const<Value>::value, "Value type must be const.");
     };
 };
 

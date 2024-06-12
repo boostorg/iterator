@@ -39,31 +39,20 @@ void category_test()
     using namespace boost::iterators::detail;
 
     static_assert(
-        !std::is_convertible<
-            std::input_iterator_tag
-          , input_output_iterator_tag>::value,
-        "");
+        !std::is_convertible<std::input_iterator_tag, input_output_iterator_tag>::value,
+        "std::input_iterator_tag is not expected to be convertible to input_output_iterator_tag.");
 
     static_assert(
-        !std::is_convertible<
-            std::output_iterator_tag
-          , input_output_iterator_tag
-         >::value,
-        "");
+        !std::is_convertible<std::output_iterator_tag , input_output_iterator_tag>::value,
+        "std::output_iterator_tag is not expected to be convertible to input_output_iterator_tag.");
 
     static_assert(
-        std::is_convertible<
-            input_output_iterator_tag
-          , std::input_iterator_tag
-        >::value,
-        "");
+        std::is_convertible<input_output_iterator_tag, std::input_iterator_tag>::value,
+        "input_output_iterator_tag is expected to be convertible to std::input_iterator_tag.");
 
     static_assert(
-        std::is_convertible<
-            input_output_iterator_tag
-          , std::output_iterator_tag
-        >::value,
-        "");
+        std::is_convertible<input_output_iterator_tag, std::output_iterator_tag>::value,
+        "input_output_iterator_tag is expected to be convertible to std::output_iterator_tag.");
 
 #if 0 // This seems wrong; we're not advertising
       // input_output_iterator_tag are we?
@@ -113,4 +102,3 @@ int main()
     operator_arrow_test();
     return 0;
 }
-

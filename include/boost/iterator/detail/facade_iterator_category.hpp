@@ -136,13 +136,15 @@ struct iterator_category_with_traversal
         !std::is_convertible<
               typename iterator_category_to_traversal<Category>::type
             , Traversal
-          >::value, "");
+         >::value,
+        "Category transformed to corresponding traversal must be convertible to Traversal."
+    );
 
-    static_assert(is_iterator_category<Category>::value, "");
-    static_assert(!is_iterator_category<Traversal>::value, "");
-    static_assert(!is_iterator_traversal<Category>::value, "");
+    static_assert(is_iterator_category<Category>::value, "Category must be an STL iterator category.");
+    static_assert(!is_iterator_category<Traversal>::value, "Traversal must not be an STL iterator category.");
+    static_assert(!is_iterator_traversal<Category>::value, "Category must not be a traversal tag.");
 #  if !BOOST_WORKAROUND(BOOST_MSVC, BOOST_TESTED_AT(1310))
-    static_assert(is_iterator_traversal<Traversal>::value, "");
+    static_assert(is_iterator_traversal<Traversal>::value, "Traversal must be a traversal tag.");
 #  endif
 };
 
@@ -151,7 +153,7 @@ struct iterator_category_with_traversal
 template <class Traversal, class ValueParam, class Reference>
 struct facade_iterator_category_impl
 {
-    static_assert(!is_iterator_category<Traversal>::value, "");
+    static_assert(!is_iterator_category<Traversal>::value, "Traversal must not be an STL iterator category.");
 
     typedef typename iterator_facade_default_category<
         Traversal,ValueParam,Reference

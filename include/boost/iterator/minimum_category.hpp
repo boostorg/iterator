@@ -42,7 +42,10 @@ struct minimum_category_impl<true,true>
 {
     template <class T1, class T2> struct apply
     {
-        static_assert(std::is_same<T1,T2>::value, "");
+        static_assert(
+            std::is_same<T1,T2>::value,
+            "Types must be same when they are convertible to each other."
+        );
         typedef T1 type;
     };
 };

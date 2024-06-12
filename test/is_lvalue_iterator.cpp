@@ -86,61 +86,96 @@ struct constant_lvalue_iterator
     constant_lvalue_iterator operator++(int);
 };
 
-
 int main()
 {
-    static_assert(boost::is_lvalue_iterator<v*>::value, "");
-    static_assert(boost::is_lvalue_iterator<v const*>::value, "");
-    static_assert(boost::is_lvalue_iterator<std::deque<v>::iterator>::value, "");
-    static_assert(boost::is_lvalue_iterator<std::deque<v>::const_iterator>::value, "");
-    static_assert(!boost::is_lvalue_iterator<std::back_insert_iterator<std::deque<v> > >::value, "");
-    static_assert(!boost::is_lvalue_iterator<std::ostream_iterator<v> >::value, "");
-    static_assert(!boost::is_lvalue_iterator<proxy_iterator<v> >::value, "");
-    static_assert(!boost::is_lvalue_iterator<proxy_iterator<int> >::value, "");
+    static_assert(boost::is_lvalue_iterator<v*>::value,
+                  "boost::is_lvalue_iterator<v*>::value is expected to be true.");
+    static_assert(boost::is_lvalue_iterator<v const*>::value,
+                  "boost::is_lvalue_iterator<v const*>::value is expected to be true.");
+    static_assert(boost::is_lvalue_iterator<std::deque<v>::iterator>::value,
+                  "boost::is_lvalue_iterator<std::deque<v>::iterator>::value.");
+    static_assert(boost::is_lvalue_iterator<std::deque<v>::const_iterator>::value,
+                  "boost::is_lvalue_iterator<std::deque<v>::const_iterator>::value is expected to be true.");
+    static_assert(!boost::is_lvalue_iterator<std::back_insert_iterator<std::deque<v>>>::value,
+                  "boost::is_lvalue_iterator<std::back_insert_iterator<std::deque<v>>>::value is expected to be false.");
+    static_assert(!boost::is_lvalue_iterator<std::ostream_iterator<v>>::value,
+                  "boost::is_lvalue_iterator<std::ostream_iterator<v>>::value is expected to be false.");
+    static_assert(!boost::is_lvalue_iterator<proxy_iterator<v>>::value,
+                  "boost::is_lvalue_iterator<proxy_iterator<v>>::value is expected to be false.");
+    static_assert(!boost::is_lvalue_iterator<proxy_iterator<int>>::value,
+                  "boost::is_lvalue_iterator<proxy_iterator<int>>::value is expected to be false.");
 #ifndef BOOST_NO_LVALUE_RETURN_DETECTION
-    static_assert(!boost::is_lvalue_iterator<value_iterator>::value, "");
+    static_assert(!boost::is_lvalue_iterator<value_iterator>::value,
+                  "boost::is_lvalue_iterator<value_iterator>::value is expected to be false.");
 #endif
     // Make sure inaccessible copy constructor doesn't prevent
     // reference binding
-    static_assert(boost::is_lvalue_iterator<noncopyable_iterator>::value, "");
+    static_assert(boost::is_lvalue_iterator<noncopyable_iterator>::value,
+                  "boost::is_lvalue_iterator<noncopyable_iterator>::value is expected to be true.");
 
-    static_assert(boost::is_lvalue_iterator<lvalue_iterator<v> >::value, "");
-    static_assert(boost::is_lvalue_iterator<lvalue_iterator<int> >::value, "");
-    static_assert(boost::is_lvalue_iterator<lvalue_iterator<char*> >::value, "");
-    static_assert(boost::is_lvalue_iterator<lvalue_iterator<float> >::value, "");
-
-
-    static_assert(boost::is_lvalue_iterator<constant_lvalue_iterator<v> >::value, "");
-    static_assert(boost::is_lvalue_iterator<constant_lvalue_iterator<int> >::value, "");
-    static_assert(boost::is_lvalue_iterator<constant_lvalue_iterator<char*> >::value, "");
-    static_assert(boost::is_lvalue_iterator<constant_lvalue_iterator<float> >::value, "");
-
+    static_assert(boost::is_lvalue_iterator<lvalue_iterator<v>>::value,
+                  "boost::is_lvalue_iterator<lvalue_iterator<v>>::value is expected to be true.");
+    static_assert(boost::is_lvalue_iterator<lvalue_iterator<int>>::value,
+                  "boost::is_lvalue_iterator<lvalue_iterator<int>>::value is expected to be true.");
+    static_assert(boost::is_lvalue_iterator<lvalue_iterator<char*>>::value,
+                  "boost::is_lvalue_iterator<lvalue_iterator<char*>>::value is expected to be true.");
+    static_assert(boost::is_lvalue_iterator<lvalue_iterator<float>>::value,
+                  "boost::is_lvalue_iterator<lvalue_iterator<float>>::value is expected to be true.");
 
 
-    static_assert(boost::is_non_const_lvalue_iterator<v*>::value, "");
-    static_assert(!boost::is_non_const_lvalue_iterator<v const*>::value, "");
-    static_assert(boost::is_non_const_lvalue_iterator<std::deque<v>::iterator>::value, "");
-    static_assert(!boost::is_non_const_lvalue_iterator<std::deque<v>::const_iterator>::value, "");
-    static_assert(!boost::is_non_const_lvalue_iterator<std::back_insert_iterator<std::deque<v> > >::value, "");
-    static_assert(!boost::is_non_const_lvalue_iterator<std::ostream_iterator<v> >::value, "");
-    static_assert(!boost::is_non_const_lvalue_iterator<proxy_iterator<v> >::value, "");
-    static_assert(!boost::is_non_const_lvalue_iterator<proxy_iterator<int> >::value, "");
+    static_assert(boost::is_lvalue_iterator<constant_lvalue_iterator<v>>::value,
+                  "boost::is_lvalue_iterator<constant_lvalue_iterator<v>>::value is expected to be true.");
+    static_assert(boost::is_lvalue_iterator<constant_lvalue_iterator<int>>::value,
+                  "boost::is_lvalue_iterator<constant_lvalue_iterator<int>>::value is expected to be true.");
+    static_assert(boost::is_lvalue_iterator<constant_lvalue_iterator<char*>>::value,
+                  "boost::is_lvalue_iterator<constant_lvalue_iterator<char*>>::value is expected to be true.");
+    static_assert(boost::is_lvalue_iterator<constant_lvalue_iterator<float>>::value,
+                  "boost::is_lvalue_iterator<constant_lvalue_iterator<float>>::value is expected to be true.");
+
+
+
+    static_assert(boost::is_non_const_lvalue_iterator<v*>::value,
+                  "boost::is_non_const_lvalue_iterator<v*>::value is expected to be true.");
+    static_assert(!boost::is_non_const_lvalue_iterator<v const*>::value,
+                  "boost::is_non_const_lvalue_iterator<v const*>::value is expected to be false.");
+    static_assert(boost::is_non_const_lvalue_iterator<std::deque<v>::iterator>::value,
+                  "boost::is_non_const_lvalue_iterator<std::deque<v>::iterator>::value is expected to be true.");
+    static_assert(!boost::is_non_const_lvalue_iterator<std::deque<v>::const_iterator>::value,
+                  "boost::is_non_const_lvalue_iterator<std::deque<v>::const_iterator>::value is expected to be false.");
+    static_assert(!boost::is_non_const_lvalue_iterator<std::back_insert_iterator<std::deque<v>>>::value,
+                  "boost::is_non_const_lvalue_iterator<std::back_insert_iterator<std::deque<v>>>::value is expected to be false.");
+    static_assert(!boost::is_non_const_lvalue_iterator<std::ostream_iterator<v>>::value,
+                  "boost::is_non_const_lvalue_iterator<std::ostream_iterator<v>>::value is expected to be false.");
+    static_assert(!boost::is_non_const_lvalue_iterator<proxy_iterator<v>>::value,
+                  "boost::is_non_const_lvalue_iterator<proxy_iterator<v>>::value is expected to be false.");
+    static_assert(!boost::is_non_const_lvalue_iterator<proxy_iterator<int>>::value,
+                  "boost::is_non_const_lvalue_iterator<proxy_iterator<int>>::value is expected to be false.");
 #ifndef BOOST_NO_LVALUE_RETURN_DETECTION
-    static_assert(!boost::is_non_const_lvalue_iterator<value_iterator>::value, "");
+    static_assert(!boost::is_non_const_lvalue_iterator<value_iterator>::value,
+                  "boost::is_non_const_lvalue_iterator<value_iterator>::value is expected to be false.");
 #endif
-    static_assert(!boost::is_non_const_lvalue_iterator<noncopyable_iterator>::value, "");
+    static_assert(!boost::is_non_const_lvalue_iterator<noncopyable_iterator>::value,
+                  "boost::is_non_const_lvalue_iterator<noncopyable_iterator>::value is expected to be false.");
 
-    static_assert(boost::is_non_const_lvalue_iterator<lvalue_iterator<v> >::value, "");
+    static_assert(boost::is_non_const_lvalue_iterator<lvalue_iterator<v>>::value,
+                  "boost::is_non_const_lvalue_iterator<lvalue_iterator<v>>::value is expected to be true.");
 #if !BOOST_WORKAROUND(BOOST_BORLANDC, BOOST_TESTED_AT(0x564))
-    static_assert(boost::is_non_const_lvalue_iterator<lvalue_iterator<int> >::value, "");
+    static_assert(boost::is_non_const_lvalue_iterator<lvalue_iterator<int>>::value,
+                  "boost::is_non_const_lvalue_iterator<lvalue_iterator<int>>::value is expected to be true.");
 #endif
-    static_assert(boost::is_non_const_lvalue_iterator<lvalue_iterator<char*> >::value, "");
-    static_assert(boost::is_non_const_lvalue_iterator<lvalue_iterator<float> >::value, "");
+    static_assert(boost::is_non_const_lvalue_iterator<lvalue_iterator<char*>>::value,
+                  "boost::is_non_const_lvalue_iterator<lvalue_iterator<char*>>::value is expected to be true.");
+    static_assert(boost::is_non_const_lvalue_iterator<lvalue_iterator<float>>::value,
+                  "boost::is_non_const_lvalue_iterator<lvalue_iterator<float>>::value is expected to be true.");
 
-    static_assert(!boost::is_non_const_lvalue_iterator<constant_lvalue_iterator<v> >::value, "");
-    static_assert(!boost::is_non_const_lvalue_iterator<constant_lvalue_iterator<int> >::value, "");
-    static_assert(!boost::is_non_const_lvalue_iterator<constant_lvalue_iterator<char*> >::value, "");
-    static_assert(!boost::is_non_const_lvalue_iterator<constant_lvalue_iterator<float> >::value, "");
+    static_assert(!boost::is_non_const_lvalue_iterator<constant_lvalue_iterator<v>>::value,
+                  "boost::is_non_const_lvalue_iterator<constant_lvalue_iterator<v>>::value is expected to be false.");
+    static_assert(!boost::is_non_const_lvalue_iterator<constant_lvalue_iterator<int>>::value,
+                  "boost::is_non_const_lvalue_iterator<constant_lvalue_iterator<int>>::value is expected to be false.");
+    static_assert(!boost::is_non_const_lvalue_iterator<constant_lvalue_iterator<char*>>::value,
+                  "boost::is_non_const_lvalue_iterator<constant_lvalue_iterator<char*>>::value is expected to be false.");
+    static_assert(!boost::is_non_const_lvalue_iterator<constant_lvalue_iterator<float>>::value,
+                  "boost::is_non_const_lvalue_iterator<constant_lvalue_iterator<float>>::value is expected to be false.");
 
     return 0;
 }
