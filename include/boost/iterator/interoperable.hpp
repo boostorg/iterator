@@ -9,9 +9,7 @@
 
 # include <type_traits>
 
-# include <boost/mpl/bool.hpp>
-# include <boost/mpl/or.hpp>
-
+# include <boost/iterator/detail/type_traits/disjunction.hpp>
 # include <boost/iterator/detail/config_def.hpp> // must appear last
 
 namespace boost {
@@ -33,10 +31,7 @@ namespace iterators {
   //
   template <typename A, typename B>
   struct is_interoperable
-    : std::integral_constant<
-          bool
-        , std::is_convertible< A, B >::value || std::is_convertible< B, A >::value
-      >
+    : detail::disjunction<std::is_convertible<A, B>, std::is_convertible<B, A>>
   {
   };
 

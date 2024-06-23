@@ -14,7 +14,6 @@
 
 #include <boost/detail/indirect_traits.hpp>
 
-#include <boost/mpl/bool.hpp>
 #include <boost/mpl/identity.hpp>
 #include <boost/mpl/eval_if.hpp>
 #include <boost/mpl/has_xxx.hpp>
@@ -25,7 +24,6 @@
 #ifdef BOOST_MPL_CFG_NO_HAS_XXX
 # include <boost/shared_ptr.hpp>
 # include <boost/scoped_ptr.hpp>
-# include <boost/mpl/bool.hpp>
 # include <memory>
 #endif
 

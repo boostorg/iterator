@@ -18,6 +18,7 @@
 #include <boost/config.hpp>
 #include <boost/type_traits/is_complete.hpp>
 #include <boost/iterator/detail/type_traits/conjunction.hpp>
+#include <boost/iterator/detail/type_traits/negation.hpp>
 #if !defined(BOOST_NO_CXX17_ITERATOR_TRAITS)
 #include <iterator>
 #endif
@@ -69,7 +70,7 @@ template< typename T >
 struct is_iterator_impl< T* > :
     public conjunction<
         boost::is_complete<T>,
-        std::integral_constant<bool, !std::is_function<T>::value>
+        negation< std::is_function< T > >
     >::type
 {
 };

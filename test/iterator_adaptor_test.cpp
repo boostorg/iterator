@@ -210,8 +210,8 @@ main()
     test = static_assert_same<Iter1::difference_type, std::ptrdiff_t>::value;
 #if !BOOST_WORKAROUND(__MWERKS__, <= 0x2407)
     static_assert(
-      std::is_convertible<Iter1::iterator_category, std::random_access_iterator_tag>::value,
-      "Iter1::iterator_category must be convertible to std::random_access_iterator_tag."
+        std::is_convertible<Iter1::iterator_category, std::random_access_iterator_tag>::value,
+        "Iterator must have a random access category."
     );
 #endif
   }
@@ -225,7 +225,7 @@ main()
 #if !BOOST_WORKAROUND(__MWERKS__, <= 0x2407)
     static_assert(boost::is_readable_iterator<Iter1>::value, "Iter1 is expected to be readable.");
 # ifndef BOOST_NO_LVALUE_RETURN_DETECTION
-    static_assert(boost::is_lvalue_iterator<Iter1>::value, "Iter1 is expected to be lvalue.");
+    static_assert(boost::is_lvalue_iterator<Iter1>::value, "Iter1 is expected to be lvalue iterator.");
 # endif
 #endif
 

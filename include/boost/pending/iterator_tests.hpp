@@ -142,8 +142,8 @@ template <bool is_pointer> struct lvalue_test
 # endif
         static_assert(std::is_reference<reference>::value, "reference must be a reference type.");
         static_assert(
-          std::is_same<reference, value_type&>::value || std::is_same<reference, const value_type&>::value,
-          "reference must either be a reference to value_type or constant reference to value_type."
+            std::is_same<reference, value_type&>::value || std::is_same<reference, const value_type&>::value,
+            "reference must either be a reference to value_type or constant reference to value_type."
         );
     }
 };

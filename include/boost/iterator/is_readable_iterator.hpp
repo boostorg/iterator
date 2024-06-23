@@ -4,7 +4,6 @@
 #ifndef IS_READABLE_ITERATOR_DWA2003112_HPP
 # define IS_READABLE_ITERATOR_DWA2003112_HPP
 
-#include <boost/mpl/bool.hpp>
 #include <boost/mpl/aux_/lambda_support.hpp>
 
 #include <boost/iterator/detail/any_conversion_eater.hpp>
@@ -54,7 +53,7 @@ namespace detail
   struct is_readable_iterator_impl<void>
   {
       template <class It>
-      struct rebind : boost::mpl::false_
+      struct rebind : std::false_type
       {};
   };
 
@@ -63,7 +62,7 @@ namespace detail
   struct is_readable_iterator_impl<const void>
   {
       template <class It>
-      struct rebind : boost::mpl::false_
+      struct rebind : std::false_type
       {};
   };
 
@@ -71,7 +70,7 @@ namespace detail
   struct is_readable_iterator_impl<volatile void>
   {
       template <class It>
-      struct rebind : boost::mpl::false_
+      struct rebind : std::false_type
       {};
   };
 
@@ -79,7 +78,7 @@ namespace detail
   struct is_readable_iterator_impl<const volatile void>
   {
       template <class It>
-      struct rebind : boost::mpl::false_
+      struct rebind : std::false_type
       {};
   };
 #endif

@@ -8,13 +8,13 @@
 
 # include <boost/iterator/iterator_categories.hpp>
 
-# include <boost/mpl/or.hpp>  // used in iterator_tag inheritance logic
-# include <boost/mpl/and.hpp>
 # include <boost/mpl/eval_if.hpp>
 # include <boost/mpl/identity.hpp>
 
 # include <type_traits>
 
+# include <boost/iterator/detail/type_traits/conjunction.hpp>
+# include <boost/iterator/detail/type_traits/disjunction.hpp>
 # include <boost/iterator/detail/config_def.hpp> // try to keep this last
 
 # ifdef BOOST_ITERATOR_REF_CONSTNESS_KILLS_WRITABILITY
@@ -55,13 +55,13 @@ struct input_output_iterator_tag
 template <class ValueParam, class Reference>
 struct iterator_writability_disabled
 # ifdef BOOST_ITERATOR_REF_CONSTNESS_KILLS_WRITABILITY // Adding Thomas' logic?
-  : mpl::or_<
-        is_const<Reference>
-      , boost::detail::indirect_traits::is_reference_to_const<Reference>
-      , is_const<ValueParam>
+  : disjunction<
+        std::is_const<Reference>
+      , std::integral_constant<bool, boost::detail::indirect_traits::is_reference_to_const<Reference>::value>
+      , std::is_const<ValueParam>
     >
 # else
-  : is_const<ValueParam>
+  : std::is_const<ValueParam>
 # endif
 {};
 
@@ -77,21 +77,21 @@ struct iterator_writability_disabled
 template <class Traversal, class ValueParam, class Reference>
 struct iterator_facade_default_category
   : mpl::eval_if<
-        mpl::and_<
+        conjunction<
             std::is_reference<Reference>
           , std::is_convertible<Traversal,forward_traversal_tag>
         >
       , mpl::eval_if<
             std::is_convertible<Traversal,random_access_traversal_tag>
           , mpl::identity<std::random_access_iterator_tag>
-          , mpl::if_<
-                std::is_convertible<Traversal,bidirectional_traversal_tag>
+          , std::conditional<
+                std::is_convertible<Traversal,bidirectional_traversal_tag>::value
               , std::bidirectional_iterator_tag
               , std::forward_iterator_tag
             >
         >
       , typename mpl::eval_if<
-            mpl::and_<
+            conjunction<
                 std::is_convertible<Traversal, single_pass_traversal_tag>
 
                 // check for readability
@@ -107,7 +107,7 @@ struct iterator_facade_default_category
 // True iff T is convertible to an old-style iterator category.
 template <class T>
 struct is_iterator_category
-  : mpl::or_<
+  : disjunction<
         std::is_convertible<T,std::input_iterator_tag>
       , std::is_convertible<T,std::output_iterator_tag>
     >

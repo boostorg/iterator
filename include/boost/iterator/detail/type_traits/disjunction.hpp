@@ -6,13 +6,13 @@
  * Copyright (c) 2024 Georgiy Guminov
  */
 /*!
- * \file iterator/detail/type_traits/conjunction.hpp
+ * \file iterator/detail/type_traits/disjunction.hpp
  *
- * This header contains definition of \c conjunction type trait.
+ * This header contains definition of \c disjunction type trait.
  */
 
-#ifndef BOOST_ITERATOR_DETAIL_TYPE_TRAITS_CONJUNCTION_HPP_INCLUDED_
-#define BOOST_ITERATOR_DETAIL_TYPE_TRAITS_CONJUNCTION_HPP_INCLUDED_
+#ifndef BOOST_ITERATOR_DETAIL_TYPE_TRAITS_DISJUNCTION_HPP_INCLUDED_
+#define BOOST_ITERATOR_DETAIL_TYPE_TRAITS_DISJUNCTION_HPP_INCLUDED_
 
 #include <type_traits>
 #include <boost/config.hpp>
@@ -28,7 +28,7 @@ namespace boost {
 namespace iterators {
 namespace detail {
 
-using std::conjunction;
+using std::disjunction;
 
 } // namespace detail
 } // namespace iterator
@@ -36,13 +36,13 @@ using std::conjunction;
 
 #else
 
-#include <boost/type_traits/conjunction.hpp>
+#include <boost/type_traits/disjunction.hpp>
 
 namespace boost {
 namespace iterators {
 namespace detail {
 
-using boost::conjunction;
+using boost::disjunction;
 
 } // namespace detail
 } // namespace iterator
@@ -50,4 +50,4 @@ using boost::conjunction;
 
 #endif
 
-#endif // BOOST_ITERATOR_DETAIL_TYPE_TRAITS_CONJUNCTION_HPP_INCLUDED_
+#endif // BOOST_ITERATOR_DETAIL_TYPE_TRAITS_DISJUNCTION_HPP_INCLUDED_

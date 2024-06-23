@@ -5,7 +5,6 @@
 // http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/range/distance.hpp>
-#include <boost/type_traits/is_integral.hpp>
 #include <boost/range/iterator_range_core.hpp>
 #include <boost/iterator/distance.hpp>
 

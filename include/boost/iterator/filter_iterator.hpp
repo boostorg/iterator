@@ -30,11 +30,11 @@ namespace iterators {
             filter_iterator<Predicate, Iterator>
           , Iterator
           , use_default
-          , typename mpl::if_<
+          , typename std::conditional<
                 std::is_convertible<
                     typename iterator_traversal<Iterator>::type
                   , random_access_traversal_tag
-                >
+                >::value
               , bidirectional_traversal_tag
               , use_default
             >::type
