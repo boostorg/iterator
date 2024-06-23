@@ -5,6 +5,7 @@
 // http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/range/distance.hpp>
+#include <boost/type_traits/is_integral.hpp>  // There is a missed include in boost/range/concepts.hpp. This include must be removed in the future.
 #include <boost/range/iterator_range_core.hpp>
 #include <boost/iterator/distance.hpp>
 

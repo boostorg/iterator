@@ -6,15 +6,14 @@
 
 #include <boost/detail/workaround.hpp>
 
-#include <boost/type_traits/add_lvalue_reference.hpp>
 #include <boost/iterator/detail/any_conversion_eater.hpp>
 #include <boost/mpl/bool.hpp>
 #include <boost/mpl/aux_/lambda_support.hpp>
 
 #include <iterator>
+#include <type_traits>
 
 // should be the last #includes
-#include <boost/type_traits/integral_constant.hpp>
 #include <boost/iterator/detail/config_def.hpp>
 
 #ifndef BOOST_NO_IS_CONVERTIBLE
@@ -54,7 +53,7 @@ namespace detail
       // convertible to Value const&
       struct conversion_eater
       {
-          conversion_eater(typename add_lvalue_reference<Value>::type);
+          conversion_eater(typename std::add_lvalue_reference<Value>::type);
       };
 
       static char tester(conversion_eater, int);
@@ -137,14 +136,14 @@ namespace detail
 } // namespace detail
 
 template< typename T > struct is_lvalue_iterator
-: public ::boost::integral_constant<bool,::boost::iterators::detail::is_readable_lvalue_iterator_impl<T>::value>
+: public std::integral_constant<bool,::boost::iterators::detail::is_readable_lvalue_iterator_impl<T>::value>
 {
 public:
     BOOST_MPL_AUX_LAMBDA_SUPPORT(1,is_lvalue_iterator,(T))
 };
 
 template< typename T > struct is_non_const_lvalue_iterator
-: public ::boost::integral_constant<bool,::boost::iterators::detail::is_non_const_lvalue_iterator_impl<T>::value>
+: public std::integral_constant<bool,::boost::iterators::detail::is_non_const_lvalue_iterator_impl<T>::value>
 {
 public:
     BOOST_MPL_AUX_LAMBDA_SUPPORT(1,is_non_const_lvalue_iterator,(T))

@@ -7,10 +7,10 @@
 #ifndef BOOST_INTEROPERABLE_23022003THW_HPP
 # define BOOST_INTEROPERABLE_23022003THW_HPP
 
+# include <type_traits>
+
 # include <boost/mpl/bool.hpp>
 # include <boost/mpl/or.hpp>
-
-# include <boost/type_traits/is_convertible.hpp>
 
 # include <boost/iterator/detail/config_def.hpp> // must appear last
 
@@ -33,13 +33,10 @@ namespace iterators {
   //
   template <typename A, typename B>
   struct is_interoperable
-# ifdef BOOST_NO_STRICT_ITERATOR_INTEROPERABILITY
-    : mpl::true_
-# else
-    : mpl::or_<
-          is_convertible< A, B >
-        , is_convertible< B, A > >
-# endif
+    : std::integral_constant<
+          bool
+        , std::is_convertible< A, B >::value || std::is_convertible< B, A >::value
+      >
   {
   };
 
