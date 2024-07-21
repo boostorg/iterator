@@ -24,9 +24,9 @@ test-suite iterator
     [ run zip_iterator_test2_fusion_vector.cpp ]
     [ run zip_iterator_test2_fusion_list.cpp ]
 #    [ run zip_iterator_test2_fusion_deque.cpp ] // See bug report for fusion https://svn.boost.org/trac/boost/ticket/11572
-    [ run zip_iterator_test_fusion.cpp : : : <source>/boost/assign//boost_assign ]
-    [ run zip_iterator_test_std_tuple.cpp : : : <source>/boost/assign//boost_assign ]
-    [ run zip_iterator_test_std_pair.cpp : : : <source>/boost/assign//boost_assign ]
+    [ run zip_iterator_test_fusion.cpp : : : <library>/boost/assign//boost_assign ]
+    [ run zip_iterator_test_std_tuple.cpp : : : <library>/boost/assign//boost_assign ]
+    [ run zip_iterator_test_std_pair.cpp : : : <library>/boost/assign//boost_assign ]
 
     [ run is_iterator.cpp ]
 
@@ -63,10 +63,10 @@ test-suite iterator
     [ compile-fail minimum_category_compile_fail.cpp ]
 
     [ run next_prior_test.cpp ]
-    [ run advance_test.cpp : : : <source>/boost/container//boost_container ]
-    [ run distance_test.cpp : : : <source>/boost/container//boost_container ]
-    [ compile adl_test.cpp : <source>/boost/array//boost_array ]
-    [ compile range_distance_compat_test.cpp : <source>/boost/range//boost_range ]
+    [ run advance_test.cpp : : : <library>/boost/container//boost_container ]
+    [ run distance_test.cpp : : : <library>/boost/container//boost_container ]
+    [ compile adl_test.cpp : <library>/boost/array//boost_array ]
+    [ compile range_distance_compat_test.cpp : <library>/boost/range//boost_range ]
 
     [ run shared_iterator_test.cpp ]
 ;
