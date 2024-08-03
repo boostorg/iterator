@@ -4,6 +4,8 @@
 
 import testing ;
 
+project : requirements <library>/boost/iterator//boost_iterator ;
+
 test-suite iterator
   :
     # These first two tests will run last, and are expected to fail
