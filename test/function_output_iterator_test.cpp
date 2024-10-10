@@ -60,9 +60,10 @@ int main()
 #endif
 
 #if defined(__cpp_lib_concepts) && ( __cpp_lib_concepts >= 202002L )
-
-    static_assert(std::output_iterator<decltype(boost::function_output_iterator([](int p) {  })), int>);
-
+    {
+        auto func = [](int) {};
+        static_assert(std::output_iterator< boost::iterators::function_output_iterator< decltype(func) >, int >);
+    }
 #endif
 
     return boost::report_errors();
