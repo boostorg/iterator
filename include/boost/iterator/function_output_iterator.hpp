@@ -37,8 +37,8 @@ namespace iterators {
       template <class T>
       typename boost::disable_if_c<
         boost::is_same< typename boost::remove_cv< T >::type, output_proxy >::value,
-        output_proxy&
-      >::type operator=(const T& value) {
+        output_proxy const&
+      >::type operator=(const T& value) const {
         m_f(value);
         return *this;
       }
@@ -46,8 +46,8 @@ namespace iterators {
       template <class T>
       typename boost::disable_if_c<
         boost::is_same< typename boost::remove_cv< typename boost::remove_reference< T >::type >::type, output_proxy >::value,
-        output_proxy&
-      >::type operator=(T&& value) {
+        output_proxy const&
+      >::type operator=(T&& value) const {
         m_f(static_cast< T&& >(value));
         return *this;
       }
