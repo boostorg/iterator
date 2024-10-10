@@ -28,37 +28,6 @@ namespace iterators {
   private:
     typedef function_output_iterator self;
 
-    class output_proxy {
-    public:
-      explicit output_proxy(UnaryFunction& f) BOOST_NOEXCEPT : m_f(f) { }
-
-#ifdef BOOST_NO_CXX11_RVALUE_REFERENCES
-      template <class T>
-      typename boost::disable_if_c<
-        boost::is_same< typename boost::remove_cv< T >::type, output_proxy >::value,
-        output_proxy&
-      >::type operator=(const T& value) {
-        m_f(value);
-        return *this;
-      }
-#else
-      template <class T>
-      typename boost::disable_if_c<
-        boost::is_same< typename boost::remove_cv< typename boost::remove_reference< T >::type >::type, output_proxy >::value,
-        output_proxy&
-      >::type operator=(T&& value) {
-        m_f(static_cast< T&& >(value));
-        return *this;
-      }
-#endif
-
-      BOOST_DEFAULTED_FUNCTION(output_proxy(output_proxy const& that), BOOST_NOEXCEPT : m_f(that.m_f) {})
-      BOOST_DELETED_FUNCTION(output_proxy& operator=(output_proxy const&))
-
-    private:
-      UnaryFunction& m_f;
-    };
-
   public:
     typedef std::output_iterator_tag iterator_category;
     typedef void                value_type;
@@ -71,7 +40,7 @@ namespace iterators {
     explicit function_output_iterator(const UnaryFunction& f)
       : m_f(f) {}
 
-    output_proxy operator*() { return output_proxy(m_f); }
+    self& operator*() { return *this; }
 #ifdef BOOST_NO_CXX11_RVALUE_REFERENCES
     template <class T>
     self& operator=(const T& value) {
