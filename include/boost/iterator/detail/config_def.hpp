@@ -46,7 +46,7 @@
 
 #endif
 
-#if BOOST_WORKAROUND(BOOST_BORLANDC, BOOST_TESTED_AT(0x5A0))                      \
+#if BOOST_WORKAROUND(BOOST_BORLANDC, BOOST_TESTED_AT(0x5A0))                    \
     || (BOOST_WORKAROUND(BOOST_INTEL_CXX_VERSION, <= 700) && defined(_MSC_VER)) \
     || BOOST_WORKAROUND(__DECCXX_VER, BOOST_TESTED_AT(60590042))                \
     || BOOST_WORKAROUND(__SUNPRO_CC, BOOST_TESTED_AT(0x590))
@@ -92,7 +92,7 @@
 #  define BOOST_NO_IS_CONVERTIBLE_TEMPLATE // The following program fails to compile:
 
 #  if 0 // test code
-    #include <boost/type_traits/is_convertible.hpp>
+    #include <type_traits>
     template <class T>
     struct foo
     {
@@ -104,13 +104,13 @@
         T p;
     };
 
-    bool x = boost::is_convertible<foo<int const*>, foo<int*> >::value;
+    bool x = std::is_convertible<foo<int const*>, foo<int*> >::value;
 #  endif
 
 #endif
 
 
-#if !defined(BOOST_MSVC) && (defined(BOOST_NO_SFINAE) || defined(BOOST_NO_IS_CONVERTIBLE) || defined(BOOST_NO_IS_CONVERTIBLE_TEMPLATE))
+#if !defined(BOOST_MSVC) && (defined(BOOST_NO_IS_CONVERTIBLE) || defined(BOOST_NO_IS_CONVERTIBLE_TEMPLATE))
 # define BOOST_NO_STRICT_ITERATOR_INTEROPERABILITY
 #endif
 
