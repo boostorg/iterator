@@ -72,6 +72,19 @@ namespace iterators {
       : m_f(f) {}
 
     output_proxy operator*() { return output_proxy(m_f); }
+#ifdef BOOST_NO_CXX11_RVALUE_REFERENCES
+    template <class T>
+    self& operator=(const T& value) {
+      m_f(value);
+      return *this;
+    }
+#else
+    template <class T>
+    self& operator=(T&& value) {
+      m_f(static_cast<T &&>(value));
+      return *this;
+    }
+#endif
     self& operator++() { return *this; }
     self& operator++(int) { return *this; }
 
