@@ -11,6 +11,7 @@
 #ifndef BOOST_ITERATOR_FUNCTION_OUTPUT_ITERATOR_HPP
 #define BOOST_ITERATOR_FUNCTION_OUTPUT_ITERATOR_HPP
 
+#include <cstddef>
 #include <iterator>
 #include <boost/config.hpp>
 #include <boost/core/enable_if.hpp>
@@ -62,7 +63,7 @@ namespace iterators {
   public:
     typedef std::output_iterator_tag iterator_category;
     typedef void                value_type;
-    typedef void                difference_type;
+    typedef std::ptrdiff_t      difference_type;
     typedef void                pointer;
     typedef void                reference;
 
