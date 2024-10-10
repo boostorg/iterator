@@ -62,7 +62,7 @@ namespace iterators {
   public:
     typedef std::output_iterator_tag iterator_category;
     typedef void                value_type;
-    typedef void                difference_type;
+    typedef std::ptrdiff_t      difference_type;
     typedef void                pointer;
     typedef void                reference;
 
