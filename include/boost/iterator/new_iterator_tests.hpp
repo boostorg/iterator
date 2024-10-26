@@ -123,10 +123,9 @@ void constant_lvalue_iterator_test(Iterator i, T v1) {
   const T &v2 = *i2;
   BOOST_TEST(v1 == v2);
 #ifndef BOOST_NO_LVALUE_RETURN_DETECTION
-  static_assert(is_lvalue_iterator<Iterator>::value,
-                "Iterator must be lvalue.");
-  static_assert(!is_non_const_lvalue_iterator<Iterator>::value,
-                "Iterator must be const.");
+  static_assert(is_lvalue_iterator<Iterator>::value
+                && !is_non_const_lvalue_iterator<Iterator>::value,
+                "Iterator must be a const lvalue iterator.");
 #endif
 }
 
@@ -149,7 +148,7 @@ void non_const_lvalue_iterator_test(Iterator i, T v1, T v2) {
   BOOST_TEST(v2 == v4);
 #ifndef BOOST_NO_LVALUE_RETURN_DETECTION
   static_assert(is_lvalue_iterator<Iterator>::value,
-                "Iterator must be lvalue.");
+                "Iterator must be an lvalue iterator.");
   static_assert(is_non_const_lvalue_iterator<Iterator>::value,
                 "Iterator must be non-const.");
 #endif

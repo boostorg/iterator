@@ -44,7 +44,7 @@ struct minimum_category_impl<true,true>
     {
         static_assert(
             std::is_same<T1,T2>::value,
-            "Types must be same when they are convertible to each other."
+            "Iterator category types must be the same when they are equivalent."
         );
         typedef T1 type;
     };

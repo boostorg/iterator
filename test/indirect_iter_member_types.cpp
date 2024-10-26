@@ -40,7 +40,7 @@ int main()
 
     static_assert(std::is_convertible<Iter::iterator_category,
                                       std::random_access_iterator_tag>::value,
-                  "Iter must have an STL random_access_iterator_tag.");
+                  "Iter must have a random access category.");
     static_assert(std::is_convertible<boost::iterator_traversal<Iter>::type,
                                       boost::random_access_traversal_tag>::value,
                   "Iter must have a random_access_traversal_tag.");
@@ -73,7 +73,7 @@ int main()
 
     static_assert(std::is_convertible<Iter::iterator_category,
                                       std::random_access_iterator_tag>::value,
-                  "Iter must have an STL random_access_iterator_tag.");
+                  "Iter must have a random access category.");
     static_assert(std::is_convertible<boost::iterator_traversal<Iter>::type,
                                       boost::random_access_traversal_tag>::value,
                   "Iter must have a random_access_traversal_tag.");
