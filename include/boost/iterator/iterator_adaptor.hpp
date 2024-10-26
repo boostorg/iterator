@@ -257,7 +257,7 @@ namespace iterators {
       {
           static_assert(
             std::is_convertible<my_traversal, random_access_traversal_tag>::value,
-            "Super iterator must have a random_access_traversal_tag."
+            "Iterator must support random access traversal."
           );
           m_iterator += n;
       }
@@ -268,7 +268,7 @@ namespace iterators {
       {
           static_assert(
             std::is_convertible<my_traversal, bidirectional_traversal_tag>::value,
-            "Super iterator must have a bidirectional_traversal_tag."
+            "Iterator must support bidirectional traversal."
           );
            --m_iterator;
       }
@@ -281,7 +281,7 @@ namespace iterators {
       {
           static_assert(
             std::is_convertible<my_traversal, random_access_traversal_tag>::value,
-            "Super iterator must have a random_access_traversal_tag."
+            "Super iterator must support random access traversal."
           );
           // Maybe readd with same_distance
           //           BOOST_STATIC_ASSERT(
