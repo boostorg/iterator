@@ -204,7 +204,7 @@ namespace iterators {
    public:
       iterator_adaptor() {}
 
-      explicit iterator_adaptor(Base const &iter)
+      explicit iterator_adaptor(Base const& iter)
           : m_iterator(iter)
       {
       }

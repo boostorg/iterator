@@ -68,7 +68,7 @@ struct generator_iterator_generator
 
 template <class Generator>
 inline generator_iterator<Generator>
-make_generator_iterator(Generator & gen)
+make_generator_iterator(Generator& gen)
 {
   typedef generator_iterator<Generator> result_t;
   return result_t(&gen);

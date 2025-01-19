@@ -50,12 +50,12 @@ namespace iterators {
                 iterators::function_input_iterator<Function, Input>,
                 typename result_of_nullary_lvalue_call<Function>::type,
                 single_pass_traversal_tag,
-                typename result_of_nullary_lvalue_call<Function>::type const &
+                typename result_of_nullary_lvalue_call<Function>::type const&
             >
         {
         public:
             function_object_input_iterator() {}
-            function_object_input_iterator(Function & f_, Input state_ = Input())
+            function_object_input_iterator(Function& f_, Input state_ = Input())
                 : f(std::addressof(f_)), state(state_) {}
 
             void increment() {
@@ -66,14 +66,14 @@ namespace iterators {
                 ++state;
             }
 
-            typename result_of_nullary_lvalue_call<Function>::type const &
+            typename result_of_nullary_lvalue_call<Function>::type const&
                 dereference() const {
                 if (!value)
                     value = (*f)();
                 return value.get();
             }
 
-            bool equal(function_object_input_iterator const & other) const {
+            bool equal(function_object_input_iterator const& other) const {
                 return f == other.f && state == other.state;
             }
 
@@ -89,12 +89,12 @@ namespace iterators {
                 iterators::function_input_iterator<Function, Input>,
                 typename function_types::result_type<Function>::type,
                 single_pass_traversal_tag,
-                typename function_types::result_type<Function>::type const &
+                typename function_types::result_type<Function>::type const&
             >
         {
         public:
             function_pointer_input_iterator() {}
-            function_pointer_input_iterator(Function &f_, Input state_ = Input())
+            function_pointer_input_iterator(Function& f_, Input state_ = Input())
                 : f(f_), state(state_) {}
 
             void increment() {
@@ -105,14 +105,14 @@ namespace iterators {
                 ++state;
             }
 
-            typename function_types::result_type<Function>::type const &
+            typename function_types::result_type<Function>::type const&
                 dereference() const {
                 if (!value)
                     value = (*f)();
                 return value.get();
             }
 
-            bool equal(function_pointer_input_iterator const & other) const {
+            bool equal(function_pointer_input_iterator const& other) const {
                 return f == other.f && state == other.state;
             }
 
@@ -138,30 +138,30 @@ namespace iterators {
             impl::function_object_input_iterator<Function,Input>
         >::type base_type;
     public:
-        function_input_iterator(Function & f, Input i)
+        function_input_iterator(Function& f, Input i)
             : base_type(f, i) {}
     };
 
     template <class Function, class Input>
     inline function_input_iterator<Function, Input>
-        make_function_input_iterator(Function & f, Input state) {
+        make_function_input_iterator(Function& f, Input state) {
             typedef function_input_iterator<Function, Input> result_t;
             return result_t(f, state);
     }
 
     template <class Function, class Input>
     inline function_input_iterator<Function*, Input>
-        make_function_input_iterator(Function * f, Input state) {
+        make_function_input_iterator(Function* f, Input state) {
             typedef function_input_iterator<Function*, Input> result_t;
             return result_t(f, state);
     }
 
     struct infinite
     {
-        infinite & operator++() { return *this; }
-        infinite & operator++(int) { return *this; }
-        bool operator==(infinite &) const { return false; };
-        bool operator==(infinite const &) const { return false; };
+        infinite& operator++() { return *this; }
+        infinite& operator++(int) { return *this; }
+        bool operator==(infinite&) const { return false; };
+        bool operator==(infinite const&) const { return false; };
     };
 
 } // namespace iterators

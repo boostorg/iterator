@@ -149,11 +149,11 @@ template <class I, class A>
 struct abstract_iterator
     : boost::iterator_facade<
           abstract_iterator<I, A>
-        , A &
+        , A&
         // In order to be value type as a reference, traversal category has
         // to satisfy least forward traversal.
         , boost::forward_traversal_tag
-        , A &
+        , A&
       >
 {
     abstract_iterator(I iter) : iter(iter) {}
@@ -161,7 +161,7 @@ struct abstract_iterator
     void increment()
     { ++iter; }
 
-    A & dereference() const
+    A& dereference() const
     { return *iter; }
 
     bool equal(abstract_iterator const& y) const
@@ -172,30 +172,30 @@ struct abstract_iterator
 
 struct base
 {
-    virtual void assign(const base &) = 0;
-    virtual bool equal(const base &) const = 0;
+    virtual void assign(const base&) = 0;
+    virtual bool equal(const base&) const = 0;
 };
 
 struct derived : base
 {
     derived(int state) : state(state) { }
-    derived(const derived &d) : state(d.state) { }
-    derived(const base &b) { derived::assign(b); }
+    derived(const derived& d) : state(d.state) { }
+    derived(const base& b) { derived::assign(b); }
 
-    virtual void assign(const base &b)
+    virtual void assign(const base& b)
     {
-        state = dynamic_cast<const derived &>(b).state;
+        state = dynamic_cast<const derived& >(b).state;
     }
 
-    virtual bool equal(const base &b) const
+    virtual bool equal(const base& b) const
     {
-        return state == dynamic_cast<const derived &>(b).state;
+        return state == dynamic_cast<const derived&>(b).state;
     }
 
     int state;
 };
 
-inline bool operator==(const base &lhs, const base &rhs)
+inline bool operator==(const base& lhs, const base& rhs)
 {
     return lhs.equal(rhs);
 }
