@@ -26,8 +26,7 @@
 // libs/iterator/test/constant_iterator_arrow.cpp fails to compile
 // because the operator-> return is improperly deduced as a non-const
 // pointer.
-#if 1 || defined(BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION)           \
-    || BOOST_WORKAROUND(BOOST_BORLANDC, BOOST_TESTED_AT(0x531))
+#if 1 
 
 // Recall that in general, compilers without partial specialization
 // can't strip constness.  Consider counting_iterator, which normally
@@ -43,41 +42,6 @@
 // strictly necessary.  Not sure how best to resolve this one.
 
 # define BOOST_ITERATOR_REF_CONSTNESS_KILLS_WRITABILITY 1
-
-#endif
-
-#if (BOOST_WORKAROUND(BOOST_INTEL_CXX_VERSION, <= 700) && defined(_MSC_VER)) \
-    || BOOST_WORKAROUND(__SUNPRO_CC, BOOST_TESTED_AT(0x590))
-
-# define BOOST_NO_LVALUE_RETURN_DETECTION
-
-# if 0 // test code
-  struct v  {};
-
-  typedef  char (&no)[3];
-
-  template <class T>
-  no foo(T const&, ...);
-
-  template <class T>
-  char foo(T&, int);
-
-
-  struct value_iterator
-  {
-      v operator*() const;
-  };
-
-  template <class T>
-  struct lvalue_deref_helper
-  {
-      static T& x;
-      enum { value = (sizeof(foo(*x,0)) == 1) };
-  };
-
-  int z2[(lvalue_deref_helper<v*>::value == 1) ? 1 : -1];
-  int z[(lvalue_deref_helper<value_iterator>::value) == 1 ? -1 : 1 ];
-# endif
 
 #endif
 

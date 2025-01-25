@@ -16,8 +16,6 @@
 #include <type_traits>
 #include <iterator>
 
-#include <boost/iterator/detail/config_def.hpp>
-
 
 namespace boost {
 namespace iterators {
@@ -100,9 +98,7 @@ namespace iterators {
     transform_iterator(
          transform_iterator<OtherUnaryFunction, OtherIterator, OtherReference, OtherValue> const& t
        , typename enable_if_convertible<OtherIterator, Iterator>::type* = 0
-#if !BOOST_WORKAROUND(BOOST_MSVC, == 1310)
        , typename enable_if_convertible<OtherUnaryFunction, UnaryFunc>::type* = 0
-#endif
     )
       : super_t(t.base()), m_f(t.functor())
    {}
@@ -142,23 +138,11 @@ namespace iterators {
   {
       return transform_iterator<UnaryFunc, Iterator>(it, UnaryFunc());
   }
-
-#if defined(BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION) && !defined(BOOST_NO_FUNCTION_TEMPLATE_ORDERING)
-  template <class Return, class Argument, class Iterator>
-  inline transform_iterator< Return (*)(Argument), Iterator, Return>
-  make_transform_iterator(Iterator it, Return (*fun)(Argument))
-  {
-    return transform_iterator<Return (*)(Argument), Iterator, Return>(it, fun);
-  }
-#endif
-
 } // namespace iterators
 
 using iterators::transform_iterator;
 using iterators::make_transform_iterator;
 
 } // namespace boost
-
-#include <boost/iterator/detail/config_undef.hpp>
 
 #endif // BOOST_TRANSFORM_ITERATOR_23022003THW_HPP

@@ -77,7 +77,7 @@ struct iterator_writability_disabled
 template <class Traversal, class ValueParam, class Reference>
 struct iterator_facade_default_category
   : mpl::eval_if<
-        conjunction<
+        detail::conjunction<
             std::is_reference<Reference>
           , std::is_convertible<Traversal,forward_traversal_tag>
         >
@@ -90,8 +90,8 @@ struct iterator_facade_default_category
               , std::forward_iterator_tag
             >
         >
-      , typename mpl::eval_if<
-            conjunction<
+      , mpl::eval_if<
+            detail::conjunction<
                 std::is_convertible<Traversal, single_pass_traversal_tag>
 
                 // check for readability
@@ -143,9 +143,7 @@ struct iterator_category_with_traversal
     static_assert(is_iterator_category<Category>::value, "Category must be an STL iterator category.");
     static_assert(!is_iterator_category<Traversal>::value, "Traversal must not be an STL iterator category.");
     static_assert(!is_iterator_traversal<Category>::value, "Category must not be a traversal tag.");
-#  if !BOOST_WORKAROUND(BOOST_MSVC, BOOST_TESTED_AT(1310))
     static_assert(is_iterator_traversal<Traversal>::value, "Traversal must be a traversal tag.");
-#  endif
 };
 
 // Computes an iterator_category tag whose traversal is Traversal and

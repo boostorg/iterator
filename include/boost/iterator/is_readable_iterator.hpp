@@ -11,9 +11,6 @@
 #include <iterator>
 #include <type_traits>
 
-// should be the last #include
-#include <boost/iterator/detail/config_def.hpp>
-
 namespace boost {
 
 namespace iterators {
@@ -29,19 +26,11 @@ namespace detail
       static char (& tester(any_conversion_eater, ...) )[2];
 
       template <class It>
-      struct rebind
-      {
-          static It& x;
-
-          BOOST_STATIC_CONSTANT(
-              bool
-            , value = (
-                sizeof(
-                    is_readable_iterator_impl<Value>::tester(*x, 1)
-                ) == 1
-            )
-          );
-      };
+      struct rebind : std::is_convertible<
+                        decltype(*std::declval<It&>())
+                      , typename std::add_lvalue_reference<Value>::type
+                      > 
+      {};
   };
 
 #undef BOOST_READABLE_PRESERVER
@@ -107,7 +96,5 @@ public:
 using iterators::is_readable_iterator;
 
 } // namespace boost
-
-#include <boost/iterator/detail/config_undef.hpp>
 
 #endif // IS_READABLE_ITERATOR_DWA2003112_HPP

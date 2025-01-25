@@ -12,17 +12,16 @@
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/iterator/iterator_adaptor.hpp> // for enable_if_convertible
 #include <boost/iterator/iterator_categories.hpp>
-
 #include <boost/iterator/minimum_category.hpp>
 
 #include <utility> // for std::pair
-#include <boost/fusion/adapted/boost_tuple.hpp> // for backward compatibility
 
 #include <boost/mpl/at.hpp>
 #include <boost/mpl/fold.hpp>
 #include <boost/mpl/transform.hpp>
 #include <boost/mpl/placeholders.hpp>
 
+#include <boost/fusion/adapted/boost_tuple.hpp> // for backward compatibility
 #include <boost/fusion/algorithm/iteration/for_each.hpp>
 #include <boost/fusion/algorithm/transformation/transform.hpp>
 #include <boost/fusion/sequence/convert.hpp>

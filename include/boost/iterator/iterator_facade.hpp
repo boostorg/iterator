@@ -27,9 +27,6 @@
 #include <type_traits>
 #include <memory>
 
-#include <boost/iterator/detail/type_traits/negation.hpp>
-#include <boost/iterator/detail/config_def.hpp> // this goes last
-
 namespace boost {
 namespace iterators {
 
@@ -115,23 +112,6 @@ namespace iterators {
           , std::add_pointer<const value_type>
           , std::add_pointer<value_type>
         >::type pointer;
-
-# if defined(BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION)                          \
-    && (BOOST_WORKAROUND(_STLPORT_VERSION, BOOST_TESTED_AT(0x452))              \
-        || BOOST_WORKAROUND(BOOST_DINKUMWARE_STDLIB, BOOST_TESTED_AT(310)))     \
-    || BOOST_WORKAROUND(BOOST_RWSTD_VER, BOOST_TESTED_AT(0x20101))              \
-    || BOOST_WORKAROUND(BOOST_DINKUMWARE_STDLIB, <= 310)
-
-        // To interoperate with some broken library/compiler
-        // combinations, user-defined iterators must be derived from
-        // std::iterator.  It is possible to implement a standard
-        // library for broken compilers without this limitation.
-#  define BOOST_ITERATOR_FACADE_NEEDS_ITERATOR_BASE 1
-
-        typedef
-           iterator<iterator_category, value_type, Difference, pointer, Reference>
-        base;
-# endif
     };
 
     // iterators whose dereference operators reference the same value
@@ -277,33 +257,6 @@ namespace iterators {
         writable_postfix_increment_dereference_proxy<Iterator> dereference_proxy;
     };
 
-# ifdef BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
-    template <class Reference, class Value>
-    struct is_non_proxy_reference_impl
-    {
-        static Reference r;
-
-        template <class R>
-        static typename std::conditional<
-            std::is_convertible<
-                R const volatile*
-              , Value const volatile*
-            >::value
-          , char[1]
-          , char[2]
-        >::type& helper(R const&);
-
-        BOOST_STATIC_CONSTANT(bool, value = sizeof(helper(r)) == 1);
-    };
-
-    template <class Reference, class Value>
-    struct is_non_proxy_reference
-      : std::integral_constant<
-            bool
-          , is_non_proxy_reference_impl<Reference, Value>::value
-        >
-    {};
-# else
     template <class Reference, class Value>
     struct is_non_proxy_reference
       : std::is_convertible<
@@ -312,7 +265,6 @@ namespace iterators {
           , Value const volatile*
         >
     {};
-# endif
 
     // A metafunction to choose the result type of postfix ++
     //
@@ -527,12 +479,6 @@ namespace iterators {
   //
   class iterator_core_access
   {
-# if defined(BOOST_NO_MEMBER_TEMPLATE_FRIENDS)
-      // Tasteless as this may seem, making all members public allows member templates
-      // to work in the absence of member template friends.
-   public:
-# else
-
       template <class I, class V, class TC, class R, class D> friend class iterator_facade;
       template <class I, class V, class TC, class R, class D, bool IsBidirectionalTraversal, bool IsRandomAccessTraversal>
       friend class detail::iterator_facade_base;
@@ -572,8 +518,6 @@ namespace iterators {
         , iterator_facade<Derived, V, TC, R, D> const&)
       )
       ;
-
-# endif
 
       template <class Facade>
       static typename Facade::reference dereference(Facade const& f)
@@ -655,12 +599,6 @@ namespace iterators {
       , class Difference
     >
     class iterator_facade_base< Derived, Value, CategoryOrTraversal, Reference, Difference, false, false >
-# ifdef BOOST_ITERATOR_FACADE_NEEDS_ITERATOR_BASE
-        : public boost::iterators::detail::iterator_facade_types<
-             Value, CategoryOrTraversal, Reference, Difference
-          >::base
-#  undef BOOST_ITERATOR_FACADE_NEEDS_ITERATOR_BASE
-# endif
     {
     private:
         typedef boost::iterators::detail::iterator_facade_types<
@@ -993,7 +931,5 @@ using iterators::iterator_core_access;
 using iterators::iterator_facade;
 
 } // namespace boost
-
-#include <boost/iterator/detail/config_undef.hpp>
 
 #endif // BOOST_ITERATOR_FACADE_23022003THW_HPP

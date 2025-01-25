@@ -23,16 +23,6 @@
 
 #include "static_assert_same.hpp"
 
-#ifdef BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
-namespace boost { namespace detail
-{
-  template<> struct function_object_result<int (*)(int)>
-  {
-      typedef int type;
-  };
-}}
-#endif
-
 struct mult_functor {
   // Functors used with transform_iterator must be
   // DefaultConstructible, as the transform_iterator must be

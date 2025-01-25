@@ -12,16 +12,12 @@
 #include <iterator>
 #include <type_traits>
 
-// should be the last #includes
-#include <boost/iterator/detail/config_def.hpp>
-
 namespace boost {
 
 namespace iterators {
 
 namespace detail
 {
-#ifndef BOOST_NO_LVALUE_RETURN_DETECTION
   // Calling lvalue_preserver( <expression>, 0 ) returns a reference
   // to the expression's result if <expression> is an lvalue, or
   // not_an_lvalue() otherwise.
@@ -32,14 +28,6 @@ namespace detail
 
   template <class U>
   not_an_lvalue lvalue_preserver(U const&, ...);
-
-# define BOOST_LVALUE_PRESERVER(expr) detail::lvalue_preserver(expr,0)
-
-#else  // BOOST_NO_LVALUE_RETURN_DETECTION
-
-# define BOOST_LVALUE_PRESERVER(expr) expr
-
-#endif  // BOOST_NO_LVALUE_RETURN_DETECTION
 
   // Guts of is_lvalue_iterator.  Value is the iterator's value_type
   // and the result is computed in the nested rebind template.
@@ -66,15 +54,13 @@ namespace detail
             , value = (
                 sizeof(
                     is_lvalue_iterator_impl<Value>::tester(
-                        BOOST_LVALUE_PRESERVER(*x), 0
+                        detail::lvalue_preserver(*x,0), 0
                     )
                 ) == 1
             )
           );
       };
   };
-
-#undef BOOST_LVALUE_PRESERVER
 
   //
   // void specializations to handle std input and output iterators
@@ -152,7 +138,5 @@ using iterators::is_lvalue_iterator;
 using iterators::is_non_const_lvalue_iterator;
 
 } // namespace boost
-
-#include <boost/iterator/detail/config_undef.hpp>
 
 #endif // IS_LVALUE_ITERATOR_DWA2003112_HPP

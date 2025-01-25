@@ -21,14 +21,6 @@
 #include <iterator>
 #include <type_traits>
 
-#ifdef BOOST_MPL_CFG_NO_HAS_XXX
-# include <boost/shared_ptr.hpp>
-# include <boost/scoped_ptr.hpp>
-# include <memory>
-#endif
-
-#include <boost/iterator/detail/config_def.hpp> // must be last #include
-
 namespace boost {
 namespace iterators {
 
@@ -106,11 +98,7 @@ namespace iterators {
   private:
       typename super_t::reference dereference() const
       {
-# if BOOST_WORKAROUND(BOOST_BORLANDC, < 0x5A0 )
-          return const_cast<super_t::reference>(**this->base());
-# else
           return **this->base();
-# endif
       }
   };
 
@@ -134,7 +122,5 @@ using iterators::indirect_iterator;
 using iterators::make_indirect_iterator;
 
 } // namespace boost
-
-#include <boost/iterator/detail/config_undef.hpp>
 
 #endif // BOOST_INDIRECT_ITERATOR_23022003THW_HPP

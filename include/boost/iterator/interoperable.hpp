@@ -7,10 +7,7 @@
 #ifndef BOOST_INTEROPERABLE_23022003THW_HPP
 # define BOOST_INTEROPERABLE_23022003THW_HPP
 
-# include <type_traits>
-
 # include <boost/iterator/detail/type_traits/disjunction.hpp>
-# include <boost/iterator/detail/config_def.hpp> // must appear last
 
 namespace boost {
 namespace iterators {
@@ -40,7 +37,5 @@ namespace iterators {
 using iterators::is_interoperable;
 
 } // namespace boost
-
-# include <boost/iterator/detail/config_undef.hpp>
 
 #endif // BOOST_INTEROPERABLE_23022003THW_HPP

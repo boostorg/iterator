@@ -13,8 +13,9 @@
 
 #include <boost/iterator/iterator_categories.hpp>
 #include <boost/iterator/iterator_facade.hpp>
-#include <boost/iterator/detail/config_def.hpp>
 #include <boost/iterator/iterator_traits.hpp>
+
+#include <boost/iterator/detail/config_def.hpp>
 
 namespace boost {
 namespace iterators {

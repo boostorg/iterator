@@ -11,9 +11,7 @@
 
 #include <boost/iterator/iterator_adaptor.hpp>
 #include <boost/iterator/iterator_categories.hpp>
-
-#include <boost/config.hpp>
-#include <boost/config/workaround.hpp>
+#include <boost/core/use_default.hpp>
 
 namespace boost {
 namespace iterators {
@@ -64,13 +62,9 @@ namespace iterators {
       filter_iterator(Iterator x, Iterator end_ = Iterator())
         : super_t(static_cast<Iterator&&>(x)), m_predicate(), m_end(static_cast<Iterator&&>(end_))
       {
-        // Pro8 is a little too aggressive about instantiating the
-        // body of this function.
-#if !BOOST_WORKAROUND(__MWERKS__, BOOST_TESTED_AT(0x3003))
           // Don't allow use of this constructor if Predicate is a
           // function pointer type, since it will be 0.
           static_assert(std::is_class<Predicate>::value, "Predicate must be a class.");
-#endif
           satisfy_predicate();
       }
 
@@ -120,7 +114,7 @@ namespace iterators {
   inline filter_iterator<Predicate,Iterator>
   make_filter_iterator(
       typename std::enable_if<
-          is_class<Predicate>::value
+          std::is_class<Predicate>::value
         , Iterator
       >::type x
     , Iterator end = Iterator())
@@ -134,7 +128,5 @@ using iterators::filter_iterator;
 using iterators::make_filter_iterator;
 
 } // namespace boost
-
-#undef BOOST_ITERATOR_DETAIL_MOVE
 
 #endif // BOOST_FILTER_ITERATOR_23022003THW_HPP

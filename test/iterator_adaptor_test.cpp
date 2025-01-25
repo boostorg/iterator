@@ -13,10 +13,8 @@
 #include <numeric>
 
 #include <boost/iterator/iterator_adaptor.hpp>
-#if !BOOST_WORKAROUND(__MWERKS__, <= 0x2407)
-# include <boost/iterator/is_readable_iterator.hpp>
-# include <boost/iterator/is_lvalue_iterator.hpp>
-#endif
+#include <boost/iterator/is_readable_iterator.hpp>
+#include <boost/iterator/is_lvalue_iterator.hpp>
 #include <boost/pending/iterator_tests.hpp>
 
 # include <boost/core/lightweight_test.hpp>
@@ -28,8 +26,6 @@
 #include <list>
 
 #include "static_assert_same.hpp"
-
-#include <boost/iterator/detail/config_def.hpp>
 
 using boost::dummyT;
 
@@ -56,9 +52,6 @@ struct ptr_iterator
       , V*
       , V
       , boost::random_access_traversal_tag
-#if BOOST_WORKAROUND(BOOST_BORLANDC, BOOST_TESTED_AT(0x551))
-      , V&
-#endif
    >
 {
 private:
@@ -67,9 +60,6 @@ private:
       , V*
       , V
       , boost::random_access_traversal_tag
-#if BOOST_WORKAROUND(BOOST_BORLANDC, BOOST_TESTED_AT(0x551))
-      , V&
-#endif
     > super_t;
 
 public:
@@ -208,12 +198,10 @@ main()
     test = static_assert_same<Iter1::reference, int&>::value;
     test = static_assert_same<Iter1::pointer, int*>::value;
     test = static_assert_same<Iter1::difference_type, std::ptrdiff_t>::value;
-#if !BOOST_WORKAROUND(__MWERKS__, <= 0x2407)
     static_assert(
         std::is_convertible<Iter1::iterator_category, std::random_access_iterator_tag>::value,
         "Iterator must have a random access category."
     );
-#endif
   }
 
   {
@@ -222,16 +210,10 @@ main()
     test = static_assert_same<Iter1::value_type, int>::value;
     test = static_assert_same<Iter1::reference, const int&>::value;
 
-#if !BOOST_WORKAROUND(__MWERKS__, <= 0x2407)
     static_assert(boost::is_readable_iterator<Iter1>::value, "Iter1 is expected to be readable.");
-# ifndef BOOST_NO_LVALUE_RETURN_DETECTION
     static_assert(boost::is_lvalue_iterator<Iter1>::value, "Iter1 is expected to be lvalue iterator.");
-# endif
-#endif
 
-#if !BOOST_WORKAROUND(BOOST_BORLANDC, BOOST_TESTED_AT(0x564)) // borland drops constness
     test = static_assert_same<Iter1::pointer, int const*>::value;
-#endif
   }
 
   {
@@ -241,11 +223,8 @@ main()
 
     test = static_assert_same<Iter::value_type, int>::value;
     test = static_assert_same<Iter::reference, int const&>::value;
-#if !BOOST_WORKAROUND(BOOST_BORLANDC, BOOST_TESTED_AT(0x564)) // borland drops constness
     test = static_assert_same<Iter::pointer, int const*>::value;
-#endif
 
-#ifndef BOOST_NO_LVALUE_RETURN_DETECTION
     static_assert(
       boost::is_non_const_lvalue_iterator<BaseIter>::value,
       "boost::is_non_const_lvalue_iterator<BaseIter>::value is expected to be true."
@@ -254,7 +233,6 @@ main()
       boost::is_lvalue_iterator<Iter>::value,
       "boost::is_lvalue_iterator<Iter>::value is expected to be true."
     );
-#endif
 
     typedef modify_traversal<BaseIter, boost::incrementable_traversal_tag> IncrementableIter;
 

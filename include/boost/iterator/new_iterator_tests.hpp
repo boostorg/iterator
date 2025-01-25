@@ -32,13 +32,12 @@
 #include <boost/iterator/is_lvalue_iterator.hpp>
 #include <boost/iterator/is_readable_iterator.hpp>
 #include <boost/pending/iterator_tests.hpp>
-#include <iterator>
-#include <type_traits>
-
 #include <boost/core/lightweight_test.hpp>
 #include <boost/detail/is_incrementable.hpp>
-#include <boost/iterator/detail/config_def.hpp>
 #include <boost/iterator/detail/type_traits/conjunction.hpp>
+
+#include <iterator>
+#include <type_traits>
 
 namespace boost {
 
@@ -81,7 +80,6 @@ void readable_iterator_test(const Iterator i1, T v)
   BOOST_TEST(v1 == v);
   BOOST_TEST(v2 == v);
 
-#if !BOOST_WORKAROUND(__MWERKS__, <= 0x2407)
   readable_iterator_traversal_test(
       i1, v,
       std::integral_constant<
@@ -91,7 +89,6 @@ void readable_iterator_test(const Iterator i1, T v)
   // the above code.
   static_assert(is_readable_iterator<Iterator>::value,
                 "Iterator must be readable.");
-#endif
 }
 
 template <class Iterator, class T>
@@ -99,14 +96,12 @@ void writable_iterator_test(Iterator i, T v, T v2) {
   Iterator i2(i); // Copy Constructible
   *i2 = v;
 
-#if !BOOST_WORKAROUND(__MWERKS__, <= 0x2407)
   writable_iterator_traversal_test(
       i, v2,
       iterators::detail::conjunction<
           std::integral_constant<bool, detail::is_incrementable<Iterator>::value>,
           std::integral_constant<bool, detail::is_postfix_incrementable<Iterator>::value>
       >());
-#endif
 }
 
 template <class Iterator>
@@ -153,12 +148,10 @@ void non_const_lvalue_iterator_test(Iterator i, T v1, T v2) {
 
   T& v4 = *i2;
   BOOST_TEST(v2 == v4);
-#ifndef BOOST_NO_LVALUE_RETURN_DETECTION
   static_assert(is_lvalue_iterator<Iterator>::value,
                 "Iterator must be an lvalue iterator.");
   static_assert(is_non_const_lvalue_iterator<Iterator>::value,
                 "Iterator must be non-const.");
-#endif
 }
 
 template <class Iterator, class T>
@@ -264,7 +257,5 @@ void random_access_readable_iterator_test(Iterator i, int N, TrueVals vals)
 }
 
 } // namespace boost
-
-#include <boost/iterator/detail/config_undef.hpp>
 
 #endif // BOOST_NEW_ITERATOR_TESTS_HPP
