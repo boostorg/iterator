@@ -6,7 +6,7 @@
 
 #include <boost/detail/workaround.hpp>
 
-#include <boost/iterator/detail/any_conversion_eater.hpp>
+#include <boost/iterator/detail/type_traits/conjunction.hpp>
 #include <boost/mpl/aux_/lambda_support.hpp>
 
 #include <iterator>
@@ -18,47 +18,20 @@ namespace iterators {
 
 namespace detail
 {
-  // Calling lvalue_preserver( <expression>, 0 ) returns a reference
-  // to the expression's result if <expression> is an lvalue, or
-  // not_an_lvalue() otherwise.
-  struct not_an_lvalue {};
-
-  template <class T>
-  T& lvalue_preserver(T&, int);
-
-  template <class U>
-  not_an_lvalue lvalue_preserver(U const&, ...);
-
   // Guts of is_lvalue_iterator.  Value is the iterator's value_type
   // and the result is computed in the nested rebind template.
   template <class Value>
   struct is_lvalue_iterator_impl
-  {
-      // Eat implicit conversions so we don't report true for things
-      // convertible to Value const&
-      struct conversion_eater
-      {
-          conversion_eater(typename std::add_lvalue_reference<Value>::type);
-      };
-
-      static char tester(conversion_eater, int);
-      static char (& tester(any_conversion_eater, ...) )[2];
+  {      
+      template <class It>
+      using DerefT = decltype(*std::declval<It&>());
 
       template <class It>
-      struct rebind
+      struct rebind : detail::conjunction<
+                        std::is_convertible<DerefT<It>, typename std::add_lvalue_reference<Value>::type>
+                      , std::is_lvalue_reference<DerefT<It>>
+                      >::type
       {
-          static It& x;
-
-          BOOST_STATIC_CONSTANT(
-              bool
-            , value = (
-                sizeof(
-                    is_lvalue_iterator_impl<Value>::tester(
-                        detail::lvalue_preserver(*x,0), 0
-                    )
-                ) == 1
-            )
-          );
       };
   };
 
