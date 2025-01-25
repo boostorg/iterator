@@ -34,25 +34,11 @@ namespace detail
   struct iterator_pointee
   {
       typedef typename std::iterator_traits<Iterator>::value_type value_type;
-
-      struct impl
-      {
-          template <class T>
-          static char test(T const&);
-
-          static char (& test(value_type&) )[2];
-
-          static Iterator& x;
-      };
-
-      BOOST_STATIC_CONSTANT(bool, is_constant = sizeof(impl::test(*impl::x)) == 1);
-
+      
       typedef typename std::conditional<
-#  if BOOST_WORKAROUND(BOOST_BORLANDC, BOOST_TESTED_AT(0x551))
-          ::boost::detail::iterator_pointee<Iterator>::is_constant
-#  else
-          is_constant
-#  endif
+          std::is_const<
+              typename std::remove_reference<decltype(*std::declval<Iterator&>())>::type
+          >::value
         , typename std::add_const<value_type>::type
         , value_type
       >::type type;

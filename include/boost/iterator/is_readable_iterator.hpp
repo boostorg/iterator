@@ -6,8 +6,6 @@
 
 #include <boost/mpl/aux_/lambda_support.hpp>
 
-#include <boost/iterator/detail/any_conversion_eater.hpp>
-
 #include <iterator>
 #include <type_traits>
 
@@ -22,9 +20,6 @@ namespace detail
   template <class Value>
   struct is_readable_iterator_impl
   {
-      static char tester(typename std::add_lvalue_reference<Value>::type, int);
-      static char (& tester(any_conversion_eater, ...) )[2];
-
       template <class It>
       struct rebind : std::is_convertible<
                         decltype(*std::declval<It&>())
@@ -32,8 +27,6 @@ namespace detail
                       > 
       {};
   };
-
-#undef BOOST_READABLE_PRESERVER
 
   //
   // void specializations to handle std input and output iterators
