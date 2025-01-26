@@ -838,16 +838,14 @@ namespace iterators {
   // ----------------
   //
 
-#  define BOOST_ITERATOR_CONVERTIBLE(a,b) std::is_convertible<a,b>()
-
-# define BOOST_ITERATOR_FACADE_INTEROP(op, result_type, return_prefix, base_op) \
-  BOOST_ITERATOR_FACADE_INTEROP_HEAD(inline, op, result_type)                   \
-  {                                                                             \
-      return_prefix iterator_core_access::base_op(                              \
-          *static_cast<Derived1 const*>(&lhs)                                   \
-        , *static_cast<Derived2 const*>(&rhs)                                   \
-        , BOOST_ITERATOR_CONVERTIBLE(Derived2,Derived1)                         \
-      );                                                                        \
+# define BOOST_ITERATOR_FACADE_INTEROP(op, result_type, return_prefix, base_op)          \
+  BOOST_ITERATOR_FACADE_INTEROP_HEAD(inline, op, result_type)                            \
+  {                                                                                      \
+      return_prefix iterator_core_access::base_op(                                       \
+          *static_cast<Derived1 const*>(&lhs)                                            \
+        , *static_cast<Derived2 const*>(&rhs)                                            \
+        , std::integral_constant<bool, std::is_convertible<Derived2, Derived1>::value>() \
+      );                                                                                 \
   }
 
 # define BOOST_ITERATOR_FACADE_RELATION(op, return_prefix, base_op) \
@@ -866,13 +864,13 @@ namespace iterators {
 
 # define BOOST_ITERATOR_FACADE_INTEROP_RANDOM_ACCESS(op, result_type, return_prefix, base_op) \
   BOOST_ITERATOR_FACADE_INTEROP_RANDOM_ACCESS_HEAD(inline, op, result_type)                   \
-  {                                                                                     \
-      using boost::iterators::detail::is_traversal_at_least;                            \
-      return_prefix iterator_core_access::base_op(                                      \
-          *static_cast<Derived1 const*>(&lhs)                                           \
-        , *static_cast<Derived2 const*>(&rhs)                                           \
-        , BOOST_ITERATOR_CONVERTIBLE(Derived2,Derived1)                                 \
-      );                                                                                \
+  {                                                                                           \
+      using boost::iterators::detail::is_traversal_at_least;                                  \
+      return_prefix iterator_core_access::base_op(                                            \
+          *static_cast<Derived1 const*>(&lhs)                                                 \
+        , *static_cast<Derived2 const*>(&rhs)                                                 \
+        , std::integral_constant<bool, std::is_convertible<Derived2, Derived1>::value>()      \
+      );                                                                                      \
   }
 
 # define BOOST_ITERATOR_FACADE_RANDOM_ACCESS_RELATION(op, return_prefix, base_op) \
