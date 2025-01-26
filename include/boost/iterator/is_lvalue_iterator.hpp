@@ -22,7 +22,7 @@ namespace detail
   // and the result is computed in the nested rebind template.
   template <class Value>
   struct is_lvalue_iterator_impl
-  {      
+  {
       template <class It>
       using DerefT = decltype(*std::declval<It&>());
 

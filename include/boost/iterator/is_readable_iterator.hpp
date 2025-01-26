@@ -24,7 +24,7 @@ namespace detail
       struct rebind : std::is_convertible<
                         decltype(*std::declval<It&>())
                       , typename std::add_lvalue_reference<Value>::type
-                      > 
+                      >
       {};
   };
 

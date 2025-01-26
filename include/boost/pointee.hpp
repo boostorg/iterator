@@ -34,7 +34,7 @@ namespace detail
   struct iterator_pointee
   {
       typedef typename std::iterator_traits<Iterator>::value_type value_type;
-      
+
       typedef typename std::conditional<
           std::is_const<
               typename std::remove_reference<decltype(*std::declval<Iterator&>())>::type
