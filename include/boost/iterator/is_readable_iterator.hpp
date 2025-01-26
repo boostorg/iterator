@@ -2,9 +2,7 @@
 // subject to the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 #ifndef IS_READABLE_ITERATOR_DWA2003112_HPP
-# define IS_READABLE_ITERATOR_DWA2003112_HPP
-
-#include <boost/mpl/aux_/lambda_support.hpp>
+#define IS_READABLE_ITERATOR_DWA2003112_HPP
 
 #include <iterator>
 #include <type_traits>
@@ -21,10 +19,11 @@ namespace detail
   struct is_readable_iterator_impl
   {
       template <class It>
-      struct rebind : std::is_convertible<
-                        decltype(*std::declval<It&>())
-                      , typename std::add_lvalue_reference<Value>::type
-                      >
+      struct rebind :
+          public std::is_convertible<
+              decltype(*std::declval<It&>()),
+              typename std::add_lvalue_reference<Value>::type
+          >
       {};
   };
 
@@ -70,18 +69,17 @@ namespace detail
   // an instantiation by removing it for others.
   //
   template <class It>
-  struct is_readable_iterator_impl2
-    : is_readable_iterator_impl<
-          BOOST_DEDUCED_TYPENAME std::iterator_traits<It>::value_type const
+  struct is_readable_iterator_impl2 :
+      public is_readable_iterator_impl<
+          typename std::iterator_traits<It>::value_type const
       >::template rebind<It>
   {};
 } // namespace detail
 
-template< typename T > struct is_readable_iterator
-: public std::integral_constant<bool,::boost::iterators::detail::is_readable_iterator_impl2<T>::value>
+template< typename T >
+struct is_readable_iterator :
+    public std::integral_constant<bool, boost::iterators::detail::is_readable_iterator_impl2<T>::value>
 {
-public:
-    BOOST_MPL_AUX_LAMBDA_SUPPORT(1,is_readable_iterator,(T))
 };
 
 } // namespace iterators
