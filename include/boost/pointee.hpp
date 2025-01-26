@@ -1,5 +1,5 @@
 #ifndef POINTEE_DWA200415_HPP
-# define POINTEE_DWA200415_HPP
+#define POINTEE_DWA200415_HPP
 
 //
 // Copyright David Abrahams 2004. Use, modification and distribution is
@@ -13,45 +13,42 @@
 // http://www.boost.org/libs/iterator/doc/pointee.html
 //
 
-# include <boost/detail/is_incrementable.hpp>
-# include <boost/iterator/iterator_traits.hpp>
-# include <boost/mpl/eval_if.hpp>
+#include <boost/detail/is_incrementable.hpp>
+#include <boost/iterator/iterator_traits.hpp>
 
 #include <iterator>
 #include <type_traits>
 
 namespace boost {
+namespace detail {
 
-namespace detail
+template< typename P >
+struct smart_ptr_pointee
 {
-  template <class P>
-  struct smart_ptr_pointee
-  {
-      typedef typename P::element_type type;
-  };
+    using type = typename P::element_type;
+};
 
-  template <class Iterator>
-  struct iterator_pointee
-  {
-      typedef typename std::iterator_traits<Iterator>::value_type value_type;
+template< typename Iterator, typename = typename std::remove_reference<decltype(*std::declval<Iterator&>())>::type >
+struct iterator_pointee
+{
+    using type = typename std::iterator_traits<Iterator>::value_type;
+};
 
-      typedef typename std::conditional<
-          std::is_const<
-              typename std::remove_reference<decltype(*std::declval<Iterator&>())>::type
-          >::value
-        , typename std::add_const<value_type>::type
-        , value_type
-      >::type type;
-  };
-}
+template< typename Iterator, typename Reference >
+struct iterator_pointee< Iterator, const Reference >
+{
+    using type = typename std::add_const<typename std::iterator_traits<Iterator>::value_type>::type;
+};
 
-template <class P>
-struct pointee
-  : mpl::eval_if<
-        detail::is_incrementable<P>
-      , detail::iterator_pointee<P>
-      , detail::smart_ptr_pointee<P>
-    >
+} // namespace detail
+
+template< typename P >
+struct pointee :
+    public std::conditional<
+        detail::is_incrementable<P>::value,
+        detail::iterator_pointee<P>,
+        detail::smart_ptr_pointee<P>
+    >::type
 {
 };
 
