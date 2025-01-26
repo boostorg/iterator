@@ -7,19 +7,11 @@
 #ifndef BOOST_FILTER_ITERATOR_23022003THW_HPP
 #define BOOST_FILTER_ITERATOR_23022003THW_HPP
 
+#include <type_traits>
+
 #include <boost/iterator/iterator_adaptor.hpp>
 #include <boost/iterator/iterator_categories.hpp>
-
-#include <boost/type_traits/is_class.hpp>
-#include <boost/static_assert.hpp>
-#include <boost/config.hpp>
-#include <boost/config/workaround.hpp>
-
-#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
-#define BOOST_ITERATOR_DETAIL_MOVE(_type, _value) static_cast< _type&& >(_value)
-#else
-#define BOOST_ITERATOR_DETAIL_MOVE(_type, _value) _value
-#endif
+#include <boost/core/use_default.hpp>
 
 namespace boost {
 namespace iterators {
@@ -36,11 +28,11 @@ namespace iterators {
             filter_iterator<Predicate, Iterator>
           , Iterator
           , use_default
-          , typename mpl::if_<
-                is_convertible<
+          , typename std::conditional<
+                std::is_convertible<
                     typename iterator_traversal<Iterator>::type
                   , random_access_traversal_tag
-                >
+                >::value
               , bidirectional_traversal_tag
               , use_default
             >::type
@@ -62,21 +54,17 @@ namespace iterators {
       filter_iterator() { }
 
       filter_iterator(Predicate f, Iterator x, Iterator end_ = Iterator())
-          : super_t(BOOST_ITERATOR_DETAIL_MOVE(Iterator, x)), m_predicate(BOOST_ITERATOR_DETAIL_MOVE(Predicate, f)), m_end(BOOST_ITERATOR_DETAIL_MOVE(Iterator, end_))
+          : super_t(static_cast<Iterator&&>(x)), m_predicate(static_cast<Predicate&&>(f)), m_end(static_cast<Iterator&&>(end_))
       {
           satisfy_predicate();
       }
 
       filter_iterator(Iterator x, Iterator end_ = Iterator())
-        : super_t(BOOST_ITERATOR_DETAIL_MOVE(Iterator, x)), m_predicate(), m_end(BOOST_ITERATOR_DETAIL_MOVE(Iterator, end_))
+        : super_t(static_cast<Iterator&&>(x)), m_predicate(), m_end(static_cast<Iterator&&>(end_))
       {
-        // Pro8 is a little too aggressive about instantiating the
-        // body of this function.
-#if !BOOST_WORKAROUND(__MWERKS__, BOOST_TESTED_AT(0x3003))
           // Don't allow use of this constructor if Predicate is a
           // function pointer type, since it will be 0.
-          BOOST_STATIC_ASSERT(is_class<Predicate>::value);
-#endif
+          static_assert(std::is_class<Predicate>::value, "Predicate must be a class.");
           satisfy_predicate();
       }
 
@@ -119,19 +107,19 @@ namespace iterators {
   inline filter_iterator<Predicate,Iterator>
   make_filter_iterator(Predicate f, Iterator x, Iterator end = Iterator())
   {
-      return filter_iterator<Predicate,Iterator>(BOOST_ITERATOR_DETAIL_MOVE(Predicate, f), BOOST_ITERATOR_DETAIL_MOVE(Iterator, x), BOOST_ITERATOR_DETAIL_MOVE(Iterator, end));
+      return filter_iterator<Predicate,Iterator>(static_cast<Predicate&&>(f), static_cast<Iterator&&>(x), static_cast<Iterator&&>(end));
   }
 
   template <class Predicate, class Iterator>
   inline filter_iterator<Predicate,Iterator>
   make_filter_iterator(
-      typename iterators::enable_if<
-          is_class<Predicate>
+      typename std::enable_if<
+          std::is_class<Predicate>::value
         , Iterator
       >::type x
     , Iterator end = Iterator())
   {
-      return filter_iterator<Predicate,Iterator>(BOOST_ITERATOR_DETAIL_MOVE(Iterator, x), BOOST_ITERATOR_DETAIL_MOVE(Iterator, end));
+      return filter_iterator<Predicate,Iterator>(static_cast<Iterator&&>(x), static_cast<Iterator&&>(end));
   }
 
 } // namespace iterators
@@ -140,7 +128,5 @@ using iterators::filter_iterator;
 using iterators::make_filter_iterator;
 
 } // namespace boost
-
-#undef BOOST_ITERATOR_DETAIL_MOVE
 
 #endif // BOOST_FILTER_ITERATOR_23022003THW_HPP

@@ -9,29 +9,12 @@
 
 #include <boost/config.hpp>
 #include <boost/config/workaround.hpp>
-#include <boost/iterator/detail/enable_if.hpp>
 #include <boost/iterator/iterator_adaptor.hpp>
 #include <boost/iterator/iterator_categories.hpp>
-#include <boost/type_traits/function_traits.hpp>
-#include <boost/type_traits/is_const.hpp>
-#include <boost/type_traits/is_class.hpp>
-#include <boost/type_traits/is_function.hpp>
-#include <boost/type_traits/is_reference.hpp>
-#include <boost/type_traits/remove_const.hpp>
-#include <boost/type_traits/remove_reference.hpp>
 #include <boost/utility/result_of.hpp>
 
+#include <type_traits>
 #include <iterator>
-
-#if BOOST_WORKAROUND(BOOST_MSVC, BOOST_TESTED_AT(1310))
-#include <boost/type_traits/is_base_and_derived.hpp>
-#endif
-
-#if !BOOST_WORKAROUND(__MWERKS__, BOOST_TESTED_AT(0x3003))
-#include <boost/static_assert.hpp>
-#endif
-
-#include <boost/iterator/detail/config_def.hpp>
 
 
 namespace boost {
@@ -103,7 +86,7 @@ namespace iterators {
 #if !BOOST_WORKAROUND(__MWERKS__, BOOST_TESTED_AT(0x3003))
         // don't provide this constructor if UnaryFunc is a
         // function pointer type, since it will be 0.  Too dangerous.
-        BOOST_STATIC_ASSERT(is_class<UnaryFunc>::value);
+        static_assert(std::is_class<UnaryFunc>::value, "Transform function must not be a function pointer.");
 #endif
     }
 
@@ -115,9 +98,7 @@ namespace iterators {
     transform_iterator(
          transform_iterator<OtherUnaryFunction, OtherIterator, OtherReference, OtherValue> const& t
        , typename enable_if_convertible<OtherIterator, Iterator>::type* = 0
-#if !BOOST_WORKAROUND(BOOST_MSVC, == 1310)
        , typename enable_if_convertible<OtherUnaryFunction, UnaryFunc>::type* = 0
-#endif
     )
       : super_t(t.base()), m_f(t.functor())
    {}
@@ -149,31 +130,19 @@ namespace iterators {
   // function pointer in the iterator be 0, leading to a runtime
   // crash.
   template <class UnaryFunc, class Iterator>
-  inline typename iterators::enable_if<
-      is_class<UnaryFunc>   // We should probably find a cheaper test than is_class<>
+  inline typename std::enable_if<
+      std::is_class<UnaryFunc>::value   // We should probably find a cheaper test than is_class<>
     , transform_iterator<UnaryFunc, Iterator>
   >::type
   make_transform_iterator(Iterator it)
   {
       return transform_iterator<UnaryFunc, Iterator>(it, UnaryFunc());
   }
-
-#if defined(BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION) && !defined(BOOST_NO_FUNCTION_TEMPLATE_ORDERING)
-  template <class Return, class Argument, class Iterator>
-  inline transform_iterator< Return (*)(Argument), Iterator, Return>
-  make_transform_iterator(Iterator it, Return (*fun)(Argument))
-  {
-    return transform_iterator<Return (*)(Argument), Iterator, Return>(it, fun);
-  }
-#endif
-
 } // namespace iterators
 
 using iterators::transform_iterator;
 using iterators::make_transform_iterator;
 
 } // namespace boost
-
-#include <boost/iterator/detail/config_undef.hpp>
 
 #endif // BOOST_TRANSFORM_ITERATOR_23022003THW_HPP

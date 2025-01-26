@@ -6,20 +6,12 @@
 #ifndef BOOST_ITERATOR_CATEGORIES_HPP
 # define BOOST_ITERATOR_CATEGORIES_HPP
 
-# include <boost/config.hpp>
-# include <boost/iterator/detail/config_def.hpp>
-
-# include <boost/detail/workaround.hpp>
-
 # include <boost/mpl/eval_if.hpp>
 # include <boost/mpl/identity.hpp>
 # include <boost/mpl/placeholders.hpp>
 # include <boost/mpl/aux_/lambda_support.hpp>
 
-# include <boost/type_traits/is_convertible.hpp>
-
-# include <boost/static_assert.hpp>
-
+#include <type_traits>
 #include <iterator>
 
 namespace boost {
@@ -77,19 +69,19 @@ namespace detail
   template <class Cat>
   struct old_category_to_traversal
     : mpl::eval_if<
-          is_convertible<Cat,std::random_access_iterator_tag>
+          std::is_convertible<Cat,std::random_access_iterator_tag>
         , mpl::identity<random_access_traversal_tag>
         , mpl::eval_if<
-              is_convertible<Cat,std::bidirectional_iterator_tag>
+              std::is_convertible<Cat,std::bidirectional_iterator_tag>
             , mpl::identity<bidirectional_traversal_tag>
             , mpl::eval_if<
-                  is_convertible<Cat,std::forward_iterator_tag>
+                  std::is_convertible<Cat,std::forward_iterator_tag>
                 , mpl::identity<forward_traversal_tag>
                 , mpl::eval_if<
-                      is_convertible<Cat,std::input_iterator_tag>
+                      std::is_convertible<Cat,std::input_iterator_tag>
                     , mpl::identity<single_pass_traversal_tag>
                     , mpl::eval_if<
-                          is_convertible<Cat,std::output_iterator_tag>
+                          std::is_convertible<Cat,std::output_iterator_tag>
                         , mpl::identity<incrementable_traversal_tag>
                         , void
                       >
@@ -107,7 +99,7 @@ namespace detail
 template <class Cat>
 struct iterator_category_to_traversal
   : mpl::eval_if< // if already convertible to a traversal tag, we're done.
-        is_convertible<Cat,incrementable_traversal_tag>
+        std::is_convertible<Cat, incrementable_traversal_tag>
       , mpl::identity<Cat>
       , boost::iterators::detail::old_category_to_traversal<Cat>
     >
@@ -146,19 +138,19 @@ struct iterator_traversal<mpl::_>
 template <class Traversal>
 struct pure_traversal_tag
   : mpl::eval_if<
-        is_convertible<Traversal,random_access_traversal_tag>
+        std::is_convertible<Traversal,random_access_traversal_tag>
       , mpl::identity<random_access_traversal_tag>
       , mpl::eval_if<
-            is_convertible<Traversal,bidirectional_traversal_tag>
+            std::is_convertible<Traversal,bidirectional_traversal_tag>
           , mpl::identity<bidirectional_traversal_tag>
           , mpl::eval_if<
-                is_convertible<Traversal,forward_traversal_tag>
+                std::is_convertible<Traversal,forward_traversal_tag>
               , mpl::identity<forward_traversal_tag>
               , mpl::eval_if<
-                    is_convertible<Traversal,single_pass_traversal_tag>
+                    std::is_convertible<Traversal,single_pass_traversal_tag>
                   , mpl::identity<single_pass_traversal_tag>
                   , mpl::eval_if<
-                        is_convertible<Traversal,incrementable_traversal_tag>
+                        std::is_convertible<Traversal,incrementable_traversal_tag>
                       , mpl::identity<incrementable_traversal_tag>
                       , void
                     >
@@ -210,7 +202,5 @@ using iterators::pure_traversal_tag;
 } // namespace detail
 
 } // namespace boost
-
-#include <boost/iterator/detail/config_undef.hpp>
 
 #endif // BOOST_ITERATOR_CATEGORIES_HPP

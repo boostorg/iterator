@@ -14,25 +14,12 @@
 
 #include <boost/detail/indirect_traits.hpp>
 
-#include <boost/type_traits/is_same.hpp>
-#include <boost/type_traits/add_reference.hpp>
-
-#include <boost/mpl/bool.hpp>
 #include <boost/mpl/identity.hpp>
 #include <boost/mpl/eval_if.hpp>
-#include <boost/mpl/not.hpp>
 #include <boost/mpl/has_xxx.hpp>
 
 #include <iterator>
-
-#ifdef BOOST_MPL_CFG_NO_HAS_XXX
-# include <boost/shared_ptr.hpp>
-# include <boost/scoped_ptr.hpp>
-# include <boost/mpl/bool.hpp>
-# include <memory>
-#endif
-
-#include <boost/iterator/detail/config_def.hpp> // must be last #include
+#include <type_traits>
 
 namespace boost {
 namespace iterators {
@@ -57,9 +44,9 @@ namespace iterators {
           , typename ia_dflt_help<
                 Reference
               , mpl::eval_if<
-                    is_same<Value,use_default>
+                    std::is_same<Value,use_default>
                   , indirect_reference<dereferenceable>
-                  , add_reference<Value>
+                  , std::add_lvalue_reference<Value>
                 >
             >::type
           , Difference
@@ -111,11 +98,7 @@ namespace iterators {
   private:
       typename super_t::reference dereference() const
       {
-# if BOOST_WORKAROUND(BOOST_BORLANDC, < 0x5A0 )
-          return const_cast<super_t::reference>(**this->base());
-# else
           return **this->base();
-# endif
       }
   };
 
@@ -139,7 +122,5 @@ using iterators::indirect_iterator;
 using iterators::make_indirect_iterator;
 
 } // namespace boost
-
-#include <boost/iterator/detail/config_undef.hpp>
 
 #endif // BOOST_INDIRECT_ITERATOR_23022003THW_HPP

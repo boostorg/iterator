@@ -4,9 +4,7 @@
 #ifndef BOOST_ITERATOR_MINIMUM_CATEGORY_HPP_INCLUDED_
 # define BOOST_ITERATOR_MINIMUM_CATEGORY_HPP_INCLUDED_
 
-# include <boost/static_assert.hpp>
-# include <boost/type_traits/is_convertible.hpp>
-# include <boost/type_traits/is_same.hpp>
+# include <type_traits>
 
 # include <boost/mpl/placeholders.hpp>
 # include <boost/mpl/aux_/lambda_support.hpp>
@@ -44,7 +42,10 @@ struct minimum_category_impl<true,true>
 {
     template <class T1, class T2> struct apply
     {
-        BOOST_STATIC_ASSERT((is_same<T1,T2>::value));
+        static_assert(
+            std::is_same<T1,T2>::value,
+            "Iterator category types must be the same when they are equivalent."
+        );
         typedef T1 type;
     };
 };
@@ -68,8 +69,8 @@ template <class T1 = mpl::_1, class T2 = mpl::_2>
 struct minimum_category
 {
     typedef boost::iterators::detail::minimum_category_impl<
-        ::boost::is_convertible<T1,T2>::value
-      , ::boost::is_convertible<T2,T1>::value
+        std::is_convertible<T1,T2>::value
+      , std::is_convertible<T2,T1>::value
     > outer;
 
     typedef typename outer::template apply<T1,T2> inner;

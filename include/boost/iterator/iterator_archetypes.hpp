@@ -8,23 +8,17 @@
 
 #include <boost/iterator/iterator_categories.hpp>
 #include <boost/operators.hpp>
-#include <boost/static_assert.hpp>
 
 #include <boost/iterator/detail/facade_iterator_category.hpp>
 
-#include <boost/type_traits/is_const.hpp>
-#include <boost/type_traits/add_const.hpp>
-#include <boost/type_traits/remove_const.hpp>
-#include <boost/type_traits/remove_cv.hpp>
+#include <type_traits>
 
 #include <boost/concept_archetype.hpp>
 
 #include <boost/mpl/bitand.hpp>
 #include <boost/mpl/int.hpp>
 #include <boost/mpl/equal_to.hpp>
-#include <boost/mpl/if.hpp>
 #include <boost/mpl/eval_if.hpp>
-#include <boost/mpl/and.hpp>
 #include <boost/mpl/identity.hpp>
 
 #include <cstddef>
@@ -119,18 +113,18 @@ namespace detail
   template <class Value, class AccessCategory, class TraversalCategory>
   struct operator_brackets
     : mpl::eval_if<
-          is_convertible<TraversalCategory, random_access_traversal_tag>
+          std::is_convertible<TraversalCategory, random_access_traversal_tag>
         , mpl::eval_if<
               archetypes::has_access<
                   AccessCategory
                 , archetypes::writable_iterator_t
               >
             , mpl::identity<writable_operator_brackets<Value> >
-            , mpl::if_<
+            , std::conditional<
                   archetypes::has_access<
                       AccessCategory
                     , archetypes::readable_iterator_t
-                  >
+                  >::value
                 , readable_operator_brackets<Value>
                 , no_operator_brackets
               >
@@ -280,9 +274,9 @@ namespace detail
 
   template <class Value>
   struct convertible_type
-    : mpl::if_< is_const<Value>,
-                typename remove_const<Value>::type,
-                bogus_type >
+    : std::conditional< std::is_const<Value>::value,
+                        typename std::remove_const<Value>::type,
+                        bogus_type >
   {};
 
 } // namespace detail
@@ -312,9 +306,9 @@ struct iterator_access_archetype_impl<
     template <class Value>
     struct archetype
     {
-        typedef typename remove_cv<Value>::type value_type;
-        typedef Value                           reference;
-        typedef Value*                          pointer;
+        typedef typename std::remove_cv<Value>::type value_type;
+        typedef Value                                reference;
+        typedef Value*                               pointer;
 
         value_type operator*() const { return static_object<value_type>::get(); }
 
@@ -330,7 +324,7 @@ struct iterator_access_archetype_impl<
     template <class Value>
     struct archetype
     {
-        BOOST_STATIC_ASSERT(!is_const<Value>::value);
+        static_assert(!std::is_const<Value>::value, "Value type must not be const.");
         typedef void value_type;
         typedef void reference;
         typedef void pointer;
@@ -381,7 +375,7 @@ struct iterator_access_archetype_impl<archetypes::writable_lvalue_iterator_t>
             Value, archetypes::readable_lvalue_iterator_t
         >
     {
-        BOOST_STATIC_ASSERT((!is_const<Value>::value));
+        static_assert(!std::is_const<Value>::value, "Value type must not be const.");
     };
 };
 
@@ -392,7 +386,7 @@ struct iterator_archetype;
 template <class Value, class AccessCategory, class TraversalCategory>
 struct traversal_archetype_base
   : detail::operator_brackets<
-        typename remove_cv<Value>::type
+        typename std::remove_cv<Value>::type
       , AccessCategory
       , TraversalCategory
     >
@@ -419,8 +413,8 @@ namespace detail
               archetypes::has_access<
                   AccessCategory, archetypes::writable_iterator_t
               >
-            , remove_const<Value>
-            , add_const<Value>
+            , std::remove_const<Value>
+            , std::add_const<Value>
           >::type
         , typename access::reference
       >::type iterator_category;

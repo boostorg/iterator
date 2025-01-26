@@ -7,12 +7,7 @@
 #ifndef BOOST_INTEROPERABLE_23022003THW_HPP
 # define BOOST_INTEROPERABLE_23022003THW_HPP
 
-# include <boost/mpl/bool.hpp>
-# include <boost/mpl/or.hpp>
-
-# include <boost/type_traits/is_convertible.hpp>
-
-# include <boost/iterator/detail/config_def.hpp> // must appear last
+# include <boost/iterator/detail/type_traits/disjunction.hpp>
 
 namespace boost {
 namespace iterators {
@@ -33,13 +28,7 @@ namespace iterators {
   //
   template <typename A, typename B>
   struct is_interoperable
-# ifdef BOOST_NO_STRICT_ITERATOR_INTEROPERABILITY
-    : mpl::true_
-# else
-    : mpl::or_<
-          is_convertible< A, B >
-        , is_convertible< B, A > >
-# endif
+    : detail::disjunction<std::is_convertible<A, B>, std::is_convertible<B, A>>
   {
   };
 
@@ -48,7 +37,5 @@ namespace iterators {
 using iterators::is_interoperable;
 
 } // namespace boost
-
-# include <boost/iterator/detail/config_undef.hpp>
 
 #endif // BOOST_INTEROPERABLE_23022003THW_HPP

@@ -7,29 +7,15 @@
 #ifndef BOOST_ITERATOR_ADAPTOR_23022003THW_HPP
 #define BOOST_ITERATOR_ADAPTOR_23022003THW_HPP
 
-#include <boost/static_assert.hpp>
-
 #include <boost/core/use_default.hpp>
+
+#include <type_traits>
 
 #include <boost/iterator/iterator_categories.hpp>
 #include <boost/iterator/iterator_facade.hpp>
-#include <boost/iterator/detail/enable_if.hpp>
-
-#include <boost/mpl/and.hpp>
-#include <boost/mpl/not.hpp>
-#include <boost/mpl/or.hpp>
-
-#include <boost/type_traits/is_same.hpp>
-#include <boost/type_traits/is_convertible.hpp>
-
-#ifdef BOOST_ITERATOR_REF_CONSTNESS_KILLS_WRITABILITY
-# include <boost/type_traits/remove_reference.hpp>
-#endif
-
-#include <boost/type_traits/add_reference.hpp>
-#include <boost/iterator/detail/config_def.hpp>
-
 #include <boost/iterator/iterator_traits.hpp>
+
+#include <boost/iterator/detail/config_def.hpp>
 
 namespace boost {
 namespace iterators {
@@ -40,13 +26,6 @@ namespace iterators {
   using boost::use_default;
 
 } // namespace iterators
-
-// the incompleteness of use_default causes massive problems for
-// is_convertible (naturally).  This workaround is fortunately not
-// needed for vc6/vc7.
-template<class To>
-struct is_convertible<use_default,To>
-  : mpl::false_ {};
 
 namespace iterators {
 
@@ -102,40 +81,13 @@ namespace iterators {
   // false positives for user/library defined iterator types. See comments
   // on operator implementation for consequences.
   //
-#  if defined(BOOST_NO_IS_CONVERTIBLE) || defined(BOOST_NO_SFINAE)
-
-  template <class From, class To>
-  struct enable_if_convertible
-  {
-      typedef boost::iterators::detail::enable_type type;
-  };
-
-#  elif BOOST_WORKAROUND(_MSC_FULL_VER, BOOST_TESTED_AT(13102292))
-
-  // For some reason vc7.1 needs us to "cut off" instantiation
-  // of is_convertible in a few cases.
   template<typename From, typename To>
   struct enable_if_convertible
-    : iterators::enable_if<
-        mpl::or_<
-            is_same<From,To>
-          , is_convertible<From, To>
-        >
-      , boost::iterators::detail::enable_type
-    >
-  {};
-
-#  else
-
-  template<typename From, typename To>
-  struct enable_if_convertible
-    : iterators::enable_if<
-          is_convertible<From, To>
+    : std::enable_if<
+          std::is_convertible<From, To>::value
         , boost::iterators::detail::enable_type
       >
   {};
-
-# endif
 
   //
   // Default template argument handling for iterator_adaptor
@@ -147,7 +99,7 @@ namespace iterators {
     template <class T, class DefaultNullaryFn>
     struct ia_dflt_help
       : mpl::eval_if<
-            is_same<T, use_default>
+            std::is_same<T, use_default>
           , DefaultNullaryFn
           , mpl::identity<T>
         >
@@ -173,9 +125,9 @@ namespace iterators {
           , typename boost::iterators::detail::ia_dflt_help<
                 Value
               , mpl::eval_if<
-                    is_same<Reference,use_default>
+                    std::is_same<Reference,use_default>
                   , iterator_value<Base>
-                  , remove_reference<Reference>
+                  , std::remove_reference<Reference>
                 >
             >::type
 # else
@@ -192,9 +144,9 @@ namespace iterators {
           , typename boost::iterators::detail::ia_dflt_help<
                 Reference
               , mpl::eval_if<
-                    is_same<Value,use_default>
+                    std::is_same<Value,use_default>
                   , iterator_reference<Base>
-                  , add_reference<Value>
+                  , std::add_lvalue_reference<Value>
                 >
             >::type
 
@@ -204,13 +156,6 @@ namespace iterators {
         >
         type;
     };
-
-    // workaround for aC++ CR JAGaf33512
-    template <class Tr1, class Tr2>
-    inline void iterator_adaptor_assert_traversal ()
-    {
-      BOOST_STATIC_ASSERT((is_convertible<Tr1, Tr2>::value));
-    }
   }
 
   //
@@ -220,7 +165,7 @@ namespace iterators {
   // versions of iterator_adaptor The idea is that when the user needs
   // to fiddle with the reference type it is highly likely that the
   // iterator category has to be adjusted as well.  Any of the
-  // following four template arguments may be ommitted or explicitly
+  // following four template arguments may be omitted or explicitly
   // replaced by use_default.
   //
   //   Value - if supplied, the value_type of the resulting iterator, unless
@@ -260,7 +205,7 @@ namespace iterators {
    public:
       iterator_adaptor() {}
 
-      explicit iterator_adaptor(Base const &iter)
+      explicit iterator_adaptor(Base const& iter)
           : m_iterator(iter)
       {
       }
@@ -309,12 +254,12 @@ namespace iterators {
           typename super_t::iterator_category
       >::type my_traversal;
 
-# define BOOST_ITERATOR_ADAPTOR_ASSERT_TRAVERSAL(cat) \
-      boost::iterators::detail::iterator_adaptor_assert_traversal<my_traversal, cat>();
-
       void advance(typename super_t::difference_type n)
       {
-          BOOST_ITERATOR_ADAPTOR_ASSERT_TRAVERSAL(random_access_traversal_tag)
+          static_assert(
+            std::is_convertible<my_traversal, random_access_traversal_tag>::value,
+            "Iterator must support random access traversal."
+          );
           m_iterator += n;
       }
 
@@ -322,7 +267,10 @@ namespace iterators {
 
       void decrement()
       {
-          BOOST_ITERATOR_ADAPTOR_ASSERT_TRAVERSAL(bidirectional_traversal_tag)
+          static_assert(
+            std::is_convertible<my_traversal, bidirectional_traversal_tag>::value,
+            "Iterator must support bidirectional traversal."
+          );
            --m_iterator;
       }
 
@@ -332,15 +280,16 @@ namespace iterators {
       typename super_t::difference_type distance_to(
           iterator_adaptor<OtherDerived, OtherIterator, V, C, R, D> const& y) const
       {
-          BOOST_ITERATOR_ADAPTOR_ASSERT_TRAVERSAL(random_access_traversal_tag)
+          static_assert(
+            std::is_convertible<my_traversal, random_access_traversal_tag>::value,
+            "Super iterator must support random access traversal."
+          );
           // Maybe readd with same_distance
           //           BOOST_STATIC_ASSERT(
           //               (detail::same_category_and_difference<Derived,OtherDerived>::value)
           //               );
           return y.base() - m_iterator;
       }
-
-# undef BOOST_ITERATOR_ADAPTOR_ASSERT_TRAVERSAL
 
    private: // data members
       Base m_iterator;

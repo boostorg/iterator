@@ -4,19 +4,10 @@
 #ifndef IS_READABLE_ITERATOR_DWA2003112_HPP
 # define IS_READABLE_ITERATOR_DWA2003112_HPP
 
-#include <boost/mpl/bool.hpp>
 #include <boost/mpl/aux_/lambda_support.hpp>
-#include <boost/type_traits/add_lvalue_reference.hpp>
-
-#include <boost/iterator/detail/any_conversion_eater.hpp>
 
 #include <iterator>
-
-// should be the last #include
-#include <boost/type_traits/integral_constant.hpp>
-#include <boost/iterator/detail/config_def.hpp>
-
-#ifndef BOOST_NO_IS_CONVERTIBLE
+#include <type_traits>
 
 namespace boost {
 
@@ -29,26 +20,13 @@ namespace detail
   template <class Value>
   struct is_readable_iterator_impl
   {
-      static char tester(typename add_lvalue_reference<Value>::type, int);
-      static char (& tester(any_conversion_eater, ...) )[2];
-
       template <class It>
-      struct rebind
-      {
-          static It& x;
-
-          BOOST_STATIC_CONSTANT(
-              bool
-            , value = (
-                sizeof(
-                    is_readable_iterator_impl<Value>::tester(*x, 1)
-                ) == 1
-            )
-          );
-      };
+      struct rebind : std::is_convertible<
+                        decltype(*std::declval<It&>())
+                      , typename std::add_lvalue_reference<Value>::type
+                      > 
+      {};
   };
-
-#undef BOOST_READABLE_PRESERVER
 
   //
   // void specializations to handle std input and output iterators
@@ -57,7 +35,7 @@ namespace detail
   struct is_readable_iterator_impl<void>
   {
       template <class It>
-      struct rebind : boost::mpl::false_
+      struct rebind : std::false_type
       {};
   };
 
@@ -66,7 +44,7 @@ namespace detail
   struct is_readable_iterator_impl<const void>
   {
       template <class It>
-      struct rebind : boost::mpl::false_
+      struct rebind : std::false_type
       {};
   };
 
@@ -74,7 +52,7 @@ namespace detail
   struct is_readable_iterator_impl<volatile void>
   {
       template <class It>
-      struct rebind : boost::mpl::false_
+      struct rebind : std::false_type
       {};
   };
 
@@ -82,7 +60,7 @@ namespace detail
   struct is_readable_iterator_impl<const volatile void>
   {
       template <class It>
-      struct rebind : boost::mpl::false_
+      struct rebind : std::false_type
       {};
   };
 #endif
@@ -100,7 +78,7 @@ namespace detail
 } // namespace detail
 
 template< typename T > struct is_readable_iterator
-: public ::boost::integral_constant<bool,::boost::iterators::detail::is_readable_iterator_impl2<T>::value>
+: public std::integral_constant<bool,::boost::iterators::detail::is_readable_iterator_impl2<T>::value>
 {
 public:
     BOOST_MPL_AUX_LAMBDA_SUPPORT(1,is_readable_iterator,(T))
@@ -111,9 +89,5 @@ public:
 using iterators::is_readable_iterator;
 
 } // namespace boost
-
-#endif
-
-#include <boost/iterator/detail/config_undef.hpp>
 
 #endif // IS_READABLE_ITERATOR_DWA2003112_HPP
