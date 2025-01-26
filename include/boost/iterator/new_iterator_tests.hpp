@@ -92,7 +92,8 @@ void readable_iterator_test(const Iterator i1, T v)
 }
 
 template <class Iterator, class T>
-void writable_iterator_test(Iterator i, T v, T v2) {
+void writable_iterator_test(Iterator i, T v, T v2)
+{
   Iterator i2(i); // Copy Constructible
   *i2 = v;
 
@@ -115,7 +116,8 @@ void swappable_iterator_test(Iterator i, Iterator j)
 }
 
 template <class Iterator, class T>
-void constant_lvalue_iterator_test(Iterator i, T v1) {
+void constant_lvalue_iterator_test(Iterator i, T v1)
+{
   Iterator i2(i);
   typedef typename std::iterator_traits<Iterator>::value_type value_type;
   typedef typename std::iterator_traits<Iterator>::reference reference;
@@ -132,7 +134,8 @@ void constant_lvalue_iterator_test(Iterator i, T v1) {
 }
 
 template <class Iterator, class T>
-void non_const_lvalue_iterator_test(Iterator i, T v1, T v2) {
+void non_const_lvalue_iterator_test(Iterator i, T v1, T v2)
+{
   Iterator i2(i);
   typedef typename std::iterator_traits<Iterator>::value_type value_type;
   typedef typename std::iterator_traits<Iterator>::reference reference;
