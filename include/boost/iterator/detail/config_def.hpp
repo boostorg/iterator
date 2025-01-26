@@ -26,7 +26,6 @@
 // libs/iterator/test/constant_iterator_arrow.cpp fails to compile
 // because the operator-> return is improperly deduced as a non-const
 // pointer.
-#if 1 
 
 // Recall that in general, compilers without partial specialization
 // can't strip constness.  Consider counting_iterator, which normally
@@ -42,7 +41,5 @@
 // strictly necessary.  Not sure how best to resolve this one.
 
 # define BOOST_ITERATOR_REF_CONSTNESS_KILLS_WRITABILITY 1
-
-#endif
 
 // no include guard; multiple inclusion intended
