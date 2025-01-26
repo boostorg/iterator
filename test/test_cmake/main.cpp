@@ -26,6 +26,7 @@
 #include <boost/iterator/iterator_concepts.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/iterator/iterator_traits.hpp>
+#include <boost/iterator/min_category.hpp>
 #include <boost/iterator/minimum_category.hpp>
 #include <boost/iterator/new_iterator_tests.hpp>
 #include <boost/iterator/permutation_iterator.hpp>

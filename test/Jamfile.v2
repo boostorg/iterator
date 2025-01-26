@@ -61,6 +61,9 @@ test-suite iterator
 
     [ run generator_iterator_test.cpp ]
 
+    [ run min_category.cpp ]
+    [ compile-fail min_category_compile_fail1.cpp ]
+    [ compile-fail min_category_compile_fail2.cpp ]
     [ run minimum_category.cpp ]
     [ compile-fail minimum_category_compile_fail.cpp ]
 
