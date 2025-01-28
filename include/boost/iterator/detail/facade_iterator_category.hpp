@@ -22,21 +22,6 @@ namespace boost {
 namespace iterators {
 namespace detail {
 
-struct input_output_iterator_tag :
-    public std::input_iterator_tag
-{
-    // Using inheritance for only input_iterator_tag helps to avoid
-    // ambiguities when a stdlib implementation dispatches on a
-    // function which is overloaded on both input_iterator_tag and
-    // output_iterator_tag, as STLPort does, in its __valid_range
-    // function.  I claim it's better to avoid the ambiguity in these
-    // cases.
-    operator std::output_iterator_tag() const
-    {
-        return std::output_iterator_tag();
-    }
-};
-
 #ifdef BOOST_ITERATOR_REF_CONSTNESS_KILLS_WRITABILITY
 
 template< typename T >
