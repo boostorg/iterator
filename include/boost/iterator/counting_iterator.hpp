@@ -13,9 +13,9 @@
 #include <limits>
 #endif
 #include <boost/core/use_default.hpp>
-#include <boost/type_traits/type_identity.hpp>
 #include <boost/detail/numeric_traits.hpp>
 #include <boost/iterator/iterator_adaptor.hpp>
+#include <boost/iterator/detail/type_traits/type_identity.hpp>
 
 namespace boost {
 namespace iterators {
@@ -109,7 +109,7 @@ namespace detail
           CategoryOrTraversal
         , typename std::conditional<
               is_numeric<Incrementable>::value
-            , boost::type_identity<random_access_traversal_tag>
+            , iterators::detail::type_identity<random_access_traversal_tag>
             , iterator_traversal<Incrementable>
           >::type
       >::type traversal;
