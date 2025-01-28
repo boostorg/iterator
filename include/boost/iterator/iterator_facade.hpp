@@ -164,14 +164,14 @@ namespace iterators {
 
     template <class T>
     struct is_not_writable_postfix_increment_dereference_proxy :
-        public boost::true_type
+        public std::true_type
     {};
 
     template <class Iterator>
     struct is_not_writable_postfix_increment_dereference_proxy<
         writable_postfix_increment_dereference_proxy<Iterator>
     > :
-        public boost::false_type
+        public std::false_type
     {};
 
     template <class Iterator>
