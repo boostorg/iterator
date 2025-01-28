@@ -9,6 +9,7 @@
 
 #include <boost/config.hpp>
 #include <boost/config/workaround.hpp>
+#include <boost/core/use_default.hpp>
 #include <boost/iterator/iterator_adaptor.hpp>
 #include <boost/iterator/iterator_categories.hpp>
 #include <boost/utility/result_of.hpp>

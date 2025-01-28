@@ -3,18 +3,19 @@
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 #ifndef COUNTING_ITERATOR_DWA200348_HPP
-# define COUNTING_ITERATOR_DWA200348_HPP
+#define COUNTING_ITERATOR_DWA200348_HPP
 
-# include <type_traits>
+#include <type_traits>
 
-# include <boost/config.hpp>
-# include <boost/detail/workaround.hpp>
-# ifndef BOOST_NO_LIMITS_COMPILE_TIME_CONSTANTS
-# include <limits>
-# endif
-# include <boost/type_traits/type_identity.hpp>
-# include <boost/detail/numeric_traits.hpp>
-# include <boost/iterator/iterator_adaptor.hpp>
+#include <boost/config.hpp>
+#include <boost/detail/workaround.hpp>
+#ifndef BOOST_NO_LIMITS_COMPILE_TIME_CONSTANTS
+#include <limits>
+#endif
+#include <boost/core/use_default.hpp>
+#include <boost/type_traits/type_identity.hpp>
+#include <boost/detail/numeric_traits.hpp>
+#include <boost/iterator/iterator_adaptor.hpp>
 
 namespace boost {
 namespace iterators {
@@ -34,23 +35,23 @@ namespace detail
   struct is_numeric_impl
   {
 
-# ifndef BOOST_NO_LIMITS_COMPILE_TIME_CONSTANTS
+#ifndef BOOST_NO_LIMITS_COMPILE_TIME_CONSTANTS
 
       BOOST_STATIC_CONSTANT(bool, value = std::numeric_limits<T>::is_specialized);
 
-# else
+#else
 
-#  if !BOOST_WORKAROUND(BOOST_BORLANDC, BOOST_TESTED_AT(0x551))
+#if !BOOST_WORKAROUND(BOOST_BORLANDC, BOOST_TESTED_AT(0x551))
       BOOST_STATIC_CONSTANT(
           bool, value = (
               std::is_convertible<int,T>::value
            && std::is_convertible<T,int>::value
       ));
-#  else
+#else
       BOOST_STATIC_CONSTANT(bool, value = std::is_arithmetic<T>::value);
-#  endif
+#endif
 
-# endif
+#endif
   };
 
   template <class T>
@@ -58,7 +59,7 @@ namespace detail
     : std::integral_constant<bool, ::boost::iterators::detail::is_numeric_impl<T>::value>
   {};
 
-#  if defined(BOOST_HAS_LONG_LONG)
+#if defined(BOOST_HAS_LONG_LONG)
   template <>
   struct is_numeric<boost::long_long_type>
     : boost::true_type {};
@@ -66,9 +67,9 @@ namespace detail
   template <>
   struct is_numeric<boost::ulong_long_type>
     : boost::true_type {};
-#  endif
+#endif
 
-#  if defined(BOOST_HAS_INT128)
+#if defined(BOOST_HAS_INT128)
   template <>
   struct is_numeric<boost::int128_type>
     : boost::true_type {};
@@ -76,7 +77,7 @@ namespace detail
   template <>
   struct is_numeric<boost::uint128_type>
     : boost::true_type {};
-#  endif
+#endif
 
   // Some compilers fail to have a numeric_limits specialization
   template <>
@@ -89,7 +90,7 @@ namespace detail
       typedef typename boost::detail::numeric_traits<T>::difference_type type;
   };
 
-#  if defined(BOOST_HAS_INT128)
+#if defined(BOOST_HAS_INT128)
   // std::numeric_limits, which is used by numeric_traits, is not specialized for __int128 in some standard libraries
   template <>
   struct numeric_difference<boost::int128_type>
@@ -102,7 +103,7 @@ namespace detail
   {
       typedef boost::int128_type type;
   };
-#  endif
+#endif
 
   template <class Incrementable, class CategoryOrTraversal, class Difference>
   struct counting_iterator_base
@@ -129,10 +130,10 @@ namespace detail
           counting_iterator<Incrementable, CategoryOrTraversal, Difference> // self
         , Incrementable                                           // Base
         , Incrementable                                           // Value
-# ifndef BOOST_ITERATOR_REF_CONSTNESS_KILLS_WRITABILITY
+#ifndef BOOST_ITERATOR_REF_CONSTNESS_KILLS_WRITABILITY
           const  // MSVC won't strip this.  Instead we enable Thomas'
                  // criterion (see boost/iterator/detail/facade_iterator_category.hpp)
-# endif
+#endif
         , traversal
         , Incrementable const&                                    // reference
         , difference
@@ -195,7 +196,7 @@ class counting_iterator
     {
     }
 
-# if 0
+#if 0
     template<class OtherIncrementable>
     counting_iterator(
         counting_iterator<OtherIncrementable, CategoryOrTraversal, Difference> const& t
@@ -203,7 +204,7 @@ class counting_iterator
     )
       : super_t(t.base())
     {}
-# endif
+#endif
 
     BOOST_DEFAULTED_FUNCTION(counting_iterator& operator=(counting_iterator const& rhs), { *static_cast< super_t* >(this) = static_cast< super_t const& >(rhs); return *this; })
 

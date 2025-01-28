@@ -13,6 +13,7 @@
 #include <boost/indirect_reference.hpp>
 
 #include <boost/detail/indirect_traits.hpp>
+#include <boost/core/use_default.hpp>
 
 #include <boost/mpl/identity.hpp>
 #include <boost/mpl/eval_if.hpp>
