@@ -34,7 +34,6 @@ namespace detail
   template <class T>
   struct is_numeric_impl
   {
-
 #ifndef BOOST_NO_LIMITS_COMPILE_TIME_CONSTANTS
 
       BOOST_STATIC_CONSTANT(bool, value = std::numeric_limits<T>::is_specialized);
@@ -59,30 +58,28 @@ namespace detail
     : std::integral_constant<bool, ::boost::iterators::detail::is_numeric_impl<T>::value>
   {};
 
-#if defined(BOOST_HAS_LONG_LONG)
   template <>
-  struct is_numeric<boost::long_long_type>
-    : boost::true_type {};
+  struct is_numeric<long long>
+    : std::true_type {};
 
   template <>
-  struct is_numeric<boost::ulong_long_type>
-    : boost::true_type {};
-#endif
+  struct is_numeric<unsigned long long>
+    : std::true_type {};
 
 #if defined(BOOST_HAS_INT128)
   template <>
   struct is_numeric<boost::int128_type>
-    : boost::true_type {};
+    : std::true_type {};
 
   template <>
   struct is_numeric<boost::uint128_type>
-    : boost::true_type {};
+    : std::true_type {};
 #endif
 
   // Some compilers fail to have a numeric_limits specialization
   template <>
   struct is_numeric<wchar_t>
-    : true_type {};
+    : std::true_type {};
 
   template <class T>
   struct numeric_difference
