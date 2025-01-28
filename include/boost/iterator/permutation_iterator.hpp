@@ -10,6 +10,7 @@
 
 #include <iterator>
 
+#include <boost/core/use_default.hpp>
 #include <boost/iterator/iterator_adaptor.hpp>
 
 
