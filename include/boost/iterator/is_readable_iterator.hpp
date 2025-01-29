@@ -8,77 +8,55 @@
 #include <type_traits>
 
 namespace boost {
-
 namespace iterators {
+namespace detail {
 
-namespace detail
+// Guts of is_readable_iterator.  It is the iterator type and
+// Value is the iterator's value_type.
+template< typename It, typename Value >
+struct is_readable_iterator_impl :
+    public std::is_convertible<
+        decltype(*std::declval< It& >()),
+        typename std::add_lvalue_reference< Value >::type
+    >
 {
-  // Guts of is_readable_iterator.  Value is the iterator's value_type
-  // and the result is computed in the nested rebind template.
-  template <class Value>
-  struct is_readable_iterator_impl
-  {
-      template <class It>
-      struct rebind :
-          public std::is_convertible<
-              decltype(*std::declval<It&>()),
-              typename std::add_lvalue_reference<Value>::type
-          >
-      {};
-  };
+};
 
-  //
-  // void specializations to handle std input and output iterators
-  //
-  template <>
-  struct is_readable_iterator_impl<void>
-  {
-      template <class It>
-      struct rebind : std::false_type
-      {};
-  };
+//
+// void specializations to handle std input and output iterators
+//
+template< typename It >
+struct is_readable_iterator_impl< It, void > :
+    public std::false_type
+{
+};
 
-#ifndef BOOST_NO_CV_VOID_SPECIALIZATIONS
-  template <>
-  struct is_readable_iterator_impl<const void>
-  {
-      template <class It>
-      struct rebind : std::false_type
-      {};
-  };
+template< typename It >
+struct is_readable_iterator_impl< It, const void > :
+    public std::false_type
+{
+};
 
-  template <>
-  struct is_readable_iterator_impl<volatile void>
-  {
-      template <class It>
-      struct rebind : std::false_type
-      {};
-  };
+template< typename It >
+struct is_readable_iterator_impl< It, volatile void > :
+    public std::false_type
+{
+};
 
-  template <>
-  struct is_readable_iterator_impl<const volatile void>
-  {
-      template <class It>
-      struct rebind : std::false_type
-      {};
-  };
-#endif
+template< typename It >
+struct is_readable_iterator_impl< It, const volatile void > :
+    public std::false_type
+{
+};
 
-  //
-  // This level of dispatching is required for Borland.  We might save
-  // an instantiation by removing it for others.
-  //
-  template <class It>
-  struct is_readable_iterator_impl2 :
-      public is_readable_iterator_impl<
-          typename std::iterator_traits<It>::value_type const
-      >::template rebind<It>
-  {};
 } // namespace detail
 
 template< typename T >
 struct is_readable_iterator :
-    public std::integral_constant<bool, boost::iterators::detail::is_readable_iterator_impl2<T>::value>
+    public iterators::detail::is_readable_iterator_impl<
+        T,
+        typename std::iterator_traits< T >::value_type const
+    >::type
 {
 };
 
