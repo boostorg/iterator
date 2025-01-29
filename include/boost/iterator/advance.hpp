@@ -8,7 +8,6 @@
 #define BOOST_ITERATOR_ADVANCE_HPP
 
 #include <boost/config.hpp>
-#include <boost/detail/workaround.hpp>
 #include <boost/iterator/iterator_categories.hpp>
 
 namespace boost {
