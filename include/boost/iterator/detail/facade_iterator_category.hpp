@@ -44,16 +44,24 @@ struct is_const_lvalue_reference< T const& > :
 template< typename ValueParam, typename Reference >
 struct iterator_writability_disabled :
 # ifdef BOOST_ITERATOR_REF_CONSTNESS_KILLS_WRITABILITY // Adding Thomas' logic?
-    public disjunction<
-        is_const_lvalue_reference<Reference>,
-        std::is_const<Reference>,
-        std::is_const<ValueParam>
+    public detail::disjunction<
+        detail::is_const_lvalue_reference< Reference >,
+        std::is_const< Reference >,
+        std::is_const< ValueParam >
     >
 # else
-    public std::is_const<ValueParam>
+    public std::is_const< ValueParam >
 # endif
 {};
 
+
+template< typename Traversal, typename ValueParam, typename Reference >
+using is_traversal_of_input_iterator = detail::conjunction<
+    std::is_convertible< Traversal, single_pass_traversal_tag >,
+
+    // check for readability
+    std::is_convertible< Reference, ValueParam >
+>;
 
 //
 // Convert an iterator_facade's traversal category, Value parameter,
@@ -66,46 +74,41 @@ struct iterator_writability_disabled :
 template< typename Traversal, typename ValueParam, typename Reference >
 struct iterator_facade_default_category
 {
-    using type = typename mp11::mp_if<
-        detail::conjunction<
-            std::is_reference<Reference>,
-            std::is_convertible<Traversal, forward_traversal_tag>
-        >,
-        mp11::mp_defer<
-            mp11::mp_cond,
-                std::is_convertible<Traversal, random_access_traversal_tag>, std::random_access_iterator_tag,
-                std::is_convertible<Traversal, bidirectional_traversal_tag>, std::bidirectional_iterator_tag,
-                std::true_type, std::forward_iterator_tag
-        >,
-        mp11::mp_defer<
-            mp11::mp_if,
-                detail::conjunction<
-                    std::is_convertible<Traversal, single_pass_traversal_tag>,
-
-                    // check for readability
-                    std::is_convertible<Reference, ValueParam>
-                >,
-                std::input_iterator_tag,
-                Traversal
-        >
+    using type = typename std::conditional<
+        detail::is_traversal_of_input_iterator< Traversal, ValueParam, Reference >::value,
+        std::input_iterator_tag,
+        Traversal
     >::type;
 };
 
+// Specialization for the (typical) case when the reference type is an actual reference
+template< typename Traversal, typename ValueParam, typename Referenced >
+struct iterator_facade_default_category< Traversal, ValueParam, Referenced& >
+{
+    using type = mp11::mp_cond<
+        std::is_convertible< Traversal, random_access_traversal_tag >, std::random_access_iterator_tag,
+        std::is_convertible< Traversal, bidirectional_traversal_tag >, std::bidirectional_iterator_tag,
+        std::is_convertible< Traversal, forward_traversal_tag >, std::forward_iterator_tag,
+        detail::is_traversal_of_input_iterator< Traversal, ValueParam, Referenced& >, std::input_iterator_tag,
+        std::true_type, Traversal
+    >;
+};
+
 template< typename Traversal, typename ValueParam, typename Reference >
-using iterator_facade_default_category_t = typename iterator_facade_default_category<Traversal, ValueParam, Reference>::type;
+using iterator_facade_default_category_t = typename iterator_facade_default_category< Traversal, ValueParam, Reference >::type;
 
 // True iff T is convertible to an old-style iterator category.
 template< typename T >
 struct is_iterator_category :
-    public disjunction<
-        std::is_convertible<T, std::input_iterator_tag>,
-        std::is_convertible<T, std::output_iterator_tag>
+    public detail::disjunction<
+        std::is_convertible< T, std::input_iterator_tag >,
+        std::is_convertible< T, std::output_iterator_tag >
     >
 {};
 
 template< typename T >
 struct is_iterator_traversal :
-    public std::is_convertible<T, incrementable_traversal_tag>
+    public std::is_convertible< T, incrementable_traversal_tag >
 {};
 
 
@@ -124,14 +127,14 @@ struct iterator_category_with_traversal :
     // convertibility to Traversal is redundant.  Should just use the
     // Category element in that case.
     static_assert(
-        !std::is_convertible<iterator_category_to_traversal_t<Category>, Traversal>::value,
+        !std::is_convertible< iterator_category_to_traversal_t< Category >, Traversal >::value,
         "Category transformed to corresponding traversal must be convertible to Traversal."
     );
 
-    static_assert(is_iterator_category<Category>::value, "Category must be an STL iterator category.");
-    static_assert(!is_iterator_category<Traversal>::value, "Traversal must not be an STL iterator category.");
-    static_assert(!is_iterator_traversal<Category>::value, "Category must not be a traversal tag.");
-    static_assert(is_iterator_traversal<Traversal>::value, "Traversal must be a traversal tag.");
+    static_assert(is_iterator_category< Category >::value, "Category must be an STL iterator category.");
+    static_assert(!is_iterator_category< Traversal >::value, "Traversal must not be an STL iterator category.");
+    static_assert(!is_iterator_traversal< Category >::value, "Category must not be a traversal tag.");
+    static_assert(is_iterator_traversal< Traversal >::value, "Traversal must be a traversal tag.");
 };
 
 // Computes an iterator_category tag whose traversal is Traversal and
@@ -139,22 +142,22 @@ struct iterator_category_with_traversal :
 template< typename Traversal, typename ValueParam, typename Reference >
 struct facade_iterator_category_impl
 {
-    static_assert(!is_iterator_category<Traversal>::value, "Traversal must not be an STL iterator category.");
+    static_assert(!is_iterator_category< Traversal >::value, "Traversal must not be an STL iterator category.");
 
-    using category = iterator_facade_default_category_t<Traversal, ValueParam, Reference>;
+    using category = iterator_facade_default_category_t< Traversal, ValueParam, Reference >;
 
     using type = typename std::conditional<
         std::is_same<
             Traversal,
-            typename iterator_category_to_traversal<category>::type
+            typename iterator_category_to_traversal< category >::type
         >::value,
         category,
-        iterator_category_with_traversal<category, Traversal>
+        iterator_category_with_traversal< category, Traversal >
     >::type;
 };
 
 template< typename Traversal, typename ValueParam, typename Reference >
-using facade_iterator_category_impl_t = typename facade_iterator_category_impl<Traversal, ValueParam, Reference>::type;
+using facade_iterator_category_impl_t = typename facade_iterator_category_impl< Traversal, ValueParam, Reference >::type;
 
 //
 // Compute an iterator_category for iterator_facade
@@ -163,7 +166,7 @@ template< typename CategoryOrTraversal, typename ValueParam, typename Reference 
 struct facade_iterator_category
 {
     using type = mp11::mp_eval_if<
-        is_iterator_category<CategoryOrTraversal>,
+        is_iterator_category< CategoryOrTraversal >,
         CategoryOrTraversal, // old-style categories are fine as-is
         facade_iterator_category_impl_t, CategoryOrTraversal, ValueParam, Reference
     >;
