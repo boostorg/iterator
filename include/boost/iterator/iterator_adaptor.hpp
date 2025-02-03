@@ -15,6 +15,7 @@
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/iterator/iterator_traits.hpp>
 #include <boost/iterator/enable_if_convertible.hpp> // for backward compatibility; remove once downstream users are updated
+#include <boost/iterator/detail/eval_if_default.hpp>
 
 #include <boost/iterator/detail/config_def.hpp>
 
@@ -26,44 +27,7 @@ namespace iterators {
 // explicitly in order to specify that the default should be used.
 using boost::use_default;
 
-//
-// Default template argument handling for iterator_adaptor
-//
 namespace detail {
-
-// If T is use_default, return the result of invoking
-// DefaultNullaryFn, otherwise return T.
-template< typename T, typename DefaultNullaryFn >
-struct ia_dflt_help
-{
-    using type = T;
-};
-
-template< typename DefaultNullaryFn >
-struct ia_dflt_help< use_default, DefaultNullaryFn >
-{
-    using type = typename DefaultNullaryFn::type;
-};
-
-template< typename T, typename DefaultNullaryFn >
-using ia_dflt_help_t = typename ia_dflt_help< T, DefaultNullaryFn >::type;
-
-// If T is use_default, return the result of invoking
-// DefaultNullaryFn, otherwise - of NondefaultNullaryFn.
-template< typename T, typename DefaultNullaryFn, typename NondefaultNullaryFn >
-struct ia_eval_if_default
-{
-    using type = typename NondefaultNullaryFn::type;
-};
-
-template< typename DefaultNullaryFn, typename NondefaultNullaryFn >
-struct ia_eval_if_default< use_default, DefaultNullaryFn, NondefaultNullaryFn >
-{
-    using type = typename DefaultNullaryFn::type;
-};
-
-template< typename T, typename DefaultNullaryFn, typename NondefaultNullaryFn >
-using ia_eval_if_default_t = typename ia_eval_if_default< T, DefaultNullaryFn, NondefaultNullaryFn >::type;
 
 // A metafunction which computes an iterator_adaptor's base class,
 // a specialization of iterator_facade.
@@ -79,36 +43,36 @@ using iterator_adaptor_base_t = iterator_facade<
     Derived,
 
 #ifdef BOOST_ITERATOR_REF_CONSTNESS_KILLS_WRITABILITY
-    detail::ia_dflt_help_t<
+    detail::eval_if_default_t<
         Value,
-        detail::ia_eval_if_default<
+        detail::eval_if_default<
             Reference,
             iterator_value< Base >,
             std::remove_reference< Reference >
         >
     >,
 #else
-    detail::ia_dflt_help_t<
+    detail::eval_if_default_t<
         Value,
         iterator_value< Base >
     >,
 #endif
 
-    detail::ia_dflt_help_t<
+    detail::eval_if_default_t<
         Traversal,
         iterator_traversal< Base >
     >,
 
-    detail::ia_dflt_help_t<
+    detail::eval_if_default_t<
         Reference,
-        detail::ia_eval_if_default<
+        detail::eval_if_default<
             Value,
             iterator_reference< Base >,
             std::add_lvalue_reference< Value >
         >
     >,
 
-    detail::ia_dflt_help_t<
+    detail::eval_if_default_t<
         Difference,
         iterator_difference< Base >
     >

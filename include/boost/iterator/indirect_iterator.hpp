@@ -12,6 +12,7 @@
 
 #include <boost/iterator/iterator_adaptor.hpp>
 #include <boost/iterator/enable_if_convertible.hpp>
+#include <boost/iterator/detail/eval_if_default.hpp>
 
 #include <boost/pointee.hpp>
 #include <boost/indirect_reference.hpp>
@@ -34,14 +35,14 @@ struct indirect_base
     using type = iterator_adaptor<
         indirect_iterator< Iter, Value, Category, Reference, Difference >,
         Iter,
-        detail::ia_dflt_help_t<
+        detail::eval_if_default_t<
             Value,
             pointee< dereferenceable >
         >,
         Category,
-        detail::ia_dflt_help_t<
+        detail::eval_if_default_t<
             Reference,
-            detail::ia_eval_if_default<
+            detail::eval_if_default<
                 Value,
                 indirect_reference< dereferenceable >,
                 std::add_lvalue_reference< Value >

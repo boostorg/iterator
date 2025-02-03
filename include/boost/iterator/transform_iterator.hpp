@@ -13,6 +13,7 @@
 #include <boost/iterator/iterator_adaptor.hpp>
 #include <boost/iterator/iterator_categories.hpp>
 #include <boost/iterator/enable_if_convertible.hpp>
+#include <boost/iterator/detail/eval_if_default.hpp>
 
 #include <boost/utility/result_of.hpp>
 
@@ -35,33 +36,33 @@ namespace iterators {
      private:
         // By default, dereferencing the iterator yields the same as
         // the function.
-        typedef typename ia_dflt_help<
-            Reference
+        using reference = detail::eval_if_default_t<
+            Reference,
 #ifdef BOOST_RESULT_OF_USE_TR1
-          , result_of<const UnaryFunc(typename std::iterator_traits<Iterator>::reference)>
+            result_of<const UnaryFunc(typename std::iterator_traits<Iterator>::reference)>
 #else
-          , result_of<const UnaryFunc&(typename std::iterator_traits<Iterator>::reference)>
+            result_of<const UnaryFunc&(typename std::iterator_traits<Iterator>::reference)>
 #endif
-        >::type reference;
+        >;
 
         // To get the default for Value: remove any reference on the
         // result type, but retain any constness to signal
         // non-writability.  Note that if we adopt Thomas' suggestion
         // to key non-writability *only* on the Reference argument,
         // we'd need to strip constness here as well.
-        typedef typename ia_dflt_help<
-            Value
-          , remove_reference<reference>
-        >::type cv_value_type;
+        using cv_value_type = detail::eval_if_default_t<
+            Value,
+            remove_reference<reference>
+        >;
 
      public:
-        typedef iterator_adaptor<
-            transform_iterator<UnaryFunc, Iterator, Reference, Value>
-          , Iterator
-          , cv_value_type
-          , use_default    // Leave the traversal category alone
-          , reference
-        > type;
+        using type = iterator_adaptor<
+            transform_iterator<UnaryFunc, Iterator, Reference, Value>,
+            Iterator,
+            cv_value_type,
+            use_default,    // Leave the traversal category alone
+            reference
+        >;
     };
   }
 

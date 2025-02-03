@@ -2,8 +2,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
-#ifndef COUNTING_ITERATOR_DWA200348_HPP
-#define COUNTING_ITERATOR_DWA200348_HPP
+#ifndef BOOST_ITERATOR_COUNTING_ITERATOR_DWA200348_HPP
+#define BOOST_ITERATOR_COUNTING_ITERATOR_DWA200348_HPP
 
 #include <limits>
 #include <type_traits>
@@ -13,15 +13,17 @@
 #include <boost/detail/numeric_traits.hpp>
 #include <boost/iterator/iterator_adaptor.hpp>
 #include <boost/iterator/iterator_categories.hpp>
+#include <boost/iterator/detail/if_default.hpp>
+#include <boost/iterator/detail/eval_if_default.hpp>
 #include <boost/iterator/detail/type_traits/type_identity.hpp>
 
 namespace boost {
 namespace iterators {
 
 template<
-    class Incrementable,
-    class CategoryOrTraversal,
-    class Difference
+    typename Incrementable,
+    typename CategoryOrTraversal,
+    typename Difference
 >
 class counting_iterator;
 
@@ -29,97 +31,109 @@ namespace detail {
 
 // Try to detect numeric types at compile time in ways compatible
 // with the limitations of the compiler and library.
-template <class T>
+template< typename T >
 struct is_numeric :
-    public std::integral_constant<bool, std::numeric_limits<T>::is_specialized>
+    public std::integral_constant< bool, std::numeric_limits< T >::is_specialized >
 {};
 
-template <>
-struct is_numeric<long long> :
+template<>
+struct is_numeric< long long > :
     public std::true_type
 {};
 
-template <>
-struct is_numeric<unsigned long long> :
+template<>
+struct is_numeric< unsigned long long > :
     public std::true_type
 {};
 
 #if defined(BOOST_HAS_INT128)
-template <>
-struct is_numeric<boost::int128_type> :
+template<>
+struct is_numeric< boost::int128_type > :
     public std::true_type
 {};
 
-template <>
-struct is_numeric<boost::uint128_type> :
+template<>
+struct is_numeric< boost::uint128_type > :
     public std::true_type
 {};
 #endif
 
 // Some compilers fail to have a numeric_limits specialization
-template <>
-struct is_numeric<wchar_t> :
+template<>
+struct is_numeric< wchar_t > :
     public std::true_type
 {};
 
-template <class T>
+template< typename T >
 struct numeric_difference
 {
-    using type = typename boost::detail::numeric_traits<T>::difference_type;
+    using type = typename boost::detail::numeric_traits< T >::difference_type;
 };
 
 #if defined(BOOST_HAS_INT128)
 // std::numeric_limits, which is used by numeric_traits, is not specialized for __int128 in some standard libraries
-template <>
-struct numeric_difference<boost::int128_type>
+template<>
+struct numeric_difference< boost::int128_type >
 {
     using type = boost::int128_type;
 };
 
-template <>
-struct numeric_difference<boost::uint128_type>
+template<>
+struct numeric_difference< boost::uint128_type >
 {
     using type = boost::int128_type;
 };
 #endif
 
-template <class Incrementable, class CategoryOrTraversal, class Difference>
+template< typename Incrementable, typename CategoryOrTraversal, typename Difference, bool IsNumeric = is_numeric< Incrementable >::value >
+struct counting_iterator_types
+{
+    using traversal = detail::eval_if_default_t<
+        CategoryOrTraversal,
+        iterator_traversal< Incrementable >
+    >;
+
+    using difference = detail::eval_if_default_t<
+        Difference,
+        iterator_difference< Incrementable >
+    >;
+};
+
+template< typename Incrementable, typename CategoryOrTraversal, typename Difference >
+struct counting_iterator_types< Incrementable, CategoryOrTraversal, Difference, true >
+{
+    using traversal = detail::if_default_t<
+        CategoryOrTraversal,
+        random_access_traversal_tag
+    >;
+
+    using difference = detail::eval_if_default_t<
+        Difference,
+        numeric_difference< Incrementable >
+    >;
+};
+
+template< typename Incrementable, typename CategoryOrTraversal, typename Difference >
 struct counting_iterator_base
 {
-    using traversal = typename detail::ia_dflt_help<
-        CategoryOrTraversal,
-        typename std::conditional<
-            is_numeric<Incrementable>::value,
-            iterators::detail::type_identity<random_access_traversal_tag>,
-            iterator_traversal<Incrementable>
-        >::type
-    >::type;
-
-    using difference = typename detail::ia_dflt_help<
-        Difference,
-        typename std::conditional<
-            is_numeric<Incrementable>::value,
-            numeric_difference<Incrementable>,
-            iterator_difference<Incrementable>
-        >::type
-    >::type;
+    using iterator_types = counting_iterator_types< Incrementable, CategoryOrTraversal, Difference >;
 
     using type = iterator_adaptor<
-        counting_iterator<Incrementable, CategoryOrTraversal, Difference>, // self
+        counting_iterator< Incrementable, CategoryOrTraversal, Difference >, // self
         Incrementable,                                           // Base
 #ifndef BOOST_ITERATOR_REF_CONSTNESS_KILLS_WRITABILITY
         const  // MSVC won't strip this.  Instead we enable Thomas'
                // criterion (see boost/iterator/detail/facade_iterator_category.hpp)
 #endif
         Incrementable,                                           // Value
-        traversal,
+        typename iterator_types::traversal,
         Incrementable const&,                                    // reference
-        difference
+        typename iterator_types::difference
     >;
 };
 
 // A distance calculation policy for wrapped iterators
-template <class Difference, class Incrementable1, class Incrementable2>
+template< typename Difference, typename Incrementable1, typename Incrementable2 >
 struct iterator_distance
 {
     static Difference distance(Incrementable1 x, Incrementable2 y)
@@ -129,7 +143,7 @@ struct iterator_distance
 };
 
 // A distance calculation policy for wrapped numbers
-template <class Difference, class Incrementable1, class Incrementable2>
+template< typename Difference, typename Incrementable1, typename Incrementable2 >
 struct number_distance
 {
     static Difference distance(Incrementable1 x, Incrementable2 y)
@@ -141,18 +155,19 @@ struct number_distance
 } // namespace detail
 
 template<
-    class Incrementable,
-    class CategoryOrTraversal = use_default,
-    class Difference = use_default
+    typename Incrementable,
+    typename CategoryOrTraversal = use_default,
+    typename Difference = use_default
 >
 class counting_iterator :
-    public detail::counting_iterator_base<Incrementable, CategoryOrTraversal, Difference>::type
+    public detail::counting_iterator_base< Incrementable, CategoryOrTraversal, Difference >::type
 {
+    friend class iterator_core_access;
+
+private:
     using super_t = typename detail::counting_iterator_base<
         Incrementable, CategoryOrTraversal, Difference
     >::type;
-
-    friend class iterator_core_access;
 
 public:
     using reference = typename super_t::reference;
@@ -174,14 +189,14 @@ private:
         return this->base_reference();
     }
 
-    template <class OtherIncrementable>
+    template< typename OtherIncrementable >
     difference_type
-    distance_to(counting_iterator<OtherIncrementable, CategoryOrTraversal, Difference> const& y) const
+    distance_to(counting_iterator< OtherIncrementable, CategoryOrTraversal, Difference > const& y) const
     {
         using distance_traits = typename std::conditional<
-            detail::is_numeric<Incrementable>::value,
-            detail::number_distance<difference_type, Incrementable, OtherIncrementable>,
-            detail::iterator_distance<difference_type, Incrementable, OtherIncrementable>
+            detail::is_numeric< Incrementable >::value,
+            detail::number_distance< difference_type, Incrementable, OtherIncrementable >,
+            detail::iterator_distance< difference_type, Incrementable, OtherIncrementable >
         >::type;
 
         return distance_traits::distance(this->base(), y.base());
@@ -189,10 +204,10 @@ private:
 };
 
 // Manufacture a counting iterator for an arbitrary incrementable type
-template <class Incrementable>
-inline counting_iterator<Incrementable> make_counting_iterator(Incrementable x)
+template< typename Incrementable >
+inline counting_iterator< Incrementable > make_counting_iterator(Incrementable x)
 {
-    return counting_iterator<Incrementable>(x);
+    return counting_iterator< Incrementable >(x);
 }
 
 } // namespace iterators
@@ -202,4 +217,4 @@ using iterators::make_counting_iterator;
 
 } // namespace boost
 
-#endif // COUNTING_ITERATOR_DWA200348_HPP
+#endif // BOOST_ITERATOR_COUNTING_ITERATOR_DWA200348_HPP
