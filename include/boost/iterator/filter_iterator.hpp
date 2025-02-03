@@ -11,6 +11,7 @@
 
 #include <boost/iterator/iterator_adaptor.hpp>
 #include <boost/iterator/iterator_categories.hpp>
+#include <boost/iterator/enable_if_convertible.hpp>
 #include <boost/core/use_default.hpp>
 
 namespace boost {

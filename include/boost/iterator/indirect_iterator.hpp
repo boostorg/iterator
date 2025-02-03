@@ -11,6 +11,7 @@
 #include <type_traits>
 
 #include <boost/iterator/iterator_adaptor.hpp>
+#include <boost/iterator/enable_if_convertible.hpp>
 
 #include <boost/pointee.hpp>
 #include <boost/indirect_reference.hpp>
@@ -84,7 +85,7 @@ public:
         typename Category2,
         typename Reference2,
         typename Difference2,
-        typename = typename enable_if_convertible< Iterator2, Iterator >::type
+        typename = enable_if_convertible_t< Iterator2, Iterator >
     >
     indirect_iterator(indirect_iterator< Iterator2, Value2, Category2, Reference2, Difference2 > const& y) :
         super_t(y.base())

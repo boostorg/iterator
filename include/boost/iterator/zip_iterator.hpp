@@ -10,7 +10,7 @@
 
 #include <boost/iterator/iterator_traits.hpp>
 #include <boost/iterator/iterator_facade.hpp>
-#include <boost/iterator/iterator_adaptor.hpp> // for enable_if_convertible
+#include <boost/iterator/enable_if_convertible.hpp>
 #include <boost/iterator/iterator_categories.hpp>
 #include <boost/iterator/minimum_category.hpp>
 

@@ -15,6 +15,7 @@
 #include <boost/iterator/iterator_adaptor.hpp>
 #include <boost/iterator/is_readable_iterator.hpp>
 #include <boost/iterator/is_lvalue_iterator.hpp>
+#include <boost/iterator/enable_if_convertible.hpp>
 #include <boost/pending/iterator_tests.hpp>
 
 # include <boost/core/lightweight_test.hpp>
