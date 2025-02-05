@@ -19,7 +19,6 @@ target_link_libraries(boost_iterator
         Boost::config
         Boost::core
         Boost::detail
-        Boost::function_types
         Boost::fusion
         Boost::mpl
         Boost::optional
