@@ -107,15 +107,6 @@ struct is_trailing_null_type< tuples::null_type > : std::true_type {};
 template< >
 struct is_trailing_null_type< fusion::void_ > : std::true_type {};
 
-// The trait checks if the tail is either an empty type list or begins with a "null" type, which indicates that the rest
-// of the types in the tail are unused
-template< typename... Tail >
-struct is_tail_empty;
-template< >
-struct is_tail_empty< > : std::true_type {};
-template< typename Front, typename... Tail >
-struct is_tail_empty< Front, Tail... > : detail::is_trailing_null_type< Front > {};
-
 // Metafunction to obtain the type of the tuple whose element types
 // are the reference types of an iterator tuple.
 template< typename IteratorTuple >
@@ -161,29 +152,27 @@ struct minimum_traversal_category_in_iterator_list;
 template< typename IteratorList >
 using minimum_traversal_category_in_iterator_list_t = typename minimum_traversal_category_in_iterator_list< IteratorList >::type;
 
+template< template< typename... > class List, typename... Iterators >
+struct minimum_traversal_category_in_iterator_list< List< Iterators... > >
+{
+    // Note: non-variadic Boost.Tuple and Boost.Fusion need special handling
+    // to avoid instantiating iterator traits on the trailing "null" types.
+    // For such types just use random_access_traversal_tag, which will not
+    // affect the result of min_category.
+    using type = min_category_t<
+        mp11::mp_eval_if<
+            detail::is_trailing_null_type< Iterators >,
+            random_access_traversal_tag,
+            pure_iterator_traversal_t, Iterators
+        >...
+    >;
+};
+
 template< typename FrontTraversal, typename Tail >
 using minimum_traversal_category_in_tail_t = min_category_t<
     FrontTraversal,
     minimum_traversal_category_in_iterator_list_t< Tail >
 >;
-
-template< template< typename... > class List, typename Front, typename... Tail >
-struct minimum_traversal_category_in_iterator_list< List< Front, Tail... > >
-{
-    using front_traversal = pure_iterator_traversal_t< Front >;
-
-    // Note: non-variadic Boost.Tuple and Boost.Fusion need special handling
-    // to avoid instantiating iterator traits on the trailing "null" types.
-    // Note 2: we rename the List to mp_list in the process of iteration to
-    // avoid specifying one template parameter to std::pair, if List is std::pair.
-    using type = mp11::mp_eval_if<
-        detail::is_tail_empty< Tail... >,
-        front_traversal,
-        minimum_traversal_category_in_tail_t,
-            front_traversal,
-            mp11::mp_list< Tail... >
-    >;
-};
 
 template< typename Front, typename Tail >
 struct minimum_traversal_category_in_iterator_list< tuples::cons< Front, Tail > >
