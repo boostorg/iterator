@@ -4,7 +4,6 @@
 //  See accompanying file LICENSE_1_0.txt or copy at
 //  https://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/generator_iterator.hpp>
 #include <boost/indirect_reference.hpp>
 #include <boost/next_prior.hpp>
 #include <boost/pointee.hpp>
@@ -15,6 +14,7 @@
 #include <boost/iterator/filter_iterator.hpp>
 #include <boost/iterator/function_input_iterator.hpp>
 #include <boost/iterator/function_output_iterator.hpp>
+#include <boost/iterator/generator_iterator.hpp>
 #include <boost/iterator/indirect_iterator.hpp>
 #include <boost/iterator/interoperable.hpp>
 #include <boost/iterator/is_iterator.hpp>
