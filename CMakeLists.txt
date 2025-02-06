@@ -22,7 +22,6 @@ target_link_libraries(boost_iterator
         Boost::fusion
         Boost::mpl
         Boost::optional
-        Boost::smart_ptr
         Boost::type_traits
         Boost::utility
 )

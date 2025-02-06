@@ -7,7 +7,6 @@
 #include <boost/indirect_reference.hpp>
 #include <boost/next_prior.hpp>
 #include <boost/pointee.hpp>
-#include <boost/shared_container_iterator.hpp>
 #include <boost/iterator/advance.hpp>
 #include <boost/iterator/counting_iterator.hpp>
 #include <boost/iterator/distance.hpp>
@@ -31,6 +30,7 @@
 #include <boost/iterator/new_iterator_tests.hpp>
 #include <boost/iterator/permutation_iterator.hpp>
 #include <boost/iterator/reverse_iterator.hpp>
+#include <boost/iterator/shared_container_iterator.hpp>
 #include <boost/iterator/transform_iterator.hpp>
 #include <boost/iterator/zip_iterator.hpp>
 
