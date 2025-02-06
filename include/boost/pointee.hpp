@@ -1,5 +1,5 @@
-#ifndef POINTEE_DWA200415_HPP
-#define POINTEE_DWA200415_HPP
+#ifndef BOOST_POINTEE_DWA200415_HPP
+#define BOOST_POINTEE_DWA200415_HPP
 
 //
 // Copyright David Abrahams 2004. Use, modification and distribution is
@@ -13,11 +13,10 @@
 // http://www.boost.org/libs/iterator/doc/pointee.html
 //
 
-#include <boost/detail/is_incrementable.hpp>
-#include <boost/iterator/iterator_traits.hpp>
-
 #include <iterator>
 #include <type_traits>
+
+#include <boost/detail/is_incrementable.hpp>
 
 namespace boost {
 namespace detail {
@@ -28,16 +27,19 @@ struct smart_ptr_pointee
     using type = typename P::element_type;
 };
 
-template< typename Iterator, typename = typename std::remove_reference<decltype(*std::declval<Iterator&>())>::type >
+template<
+    typename Iterator,
+    typename = typename std::remove_reference< decltype(*std::declval< Iterator& >()) >::type
+>
 struct iterator_pointee
 {
-    using type = typename std::iterator_traits<Iterator>::value_type;
+    using type = typename std::iterator_traits< Iterator >::value_type;
 };
 
 template< typename Iterator, typename Reference >
 struct iterator_pointee< Iterator, const Reference >
 {
-    using type = typename std::add_const<typename std::iterator_traits<Iterator>::value_type>::type;
+    using type = typename std::add_const< typename std::iterator_traits< Iterator >::value_type >::type;
 };
 
 } // namespace detail
@@ -45,13 +47,16 @@ struct iterator_pointee< Iterator, const Reference >
 template< typename P >
 struct pointee :
     public std::conditional<
-        detail::is_incrementable<P>::value,
-        detail::iterator_pointee<P>,
-        detail::smart_ptr_pointee<P>
+        detail::is_incrementable< P >::value,
+        detail::iterator_pointee< P >,
+        detail::smart_ptr_pointee< P >
     >::type
 {
 };
 
+template< typename P >
+using pointee_t = typename pointee< P >::type;
+
 } // namespace boost
 
-#endif // POINTEE_DWA200415_HPP
+#endif // BOOST_POINTEE_DWA200415_HPP
