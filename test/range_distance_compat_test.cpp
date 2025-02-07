@@ -4,15 +4,6 @@
 // (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 
-// The following Boost.MPL includes are needed to mitigate the missing includes in Boost.Range.
-// They can be removed once https://github.com/boostorg/range/pull/154 is merged.
-// -- Begin workaround includes
-#include <boost/mpl/assert.hpp>
-#include <boost/mpl/eval_if.hpp>
-#include <boost/mpl/and.hpp>
-#include <boost/mpl/identity.hpp>
-// -- End of workaround includes
-
 #include <boost/range/distance.hpp>
 #include <boost/range/iterator_range_core.hpp>
 #include <boost/iterator/distance.hpp>
