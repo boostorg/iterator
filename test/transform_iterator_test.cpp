@@ -15,11 +15,17 @@
 #include <boost/assert.hpp>
 #include <boost/config.hpp>
 #include <algorithm>
+#include <iterator>
+#include <vector>
 #include <boost/iterator/transform_iterator.hpp>
 #include <boost/iterator/iterator_concepts.hpp>
 #include <boost/iterator/new_iterator_tests.hpp>
 #include <boost/pending/iterator_tests.hpp>
 #include <boost/concept_check.hpp>
+
+#if defined(__cpp_lib_ranges) && ( __cpp_lib_ranges >= 202002L )
+#include <ranges>
+#endif
 
 #include "static_assert_same.hpp"
 
@@ -47,6 +53,19 @@ struct adaptable_mult_functor
   adaptable_mult_functor(int aa) : mult_functor(aa) { }
 };
 
+struct identity {
+  template <class T>
+  T&& operator()(T&& x) const {
+    return static_cast<T&&>(x);
+  }
+};
+
+struct reference_to_value {
+  template <class T>
+  typename std::remove_reference<T>::type operator()(T&& x) const {
+    return x;
+  }
+};
 
 struct const_select_first
 {
@@ -270,6 +289,104 @@ main()
 
     boost::random_access_readable_iterator_test(
         boost::make_transform_iterator(y, polymorphic_mult_functor()), N, x);
+  }
+
+
+  {
+    using Iter = boost::iterators::transform_iterator<identity, typename std::vector<int>::iterator>;
+    using ConstIter = boost::iterators::transform_iterator<identity, typename std::vector<int>::const_iterator>;
+
+    static_assert(
+      std::is_same<decltype(*std::declval<Iter>()), int&>::value,
+      "Transform iterator with identity must dereference into int reference."
+    );
+
+    static_assert(
+      std::is_same<decltype(*std::declval<ConstIter>()), const int&>::value,
+      "Transform iterator with identity must dereference into const int reference."
+    );
+
+    static_assert(
+      std::is_same<decltype(std::declval<Iter>()[std::declval<std::size_t>()]), int&>::value,
+      "Transform iterator over iterator with identity must return int reference for operator[] call."
+    );
+
+    static_assert(
+      std::is_same<decltype(std::declval<ConstIter>()[std::declval<std::size_t>()]), const int&>::value,
+      "Transform iterator over const iterator with identity must return int reference for operator[] call."
+    );
+
+    #if defined(__cpp_lib_concepts) && ( __cpp_lib_concepts >= 202002L )
+      static_assert(std::random_access_iterator<Iter>);
+      static_assert(std::random_access_iterator<ConstIter>);
+      static_assert(std::output_iterator<Iter, int>);
+      static_assert(std::input_iterator<Iter>);
+      static_assert(!std::output_iterator<ConstIter, int>);
+      static_assert(std::input_iterator<ConstIter>);
+    #endif
+
+    auto nums = std::vector<int>{1, 2, 3, 4, 5, 6};
+
+    auto iter1 = boost::iterators::make_transform_iterator<identity>(nums.begin());
+    auto iter2 = boost::iterators::make_transform_iterator<identity>(nums.end());
+
+    const auto found3 = std::lower_bound(iter1, iter2, 3);
+    BOOST_TEST(*found3 == 3);
+
+    #if defined(__cpp_lib_ranges)
+    auto found3rng = std::ranges::lower_bound(iter1, iter2, 3);
+    BOOST_TEST(*found3rng == 3);
+    #endif
+
+    *std::prev(iter2) = 7;
+    BOOST_TEST(nums.back() == 7);
+  }
+
+  {
+    using Iter = boost::iterators::transform_iterator<reference_to_value, typename std::vector<int>::iterator>;
+    using ConstIter = boost::iterators::transform_iterator<reference_to_value, typename std::vector<int>::const_iterator>;
+
+    static_assert(
+      std::is_same<decltype(*std::declval<Iter>()), int>::value,
+      "Transform iterator with identity must dereference into int reference."
+    );
+
+    static_assert(
+      std::is_same<decltype(*std::declval<ConstIter>()), int>::value,
+      "Transform iterator with identity must dereference into const int reference."
+    );
+
+    static_assert(
+      std::is_same<decltype(std::declval<Iter>()[std::declval<std::size_t>()]), int>::value,
+      "Transform iterator over iterator with identity must return int reference for operator[] call."
+    );
+
+    static_assert(
+      std::is_same<decltype(std::declval<ConstIter>()[std::declval<std::size_t>()]), int>::value,
+      "Transform iterator over const iterator with identity must return int reference for operator[] call."
+    );
+
+    #if defined(__cpp_lib_concepts) && ( __cpp_lib_concepts >= 202002L )
+      static_assert(std::random_access_iterator<Iter>);
+      static_assert(std::random_access_iterator<ConstIter>);
+      static_assert(!std::output_iterator<Iter, int>);
+      static_assert(std::input_iterator<Iter>);
+      static_assert(!std::output_iterator<ConstIter, int>);
+      static_assert(std::input_iterator<ConstIter>);
+    #endif
+
+    auto nums = std::vector<int>{1, 2, 3, 4, 5, 6};
+
+    auto iter1 = boost::iterators::make_transform_iterator<identity>(nums.begin());
+    auto iter2 = boost::iterators::make_transform_iterator<identity>(nums.end());
+
+    const auto found3 = std::lower_bound(iter1, iter2, 3);
+    BOOST_TEST(*found3 == 3);
+
+    #if defined(__cpp_lib_ranges) && ( __cpp_lib_ranges >= 202002L )
+    auto found3rng = std::ranges::lower_bound(iter1, iter2, 3);
+    BOOST_TEST(*found3rng == 3);
+    #endif
   }
 
   return boost::report_errors();

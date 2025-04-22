@@ -32,7 +32,7 @@ namespace detail {
 template< typename UnaryFunc, typename Iterator >
 struct transform_iterator_default_reference
 {
-    using type = decltype(std::declval< UnaryFunc const& >()(std::declval< typename std::iterator_traits< Iterator >::reference >()));
+    using type = decltype(std::declval< UnaryFunc const& >()(*std::declval< Iterator >()));
 };
 
 // Compute the iterator_adaptor instantiation to be used for transform_iterator
@@ -81,6 +81,7 @@ private:
     using functor_base = boost::empty_value< UnaryFunc >;
 
 public:
+
     transform_iterator() = default;
 
     transform_iterator(Iterator const& x, UnaryFunc f) :
