@@ -641,6 +641,7 @@ private:
 
 public:
     using reference = typename base_type::reference;
+    using value_type = typename base_type::value_type;
     using difference_type = typename base_type::difference_type;
 
 public:

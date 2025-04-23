@@ -171,6 +171,7 @@ private:
 
 public:
     using reference = typename super_t::reference;
+    using value_type = typename super_t::value_type;
     using difference_type = typename super_t::difference_type;
 
     counting_iterator() = default;
@@ -181,6 +182,11 @@ public:
     counting_iterator(Incrementable x) :
         super_t(x)
     {
+    }
+
+    value_type operator[](difference_type n) const {
+        auto ret_iter = *this;
+        return *(ret_iter + n);
     }
 
 private:
