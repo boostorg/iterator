@@ -35,6 +35,34 @@ struct transform_iterator_default_reference
     using type = decltype(std::declval< UnaryFunc const& >()(*std::declval< Iterator >()));
 };
 
+template < typename Iterator, class Enable = void >
+struct transform_iterator_category_base {
+};
+
+template <class IterCategory>
+struct transform_iterator_category_base_impl {
+    using type = IterCategory;
+};
+
+template <>
+struct transform_iterator_category_base_impl<std::output_iterator_tag> {
+    using type = std::input_iterator_tag;
+};
+
+template<class T, class R = void>
+struct enable_if_type { using type = R; };
+
+template < typename Iterator >
+struct transform_iterator_category_base<
+    Iterator,
+    typename enable_if_type<typename std::iterator_traits<Iterator>::iterator_category>::type
+>
+{
+    using type = typename transform_iterator_category_base_impl<
+                    typename std::iterator_traits<Iterator>::iterator_category
+                 >::type;
+};
+
 // Compute the iterator_adaptor instantiation to be used for transform_iterator
 template< typename UnaryFunc, typename Iterator, typename Reference, typename Value >
 struct transform_iterator_base
@@ -81,6 +109,8 @@ private:
     using functor_base = boost::empty_value< UnaryFunc >;
 
 public:
+
+    using iterator_category = typename detail::transform_iterator_category_base< Iterator >::type;
 
     transform_iterator() = default;
 
