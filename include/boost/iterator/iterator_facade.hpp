@@ -374,8 +374,7 @@ template< typename ValueType, typename Reference >
 struct use_operator_brackets_proxy :
     public detail::negation<
         detail::conjunction<
-            std::is_copy_constructible< ValueType >,
-            std::is_trivial< ValueType >,
+            std::is_trivially_copyable< ValueType >,
             iterator_writability_disabled< ValueType, Reference >
         >
     >
@@ -385,14 +384,14 @@ template< typename Iterator, typename Value, typename Reference >
 struct operator_brackets_result
 {
     using type = typename std::conditional<
-        use_operator_brackets_proxy<Value, Reference>::value,
-        operator_brackets_proxy<Iterator>,
+        use_operator_brackets_proxy< Value, Reference >::value,
+        operator_brackets_proxy< Iterator >,
         Value
     >::type;
 };
 
 template< typename Iterator >
-inline operator_brackets_proxy<Iterator> make_operator_brackets_result(Iterator const& iter, std::true_type)
+inline operator_brackets_proxy< Iterator > make_operator_brackets_result(Iterator const& iter, std::true_type)
 {
     return operator_brackets_proxy< Iterator >(iter);
 }
