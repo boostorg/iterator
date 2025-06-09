@@ -365,10 +365,23 @@ public:
             typename std::remove_cv< typename std::remove_reference< T >::type >::type
         >::value,
         operator_brackets_proxy&
-    >::type operator= (T&& val) noexcept(std::is_nothrow_assignable< reference, T&& >::value)
+    >::type operator= (T&& val) noexcept(noexcept(*std::declval< Iterator const& >() = std::declval< T&& >()))
     {
         *m_iter = static_cast< T&& >(val);
         return *this;
+    }
+
+    // Provides it[n]->foo(). Leverages chaining of operator->.
+    reference operator->() const noexcept(noexcept(*std::declval< Iterator const& >()))
+    {
+        return *m_iter;
+    }
+
+    // Provides (*it[n]).foo()
+    template< typename Ref = reference, typename Result = decltype(*std::declval< Ref >()) >
+    Result operator*() const noexcept(noexcept(**std::declval< Iterator const& >()))
+    {
+        return **m_iter;
     }
 
 private:
