@@ -9,6 +9,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <utility>
 #include <type_traits>
 
 #include <boost/config.hpp>
@@ -346,21 +347,27 @@ class operator_brackets_proxy
     // Iterator is actually an iterator_facade, so we do not have to
     // go through iterator_traits to access the traits.
     using reference = typename Iterator::reference;
-    using value_type = typename Iterator::value_type;
 
 public:
-    operator_brackets_proxy(Iterator const& iter) :
+    explicit operator_brackets_proxy(Iterator const& iter) noexcept(std::is_nothrow_copy_constructible< Iterator >::value) :
         m_iter(iter)
     {}
 
-    operator reference() const
+    operator reference() const noexcept(noexcept(*std::declval< Iterator const& >()))
     {
         return *m_iter;
     }
 
-    operator_brackets_proxy& operator=(value_type const& val)
+    template< typename T >
+    typename std::enable_if<
+        !std::is_same<
+            operator_brackets_proxy< Iterator >,
+            typename std::remove_cv< typename std::remove_reference< T >::type >::type
+        >::value,
+        operator_brackets_proxy&
+    >::type operator= (T&& val) noexcept(std::is_nothrow_assignable< reference, T&& >::value)
     {
-        *m_iter = val;
+        *m_iter = static_cast< T&& >(val);
         return *this;
     }
 
