@@ -360,12 +360,17 @@ public:
 
     template< typename T >
     typename std::enable_if<
-        !std::is_same<
-            operator_brackets_proxy< Iterator >,
-            typename std::remove_cv< typename std::remove_reference< T >::type >::type
+        detail::conjunction<
+            detail::negation<
+                std::is_same<
+                    operator_brackets_proxy< Iterator >,
+                    typename std::remove_cv< typename std::remove_reference< T >::type >::type
+                >
+            >,
+            std::is_assignable< reference, T&& >
         >::value,
         operator_brackets_proxy&
-    >::type operator= (T&& val) noexcept(noexcept(*std::declval< Iterator const& >() = std::declval< T&& >()))
+    >::type operator= (T&& val) noexcept(noexcept(*std::declval< Iterator& >() = std::declval< T&& >()))
     {
         *m_iter = static_cast< T&& >(val);
         return *this;
