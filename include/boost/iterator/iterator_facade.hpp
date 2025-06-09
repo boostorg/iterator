@@ -368,40 +368,6 @@ private:
     Iterator m_iter;
 };
 
-// A metafunction that determines whether operator[] must return a
-// proxy, or whether it can simply return a copy of the value_type.
-template< typename ValueType, typename Reference >
-struct use_operator_brackets_proxy :
-    public detail::negation<
-        detail::conjunction<
-            std::is_trivially_copyable< ValueType >,
-            iterator_writability_disabled< ValueType, Reference >
-        >
-    >
-{};
-
-template< typename Iterator, typename Value, typename Reference >
-struct operator_brackets_result
-{
-    using type = typename std::conditional<
-        use_operator_brackets_proxy< Value, Reference >::value,
-        operator_brackets_proxy< Iterator >,
-        Value
-    >::type;
-};
-
-template< typename Iterator >
-inline operator_brackets_proxy< Iterator > make_operator_brackets_result(Iterator const& iter, std::true_type)
-{
-    return operator_brackets_proxy< Iterator >(iter);
-}
-
-template< typename Iterator >
-inline typename Iterator::value_type make_operator_brackets_result(Iterator const& iter, std::false_type)
-{
-    return *iter;
-}
-
 // A binary metafunction class that always returns bool.
 template< typename Iterator1, typename Iterator2 >
 using always_bool_t = bool;
@@ -678,13 +644,9 @@ public:
     using difference_type = typename base_type::difference_type;
 
 public:
-    typename boost::iterators::detail::operator_brackets_result< Derived, Value, reference >::type
-    operator[](difference_type n) const
+    operator_brackets_proxy< Derived > operator[](difference_type n) const
     {
-        return boost::iterators::detail::make_operator_brackets_result< Derived >(
-            this->derived() + n,
-            std::integral_constant< bool, boost::iterators::detail::use_operator_brackets_proxy< Value, Reference >::value >{}
-        );
+        return operator_brackets_proxy< Derived >(this->derived() + n);
     }
 
     Derived& operator+=(difference_type n)
