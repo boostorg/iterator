@@ -8,6 +8,7 @@
 #define BOOST_ITERATOR_DISTANCE_HPP
 
 #include <boost/config.hpp>
+#include <boost/core/enable_if.hpp>
 #include <boost/iterator/is_iterator.hpp>
 #include <boost/iterator/iterator_categories.hpp>
 #include <boost/iterator/iterator_traits.hpp>
