@@ -8,6 +8,7 @@
 #define BOOST_ITERATOR_DISTANCE_HPP
 
 #include <boost/config.hpp>
+#include <boost/iterator/is_iterator.hpp>
 #include <boost/iterator/iterator_categories.hpp>
 #include <boost/iterator/iterator_traits.hpp>
 
@@ -40,7 +41,9 @@ distance_impl(RandomAccessIterator first, RandomAccessIterator last, random_acce
 namespace distance_adl_barrier {
 
 template< typename SinglePassIterator >
-inline BOOST_CXX14_CONSTEXPR typename iterator_difference< SinglePassIterator >::type
+inline BOOST_CXX14_CONSTEXPR
+boost::enable_if_c< boost::is_iterator< SinglePassIterator >::value,
+                    typename iterator_difference< SinglePassIterator >::type >
 distance(SinglePassIterator first, SinglePassIterator last)
 {
     return detail::distance_impl(first, last, typename iterator_traversal< SinglePassIterator >::type());
