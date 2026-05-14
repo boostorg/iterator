@@ -43,8 +43,10 @@ namespace distance_adl_barrier {
 
 template< typename SinglePassIterator >
 inline BOOST_CXX14_CONSTEXPR
-typename boost::enable_if< boost::is_iterator< SinglePassIterator >,
-                           typename iterator_difference< SinglePassIterator >::type >::type
+typename std::enable_if<
+    boost::is_iterator< SinglePassIterator >::value,
+    iterator_difference< SinglePassIterator >
+>::type::type
 distance(SinglePassIterator first, SinglePassIterator last)
 {
     return detail::distance_impl(first, last, typename iterator_traversal< SinglePassIterator >::type());
