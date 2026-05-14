@@ -80,5 +80,17 @@ int main()
         );
     }
 
+    {
+        // Definitely not an iterator.
+        struct Foo
+        {
+            friend
+            std::ptr_diff distance(Foo const &, Foo const &) { return -1; }
+        };
+        // Make it visible.
+        using boost::distance;
+        auto result = distance(Foo{}, Foo{});
+        BOOST_TEST(result == -1);
+    }
     return boost::report_errors();
 }
