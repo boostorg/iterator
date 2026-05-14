@@ -4,6 +4,7 @@
 // (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 
+#include <cstddef>
 #include <vector>
 #include <list>
 #include <boost/container/slist.hpp>
@@ -84,10 +85,10 @@ int main()
         // Definitely not an iterator.
         struct Foo
         {
-            friend
-            std::ptr_diff distance(Foo const &, Foo const &) { return -1; }
+            constexpr friend
+            std::ptrdiff_t distance(Foo const &, Foo const &) { return -1; }
         };
-        // Make it visible.
+        // Make boost::distance visible since we're not actually in the boost namespace here.
         using boost::distance;
         auto result = distance(Foo{}, Foo{});
         BOOST_TEST(result == -1);
