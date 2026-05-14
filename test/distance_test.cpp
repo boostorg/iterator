@@ -20,6 +20,13 @@ void test_distance(Iterator it_from, Iterator it_to, int n)
     BOOST_TEST(boost::distance(it_from, it_to) == n);
 }
 
+// Definitely not an iterator.
+struct Foo
+{
+    constexpr friend
+    std::ptrdiff_t distance(Foo const &, Foo const &) { return -1; }
+};
+
 int main()
 {
     int array[3] = {1, 2, 3};
@@ -82,12 +89,6 @@ int main()
     }
 
     {
-        // Definitely not an iterator.
-        struct Foo
-        {
-            constexpr friend
-            std::ptrdiff_t distance(Foo const &, Foo const &) { return -1; }
-        };
         // Make boost::distance visible since we're not actually in the boost namespace here.
         using boost::distance;
         auto result = distance(Foo{}, Foo{});
