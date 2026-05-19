@@ -4,6 +4,8 @@
 // (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 
+#include <cstddef>
+#include <functional>
 #include <vector>
 #include <list>
 #include <boost/container/slist.hpp>
@@ -18,6 +20,12 @@ void test_advance(Iterator it_from, Iterator it_to, int n)
 {
     boost::advance(it_from,  n);
     BOOST_TEST(it_from == it_to);
+}
+
+// Overload for integers
+void advance(int &x, int n)
+{
+    x += n;
 }
 
 int main()
@@ -87,5 +95,10 @@ int main()
         );
     }
 
+    {
+        int x = 0;
+        test_advance(std::ref(x), 3, 3);
+    }
+    
     return boost::report_errors();
 }
