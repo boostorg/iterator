@@ -8,7 +8,10 @@
 #define BOOST_ITERATOR_ADVANCE_HPP
 
 #include <boost/config.hpp>
+#include <boost/iterator/is_iterator.hpp>
 #include <boost/iterator/iterator_categories.hpp>
+
+#include <type_traits>
 
 namespace boost {
 namespace iterators {
@@ -56,7 +59,9 @@ inline BOOST_CXX14_CONSTEXPR void advance_impl(RandomAccessIterator& it, Distanc
 namespace advance_adl_barrier {
 
 template< typename InputIterator, typename Distance >
-inline BOOST_CXX14_CONSTEXPR void advance(InputIterator& it, Distance n)
+inline BOOST_CXX14_CONSTEXPR
+typename std::enable_if< boost::is_iterator< SinglePassIterator >::value, void > >::type
+advance(InputIterator& it, Distance n)
 {
     detail::advance_impl(it, n, typename iterator_traversal< InputIterator >::type());
 }
