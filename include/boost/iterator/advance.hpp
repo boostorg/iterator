@@ -60,7 +60,7 @@ namespace advance_adl_barrier {
 
 template< typename InputIterator, typename Distance >
 inline BOOST_CXX14_CONSTEXPR
-typename std::enable_if< boost::is_iterator< SinglePassIterator >::value, void > >::type
+typename std::enable_if< boost::is_iterator< InputIterator >::value, void > >::type
 advance(InputIterator& it, Distance n)
 {
     detail::advance_impl(it, n, typename iterator_traversal< InputIterator >::type());
