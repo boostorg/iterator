@@ -25,7 +25,7 @@ struct Foo
 {
     int x = 0;
 
-    friend constexpr
+    friend
     void advance(Foo &value, int n)
     {
         value.x += 10 * n;
