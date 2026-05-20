@@ -4,8 +4,6 @@
 // (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 
-#include <cstddef>
-#include <functional>
 #include <vector>
 #include <list>
 #include <boost/container/slist.hpp>
@@ -22,11 +20,17 @@ void test_advance(Iterator it_from, Iterator it_to, int n)
     BOOST_TEST(it_from == it_to);
 }
 
-// Overload for integers
-void advance(int &x, int n)
+// Definitely not an iterator
+struct Foo
 {
-    x += n;
-}
+    int x = 0;
+
+    friend constexpr
+    void advance(Foo &value, int n)
+    {
+        value.x += 10 * n;
+    }
+};
 
 int main()
 {
@@ -96,8 +100,10 @@ int main()
     }
 
     {
-        int x = 0;
-        test_advance(std::ref(x), 3, 3);
+        using boost::advance;
+        Foo bar;
+        advance(bar, 3);
+        BOOST_TEST(bar.x == 30);
     }
     
     return boost::report_errors();
