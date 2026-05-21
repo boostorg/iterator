@@ -26,7 +26,7 @@ struct Foo
     int x = 0;
 
     friend
-    void advance(Foo &value, int n)
+    void advance(Foo &value, long n)
     {
         value.x += 10 * n;
     }
