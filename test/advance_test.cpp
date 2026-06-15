@@ -25,6 +25,8 @@ struct Foo
 {
     int x = 0;
 
+    // Don't use type "int" for "n", otherwise it matches literal int exactly
+    // and doesn't demonstrate the effect of enable_if.
     friend
     void advance(Foo &value, long n)
     {
